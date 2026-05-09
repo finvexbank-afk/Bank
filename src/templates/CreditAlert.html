@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
+        .container { padding: 40px; border: 1px solid #eee; max-width: 600px; margin: 0 auto; }
+        .disclaimer { font-size: 11px; color: #888; text-align: center; margin-bottom: 30px; }
+        .footer { font-size: 11px; text-align: center; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; }
+        .highlight { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="disclaimer">
+            DISCLAIMER: this message was automatically generated via Finvex Bank secured online channel, please do not reply this message. all correspondent should be address to customer Services.<br>
+            © 2025 Finvex Bank. All rights reserved.
+        </div>
+
+        <h3>Hello {{user_name}},</h3>
+        <p>Your account have been <span class="highlight">Credited</span>.</p>
+        <p>Details of the transaction are shown below;</p>
+
+        <p>Account Number: <span class="highlight">{{account_number}}</span></p>
+        <p>Account Name: <span class="highlight">{{user_name}}</span></p>
+        <p>Description: <span class="highlight">{{description}}</span></p>
+        <p>Total Amount: <span class="highlight">{{amount}}EUR</span></p>
+        <p>Date: <span class="highlight">{{date}}</span></p>
+        <p>Available Balance: <span class="highlight">{{balance}}EUR</span></p>
+
+        <p>Thanks, Finvex Bank</p>
+
+        <div class="footer">
+            123 Rue des finances 1000 Paris France
+        </div>
+    </div>
+</body>
+</html>
