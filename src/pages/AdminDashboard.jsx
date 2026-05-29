@@ -15,6 +15,8 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, doc, updateDoc, onSnapshot, query, orderBy, addDoc, serverTimestamp, setDoc, deleteDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { countries } from '../data/countries';
+import LanguageSelector from '../components/LanguageSelector';
 
 const AdminDashboard = () => {
     const { user, logout } = useAppContext();
@@ -143,6 +145,9 @@ const AdminDashboard = () => {
                 <header style={{ height: '70px', background: 'white', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} style={{ background: '#F1F5F9', border: 'none', color: '#1E293B', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}><Menu size={22} /></button>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <LanguageSelector position="inline" />
                     </div>
                 </header>
 
@@ -528,7 +533,7 @@ const CreateUserForm = () => {
     const [data, setData] = useState({ 
         firstName: '', middleName: '', lastName: '', username: '', email: '', 
         phone: '', dob: '', accountType: 'Checking', accountNumber: Math.floor(10000000000 + Math.random() * 90000000000).toString(),
-        imf: '', swift: '', cot: '', pin: '', balance: '0', password: '', country: 'USA'
+        imf: '', swift: '', cot: '', pin: '', balance: '0', password: '', country: ''
     });
     const [loading, setLoading] = useState(false);
 
@@ -569,6 +574,22 @@ const CreateUserForm = () => {
                         <FormInput label="Last Name" data={data} setData={setData} field="lastName" required />
                         <FormInput label="Corporate Email" data={data} setData={setData} field="email" type="email" required />
                         <FormInput label="Access Code" data={data} setData={setData} field="password" type="password" required />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                        <FormInput label="Phone Number" data={data} setData={setData} field="phone" type="tel" />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>Country</label>
+                            <select 
+                                value={data.country} 
+                                onChange={e=>setData({...data, country: e.target.value})} 
+                                style={formInputStyle}
+                            >
+                                <option value="">Select a country</option>
+                                {countries.map((country, index) => (
+                                    <option key={index} value={country}>{country}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                     <button disabled={loading} style={{ padding: '20px', background: '#2563EB', color: 'white', border: 'none', borderRadius: '16px', fontWeight: 900 }}>
                         {loading ? 'DEPLOYING...' : 'DEPLOY CLIENT NODE'}

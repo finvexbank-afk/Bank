@@ -61,7 +61,7 @@ const Dashboard = () => {
                     }}>
                         <div style={{ position: 'absolute', top: '24px', right: '32px', textAlign: 'right' }} className="time-box-mobile">
                             <h4 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>{currentTime}</h4>
-                            <p style={{ fontSize: '11px', opacity: 0.8 }}>mardi 27 mai 2025</p>
+                            <p style={{ fontSize: '11px', opacity: 0.8 }}>{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>

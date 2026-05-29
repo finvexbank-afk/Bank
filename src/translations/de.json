@@ -1,0 +1,104 @@
+{
+  "auth": {
+    "title": "Starten Sie das Banking mit uns",
+    "subtitle": "Erstellen Sie Ihr Finvex Bank-Konto in nur wenigen Schritten und genießen Sie unsere volle Palette von Bankdienstleistungen.",
+    "features": {
+      "secure": {
+        "title": "Sichere Banking-Plattform",
+        "description": "Branchenführende Sicherheitsprotokolle zum Schutz Ihrer Gelder"
+      },
+      "fast": {
+        "title": "Schnelle Überweisungen",
+        "description": "Senden und empfangen Sie schnell Geld an jeden, überall"
+      },
+      "access": {
+        "title": "24/7 Kontozugriff",
+        "description": "Verwalten Sie Ihre Finanzen jederzeit, überall auf jedem Gerät"
+      }
+    },
+    "signIn": {
+      "title": "Anmelden",
+      "subtitle": "Zugriff auf Ihr Finvex Bank-Konto",
+      "email": "E-Mail-Adresse",
+      "password": "Passwort",
+      "button": "Anmelden",
+      "noAccount": "Haben Sie kein Konto?",
+      "createAccount": "Konto erstellen"
+    },
+    "signUp": {
+      "title": "Erstellen Sie Ihr Konto",
+      "step": "Schritt",
+      "of": "von",
+      "steps": {
+        "personal": "Persönliche Daten",
+        "contact": "Kontaktdaten",
+        "account": "Konto-Einrichtung",
+        "security": "Sicherheit"
+      },
+      "next": "Weiter",
+      "previous": "Zurück",
+      "createAccount": "Konto erstellen",
+      "personal": {
+        "title": "Persönliche Informationen",
+        "subtitle": "Bitte geben Sie Ihren gesetzlichen Namen an, wie er auf offiziellen Dokumenten erscheint",
+        "firstName": "Gesetzlicher Vorname",
+        "middleName": "Zweiter Vorname",
+        "lastName": "Gesetzlicher Nachname",
+        "username": "Benutzername"
+      },
+      "contact": {
+        "title": "Kontaktinformationen",
+        "subtitle": "Wir verwenden diese Details, um mit Ihnen über Ihr Konto zu kommunizieren",
+        "email": "E-Mail-Adresse",
+        "phone": "Telefonnummer",
+        "country": "Land"
+      },
+      "account": {
+        "title": "Konto-Einrichtung",
+        "subtitle": "Wählen Sie Ihren Kontotyp und richten Sie Ihre Transaktions-PIN ein",
+        "accountType": "Kontotyp",
+        "checking": "Girokonto",
+        "checkingDesc": "Perfekt für tägliche Transaktionen",
+        "savings": "Sparkonto",
+        "savingsDesc": "Zinsen auf Einlagen verdienen",
+        "pin": "Transaktions-PIN (4 Ziffern)",
+        "pinDesc": "Ihre PIN wird zur Autorisierung von Transaktionen benötigt"
+      },
+      "security": {
+        "title": "Sichern Sie Ihr Konto",
+        "subtitle": "Erstellen Sie ein starkes Passwort zum Schutz Ihres Kontos",
+        "password": "Passwort",
+        "confirmPassword": "Passwort bestätigen",
+        "terms": "Ich akzeptiere die Allgemeinen Geschäftsbedingungen"
+      }
+    },
+    "verification": {
+      "title": "Überprüfen Sie Ihre E-Mail",
+      "subtitle": "Bitte überprüfen Sie Ihren Posteingang für den Bestätigungslink",
+      "success": "Erfolg",
+      "message": "Ihre Registrierung war erfolgreich. Ein Bestätigungslink wurde an Ihre E-Mail-Adresse gesendet. Bitte klicken Sie darauf, um Ihre E-Mail-Adresse zu bestätigen.",
+      "checkInbox": "Überprüfen Sie Ihren Posteingang",
+      "checkInboxDesc": "Wir haben Ihnen eine E-Mail mit einem Link zur Bestätigung Ihres Kontos gesendet",
+      "notReceived": "E-Mail nicht erhalten?",
+      "troubleshoot": {
+        "title": "E-Mail nicht erhalten?",
+        "spam": "Die E-Mail befindet sich möglicherweise in Ihrem Spam-Ordner",
+        "typo": "Die eingegebene E-Mail-Adresse enthält möglicherweise einen Tippfehler.",
+        "autocomplete": "Sie haben möglicherweise versehentlich eine andere E-Mail-Adresse eingegeben (dies geschieht normalerweise bei der Autovervollständigung)"
+      },
+      "resend": "Bestätigungs-E-Mail erneut senden",
+      "devButton": "[DEV] Zum Dashboard gehen ohne E-Mail zu bestätigen"
+    },
+    "errors": {
+      "invalidCredentials": "Ungültige E-Mail oder Passwort.",
+      "passwordMismatch": "Passwörter stimmen nicht überein.",
+      "termsRequired": "Bitte akzeptieren Sie die Allgemeinen Geschäftsbedingungen.",
+      "fillRequired": "Bitte füllen Sie alle erforderlichen Felder aus.",
+      "emailPhoneRequired": "E-Mail und Telefon sind erforderlich.",
+      "pinRequired": "Bitte geben Sie eine 4-stellige PIN ein.",
+      "emailExists": "Diese E-Mail ist bereits registriert.",
+      "generalError": "Ein Fehler ist aufgetreten."
+    },
+    "loading": "Anmelden..."
+  }
+}

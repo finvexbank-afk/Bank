@@ -4,8 +4,9 @@ import { useAppContext } from '../AppContext';
 
 const TransferModal = ({ isOpen, onClose }) => {
     const { user } = useAppContext();
-    const [step, setStep] = useState(-1); // -1: Selection, 0: Details, 1: Code1, 2: Code2, 3: Code3, 4: Success
+    const [step, setStep] = useState(-1); // -1: Selection, 0: Details, 1: Speed, 2: Code1, 3: Code2, 4: Code3, 5: Success
     const [transferType, setTransferType] = useState('Local'); // 'Local' or 'International'
+    const [transferSpeed, setTransferSpeed] = useState('Standard'); // 'Standard' or 'Immediate'
     const [amount, setAmount] = useState('');
     const [recipient, setRecipient] = useState('');
     
@@ -33,29 +34,32 @@ const TransferModal = ({ isOpen, onClose }) => {
         if (step === 0) {
             if (!amount || !recipient) return setError('Please fill all fields');
             if (parseFloat(amount) > user.balance) return setError('Insufficient funds');
-            
-            // If Local, go straight to success or simpler validation
+            setStep(1);
+        } else if (step === 1) {
             if (transferType === 'Local') {
                 await executeTransfer('Local');
             } else {
-                setStep(1);
+                setStep(2);
             }
-        } else if (step === 1) {
-            if (imfCode !== EXPECTED_IMF) return setError('Invalid IMF/Activation Code. Contact Support.');
-            setStep(2);
         } else if (step === 2) {
-            if (swiftCode !== EXPECTED_SWIFT) return setError('Invalid SWIFT/Compliance Code.');
+            if (imfCode !== EXPECTED_IMF) return setError('Invalid IMF/Activation Code. Contact Support.');
             setStep(3);
         } else if (step === 3) {
+            if (swiftCode !== EXPECTED_SWIFT) return setError('Invalid SWIFT/Compliance Code.');
+            setStep(4);
+        } else if (step === 4) {
             if (finalCode !== EXPECTED_FINAL) return setError('Invalid Finalization Code.');
             await executeTransfer('International');
-        } else if (step === 4) {
+        } else if (step === 5) {
             resetAndClose();
         }
     };
 
     const executeTransfer = async (type) => {
-        const amountNum = parseFloat(amount);
+        let amountNum = parseFloat(amount);
+        if (transferSpeed === 'Immediate') {
+            amountNum += amountNum * 0.01; // 1% fee for immediate
+        }
         const newBalance = user.balance - amountNum;
         const now = new Date();
         const dateStr = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -72,6 +76,7 @@ const TransferModal = ({ isOpen, onClose }) => {
                 amount: -amountNum,
                 type: 'Debit',
                 scope: type,
+                speed: transferSpeed,
                 description: `Transfer to ${recipient}`,
                 to: recipient,
                 status: 'Completed',
@@ -80,7 +85,7 @@ const TransferModal = ({ isOpen, onClose }) => {
                 ref: `FINVEX/TX-${Math.random().toString(36).substring(2, 9).toUpperCase()}`
             });
             
-            setStep(4);
+            setStep(5);
         } catch (err) {
             setError('Transaction failed. Internal server error.');
         }
@@ -94,7 +99,10 @@ const TransferModal = ({ isOpen, onClose }) => {
             setRecipient(''); 
             setImfCode(''); 
             setSwiftCode(''); 
+            setImfCode(''); 
+            setSwiftCode(''); 
             setFinalCode(''); 
+            setTransferSpeed('Standard');
             setError('');
         }, 500);
     };
@@ -181,8 +189,41 @@ const TransferModal = ({ isOpen, onClose }) => {
                                 </div>
                             )}
 
-                            {/* Verification Steps for International */}
                             {step === 1 && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                    <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B', margin: '0 0 8px 0' }}>Transfer Execution Speed</h4>
+                                    <p style={{ fontSize: '14px', color: '#64748B', marginTop: 0, marginBottom: '16px' }}>Choose how fast you want the funds to be delivered.</p>
+
+                                    <div 
+                                        onClick={() => setTransferSpeed('Immediate')} 
+                                        style={{ ...optionCardStyle, border: transferSpeed === 'Immediate' ? '2px solid #0EA5E9' : '1.5px solid #F1F5F9', background: transferSpeed === 'Immediate' ? '#F0F9FF' : 'white' }}
+                                    >
+                                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'white', color: '#0EA5E9', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0, border: '1px solid #E2E8F0' }}>⚡</div>
+                                        <div style={{ flex: 1, textAlign: 'left' }}>
+                                            <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#1E293B', margin: '0 0 4px 0' }}>Immediate Transfer</h4>
+                                            <p style={{ fontSize: '13px', color: '#64748B', margin: '0 0 2px 0' }}>Arrives in seconds.</p>
+                                            <p style={{ fontSize: '11px', color: '#EF4444', fontWeight: 600, margin: 0 }}>Fee: 1% (€{(parseFloat(amount || 0) * 0.01).toFixed(2)})</p>
+                                        </div>
+                                        <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: transferSpeed === 'Immediate' ? '6px solid #0EA5E9' : '2px solid #CBD5E1' }}></div>
+                                    </div>
+
+                                    <div 
+                                        onClick={() => setTransferSpeed('Standard')} 
+                                        style={{ ...optionCardStyle, border: transferSpeed === 'Standard' ? '2px solid #0EA5E9' : '1.5px solid #F1F5F9', background: transferSpeed === 'Standard' ? '#F0F9FF' : 'white' }}
+                                    >
+                                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'white', color: '#64748B', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0, border: '1px solid #E2E8F0' }}>⏳</div>
+                                        <div style={{ flex: 1, textAlign: 'left' }}>
+                                            <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#1E293B', margin: '0 0 4px 0' }}>Standard Transfer</h4>
+                                            <p style={{ fontSize: '13px', color: '#64748B', margin: '0 0 2px 0' }}>Takes 1-3 business days.</p>
+                                            <p style={{ fontSize: '11px', color: '#10B981', fontWeight: 600, margin: 0 }}>Free</p>
+                                        </div>
+                                        <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: transferSpeed === 'Standard' ? '6px solid #0EA5E9' : '2px solid #CBD5E1' }}></div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Verification Steps for International */}
+                            {step === 2 && (
                                 <div style={{ textAlign: 'center' }}>
                                     <div style={{ width: '64px', height: '64px', background: '#FFF7ED', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 24px', color: '#D97706' }}><ShieldAlert size={32} /></div>
                                     <h4 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '12px' }}>IMF Authorization</h4>
@@ -191,7 +232,7 @@ const TransferModal = ({ isOpen, onClose }) => {
                                 </div>
                             )}
 
-                            {step === 2 && (
+                            {step === 3 && (
                                 <div style={{ textAlign: 'center' }}>
                                     <div style={{ width: '64px', height: '64px', background: '#F0F9FF', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 24px', color: '#0EA5E9' }}><ShieldAlert size={32} /></div>
                                     <h4 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '12px' }}>SWIFT Clearance</h4>
@@ -200,7 +241,7 @@ const TransferModal = ({ isOpen, onClose }) => {
                                 </div>
                             )}
 
-                            {step === 3 && (
+                            {step === 4 && (
                                 <div style={{ textAlign: 'center' }}>
                                     <div style={{ width: '64px', height: '64px', background: '#F5F3FF', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 24px', color: '#8B5CF6' }}><ShieldAlert size={32} /></div>
                                     <h4 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '12px' }}>Tax Finalization</h4>
@@ -209,13 +250,16 @@ const TransferModal = ({ isOpen, onClose }) => {
                                 </div>
                             )}
 
-                            {step === 4 && (
+                            {step === 5 && (
                                 <div style={{ textAlign: 'center', padding: '10px 0' }}>
                                     <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#D1FAE5', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 24px', color: '#10B981' }}>
                                         <CheckCircle size={40} />
                                     </div>
                                     <h2 style={{ fontSize: '26px', fontWeight: 900, color: '#1E293B', marginBottom: '12px' }}>Order Transmitted!</h2>
                                     <p style={{ color: '#64748B', fontWeight: 500, fontSize: '15px' }}>Your transfer of <span style={{ color: '#10B981', fontWeight: 700 }}>€{amount}</span> to {recipient} is being processed.</p>
+                                    {transferSpeed === 'Immediate' && (
+                                        <p style={{ fontSize: '12px', color: '#EF4444', fontWeight: 600, margin: '8px 0 0 0' }}>Includes a 1% Immediate Execution Fee (€{(parseFloat(amount||0) * 0.01).toFixed(2)})</p>
+                                    )}
                                     <div style={{ marginTop: '32px', padding: '16px', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
                                         <p style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 600, margin: 0 }}>REFERENCE CODE</p>
                                         <p style={{ fontSize: '15px', color: '#475569', fontWeight: 700, margin: '4px 0 0 0', fontFamily: 'monospace' }}>FINVEX/TX-{(Math.random() * 1000000).toFixed(0)}</p>
@@ -224,11 +268,11 @@ const TransferModal = ({ isOpen, onClose }) => {
                             )}
 
                             <div style={{ display: 'flex', gap: '12px', marginTop: '40px' }}>
-                                {step < 4 && (
+                                {step < 5 && (
                                     <button onClick={() => setStep(step === 0 ? -1 : step - 1)} style={{ flex: 1, padding: '16px', background: 'white', color: '#64748B', border: '1px solid #E2E8F0', borderRadius: '16px', fontWeight: 700, cursor: 'pointer' }}>Back</button>
                                 )}
-                                <button onClick={handleNext} style={{ flex: 2, padding: '16px', background: step < 4 ? '#0EA5E9' : '#10B981', color: 'white', border: 'none', borderRadius: '16px', fontWeight: 800, fontSize: '15px', cursor: 'pointer', boxShadow: step < 4 ? '0 10px 20px rgba(14, 165, 233, 0.2)' : 'none' }}>
-                                    {step === 0 ? 'Continue' : step < 4 ? 'Authenticate' : 'Done'}
+                                <button onClick={handleNext} style={{ flex: 2, padding: '16px', background: step < 5 ? '#0EA5E9' : '#10B981', color: 'white', border: 'none', borderRadius: '16px', fontWeight: 800, fontSize: '15px', cursor: 'pointer', boxShadow: step < 5 ? '0 10px 20px rgba(14, 165, 233, 0.2)' : 'none' }}>
+                                    {step === 0 ? 'Continue' : step === 1 ? 'Review' : step < 5 ? 'Authenticate' : 'Done'}
                                 </button>
                             </div>
                         </div>

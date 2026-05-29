@@ -15,31 +15,37 @@ import PinVerification from './pages/PinVerification';
 import LoanRequest from './pages/LoanRequest';
 import InternationalTransfer from './pages/InternationalTransfer';
 import AdminLogin from './pages/AdminLogin';
+import { AppProvider } from './AppContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import './index.css';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/auth" />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/admin-login" element={<AdminLogin />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/cards" element={<Cards />} />
-        <Route path="/deposit" element={<Deposit />} />
-        <Route path="/transactions" element={<Transactions />} />
-        <Route path="/support" element={<Support />} />
-        <Route path="/loans" element={<Loans />} />
-        <Route path="/irs" element={<IRS />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/verify-account" element={<VerificationPortal />} />
-        <Route path="/enrollment" element={<Enrollment />} />
-        <Route path="/verify-pin" element={<PinVerification />} />
-        <Route path="/loan-request" element={<LoanRequest />} />
-        <Route path="/international-transfer" element={<InternationalTransfer />} />
-      </Routes>
-    </Router>
+    <LanguageProvider>
+      <AppProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Navigate to="/auth" />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/cards" element={<Cards />} />
+            <Route path="/deposit" element={<Deposit />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/loans" element={<Loans />} />
+            <Route path="/irs" element={<IRS />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/verify-account" element={<VerificationPortal />} />
+            <Route path="/enrollment" element={<Enrollment />} />
+            <Route path="/verify-pin" element={<PinVerification />} />
+            <Route path="/loan-request" element={<LoanRequest />} />
+            <Route path="/international-transfer" element={<InternationalTransfer />} />
+          </Routes>
+        </Router>
+      </AppProvider>
+    </LanguageProvider>
   );
 }
 

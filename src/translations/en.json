@@ -1,0 +1,104 @@
+{
+  "auth": {
+    "title": "Start Banking with Us",
+    "subtitle": "Create your Finvex Bank account in just a few steps and enjoy our full range of banking services.",
+    "features": {
+      "secure": {
+        "title": "Secure Banking Platform",
+        "description": "Industry-leading security protocols to keep your funds safe"
+      },
+      "fast": {
+        "title": "Fast Transfers",
+        "description": "Send and receive money quickly to anyone, anywhere"
+      },
+      "access": {
+        "title": "24/7 Account Access",
+        "description": "Manage your finances anytime, anywhere on any device"
+      }
+    },
+    "signIn": {
+      "title": "Sign In",
+      "subtitle": "Access your Finvex Bank account",
+      "email": "Email Address",
+      "password": "Password",
+      "button": "Sign In",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create Account"
+    },
+    "signUp": {
+      "title": "Create Your Account",
+      "step": "Step",
+      "of": "of",
+      "steps": {
+        "personal": "Personal Info",
+        "contact": "Contact Details",
+        "account": "Account Setup",
+        "security": "Security"
+      },
+      "next": "Next",
+      "previous": "Previous",
+      "createAccount": "Create Account",
+      "personal": {
+        "title": "Personal Information",
+        "subtitle": "Please provide your legal name as it appears on official documents",
+        "firstName": "Legal First Name",
+        "middleName": "Middle Name",
+        "lastName": "Legal Last Name",
+        "username": "Username"
+      },
+      "contact": {
+        "title": "Contact Information",
+        "subtitle": "We'll use these details to communicate with you about your account",
+        "email": "Email Address",
+        "phone": "Phone Number",
+        "country": "Country"
+      },
+      "account": {
+        "title": "Account Setup",
+        "subtitle": "Choose your account type and set up your transaction PIN",
+        "accountType": "Account Type",
+        "checking": "Checking Account",
+        "checkingDesc": "Perfect for daily transactions",
+        "savings": "Savings Account",
+        "savingsDesc": "Earn interest on deposits",
+        "pin": "Transaction PIN (4 digits)",
+        "pinDesc": "Your PIN will be required to authorize transactions"
+      },
+      "security": {
+        "title": "Secure Your Account",
+        "subtitle": "Create a strong password to protect your account",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "terms": "I accept the terms and conditions"
+      }
+    },
+    "verification": {
+      "title": "Check your email",
+      "subtitle": "Please check your inbox for the verification link",
+      "success": "Success",
+      "message": "Your registration was successful. A verification link has been sent to your email address. Please click on it to verify your email address.",
+      "checkInbox": "Check your inbox",
+      "checkInboxDesc": "We sent you an email with a link to confirm your account",
+      "notReceived": "Didn't receive the email?",
+      "troubleshoot": {
+        "title": "Didn't receive the email?",
+        "spam": "The email may be in your spam folder",
+        "typo": "The email address you entered may contain a typo.",
+        "autocomplete": "You may have accidentally entered a different email address (this usually happens with autocomplete)"
+      },
+      "resend": "Resend verification email",
+      "devButton": "[DEV] Go to Dashboard without verifying email"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password.",
+      "passwordMismatch": "Passwords do not match.",
+      "termsRequired": "Please accept the terms and conditions.",
+      "fillRequired": "Please fill all required fields.",
+      "emailPhoneRequired": "Email and Phone are required.",
+      "pinRequired": "Please enter a 4-digit PIN.",
+      "emailExists": "This email is already registered.",
+      "generalError": "An error occurred."
+    },
+    "loading": "Entering..."
+  }
+}

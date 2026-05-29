@@ -135,6 +135,7 @@ button { font-family: var(--font-inter); cursor: pointer; border: none; outline:
   font-size: 13px;
   color: var(--text-muted);
   z-index: 10;
+  margin-top: auto;
 }
 .footer-links { display: flex; gap: 20px; }
 .footer-links a { color: var(--text-muted); transition: color 0.2s; }
@@ -262,6 +263,15 @@ button { font-family: var(--font-inter); cursor: pointer; border: none; outline:
 
 .auth-container { min-height: 100vh; display: flex; flex-direction: row; background: var(--bg-color); font-family: var(--font-inter); }
 
+.auth-right { flex: 1.2; display: flex; flex-direction: column; padding: 40px; justify-content: center; align-items: center; background: #F1F5F9; }
+.auth-form-card { width: 100%; max-width: 580px; background: white; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); padding: 48px; }
+.auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.auth-account-types { display: flex; gap: 16px; }
+.auth-buttons { display: flex; gap: 16px; margin-top: 32px; }
+.auth-step-labels { display: flex; justify-content: space-between; margin-bottom: 40px; }
+.auth-step-labels span { flex: 1; text-align: center; font-size: 11px; font-weight: 600; padding: 0 4px; }
+.auth-progress-bar { height: 6px; background: #E2E8F0; border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
+
 @media (max-width: 900px) {
   .dashboard-body { grid-template-columns: 1fr; }
   .stats-row { grid-template-columns: repeat(2, 1fr); }
@@ -273,6 +283,16 @@ button { font-family: var(--font-inter); cursor: pointer; border: none; outline:
     grid-template-columns: 1fr;
     gap: 24px;
   }
+}
+
+@media (max-width: 600px) {
+  .auth-right { padding: 16px; min-height: 100vh; justify-content: flex-start; }
+  .auth-form-card { padding: 24px; border-radius: 16px; }
+  .auth-grid { grid-template-columns: 1fr; }
+  .auth-account-types { flex-direction: column; }
+  .auth-buttons { flex-direction: column; gap: 12px; margin-top: 24px; }
+  .auth-step-labels { display: none; }
+  .auth-progress-bar { margin-bottom: 24px; }
 }
 
 @media (max-width: 1024px) {

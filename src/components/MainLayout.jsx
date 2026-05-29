@@ -7,6 +7,7 @@ import {
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import TransferModal from './TransferModal';
 import { useAppContext } from '../AppContext';
+import LanguageSelector from './LanguageSelector';
 
 const MainLayout = ({ children }) => {
     const navigate = useNavigate();
@@ -127,6 +128,7 @@ const MainLayout = ({ children }) => {
                     </div>
                     
                     <div className="topbar-right" style={{ gap: '8px' }}>
+                        <LanguageSelector position="inline" />
                         <div className="mini-balance" style={{ fontSize: '13px', padding: '6px 12px' }}>
                             <CreditCard size={16} /> {formatMoney(user.balance)}
                         </div>

@@ -1,0 +1,104 @@
+{
+  "auth": {
+    "title": "Commencez la banque avec nous",
+    "subtitle": "Créez votre compte Finvex Bank en quelques étapes seulement et profitez de notre gamme complète de services bancaires.",
+    "features": {
+      "secure": {
+        "title": "Plateforme bancaire sécurisée",
+        "description": "Protocoles de sécurité de pointe pour protéger vos fonds"
+      },
+      "fast": {
+        "title": "Transferts rapides",
+        "description": "Envoyez et recevez de l'argent rapidement à n'importe qui, n'importe où"
+      },
+      "access": {
+        "title": "Accès au compte 24/7",
+        "description": "Gérez vos finances à tout moment, n'importe où sur n'importe quel appareil"
+      }
+    },
+    "signIn": {
+      "title": "Se connecter",
+      "subtitle": "Accédez à votre compte Finvex Bank",
+      "email": "Adresse e-mail",
+      "password": "Mot de passe",
+      "button": "Se connecter",
+      "noAccount": "Vous n'avez pas de compte?",
+      "createAccount": "Créer un compte"
+    },
+    "signUp": {
+      "title": "Créez votre compte",
+      "step": "Étape",
+      "of": "sur",
+      "steps": {
+        "personal": "Infos personnelles",
+        "contact": "Coordonnées",
+        "account": "Configuration du compte",
+        "security": "Sécurité"
+      },
+      "next": "Suivant",
+      "previous": "Précédent",
+      "createAccount": "Créer un compte",
+      "personal": {
+        "title": "Informations personnelles",
+        "subtitle": "Veuillez fournir votre nom légal tel qu'il apparaît sur les documents officiels",
+        "firstName": "Prénom légal",
+        "middleName": "Deuxième prénom",
+        "lastName": "Nom légal",
+        "username": "Nom d'utilisateur"
+      },
+      "contact": {
+        "title": "Informations de contact",
+        "subtitle": "Nous utiliserons ces détails pour communiquer avec vous concernant votre compte",
+        "email": "Adresse e-mail",
+        "phone": "Numéro de téléphone",
+        "country": "Pays"
+      },
+      "account": {
+        "title": "Configuration du compte",
+        "subtitle": "Choisissez votre type de compte et configurez votre PIN de transaction",
+        "accountType": "Type de compte",
+        "checking": "Compte chèque",
+        "checkingDesc": "Parfait pour les transactions quotidiennes",
+        "savings": "Compte d'épargne",
+        "savingsDesc": "Gagnez des intérêts sur les dépôts",
+        "pin": "PIN de transaction (4 chiffres)",
+        "pinDesc": "Votre PIN sera requis pour autoriser les transactions"
+      },
+      "security": {
+        "title": "Sécurisez votre compte",
+        "subtitle": "Créez un mot de passe fort pour protéger votre compte",
+        "password": "Mot de passe",
+        "confirmPassword": "Confirmer le mot de passe",
+        "terms": "J'accepte les termes et conditions"
+      }
+    },
+    "verification": {
+      "title": "Vérifiez votre adresse e-mail",
+      "subtitle": "Veuillez vérifier votre boîte de réception pour le lien de vérification",
+      "success": "Succès",
+      "message": "Votre inscription a réussi. Un lien de vérification a été envoyé à votre adresse e-mail. Veuillez cliquer dessus pour vérifier votre adresse e-mail.",
+      "checkInbox": "Vérifiez votre boîte de réception",
+      "checkInboxDesc": "Nous vous avons envoyé un e-mail avec un lien pour confirmer votre compte",
+      "notReceived": "Vous n'avez pas reçu l'e-mail?",
+      "troubleshoot": {
+        "title": "Vous n'avez pas reçu l'e-mail?",
+        "spam": "L'e-mail peut être dans votre dossier spam",
+        "typo": "L'adresse e-mail que vous avez saisie peut contenir une faute de frappe.",
+        "autocomplete": "Vous avez peut-être accidentellement saisi une autre adresse e-mail (cela se produit généralement avec la saisie semi-automatique)"
+      },
+      "resend": "Renvoyer l'e-mail de vérification",
+      "devButton": "[DEV] Aller au Dashboard sans vérifier l'email"
+    },
+    "errors": {
+      "invalidCredentials": "Email ou mot de passe invalide.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "termsRequired": "Veuillez accepter les termes et conditions.",
+      "fillRequired": "Veuillez remplir tous les champs obligatoires.",
+      "emailPhoneRequired": "L'email et le téléphone sont requis.",
+      "pinRequired": "Veuillez entrer un PIN à 4 chiffres.",
+      "emailExists": "Cet email est déjà enregistré.",
+      "generalError": "Une erreur s'est produite."
+    },
+    "loading": "Connexion..."
+  }
+}
