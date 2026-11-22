@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Building2, ArrowRight, ShieldCheck, Mail, Lock, User, 
   AlertCircle, Eye, EyeOff, CheckCircle, Smartphone, 
@@ -13,6 +13,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import LanguageSelector from '../components/LanguageSelector';
 import { countries } from '../data/countries';
+import { validateSignupStep, validateSignupForm } from '../utils/authValidation';
+import { getFirebaseErrorKey, isProfileWriteError } from '../utils/firebaseErrors';
 
 const Auth = () => {
     const { user } = useAppContext();
@@ -41,10 +43,20 @@ const Auth = () => {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
-    const [isEmailSent, setIsEmailSent] = useState(false);
+    // Post-signup state is owned here and scoped to the session. The old
+    // `justRegistered` localStorage flag was deleted by AppContext as soon as
+    // the Firestore profile appeared, which could redirect to /dashboard before
+    // the verification screen was shown.
+    const [showVerification, setShowVerification] = useState(
+        sessionStorage.getItem('finvex_show_verification') === 'true'
+    );
+    const [emailSendFailed, setEmailSendFailed] = useState(false);
+    const [resendError, setResendError] = useState(false);
+    const [profilePendingUid, setProfilePendingUid] = useState(null);
+    const signupInProgress = useRef(false);
 
-    // Only redirect if NOT in the post-registration email-sent state
-    if (user && !isEmailSent && localStorage.getItem('justRegistered') !== 'true') {
+    if (user && !showVerification && !signupInProgress.current &&
+        sessionStorage.getItem('finvex_post_signup') !== 'true') {
         return <Navigate to="/dashboard" />;
     }
 
@@ -58,13 +70,8 @@ const Auth = () => {
 
     const handleNext = () => {
         setError('');
-        if (step === 1) {
-            if (!formData.firstName || !formData.lastName || !formData.username) return setError(t('auth.errors.fillRequired', language));
-        } else if (step === 2) {
-            if (!formData.email || !formData.phone) return setError(t('auth.errors.emailPhoneRequired', language));
-        } else if (step === 3) {
-            if (!formData.transactionPin || formData.transactionPin.length !== 4) return setError(t('auth.errors.pinRequired', language));
-        }
+        const errorKey = validateSignupStep(step, formData);
+        if (errorKey) return setError(t(`auth.errors.${errorKey}`, language));
         setStep(step + 1);
     };
 
@@ -72,71 +79,138 @@ const Auth = () => {
         setStep(step - 1);
     };
 
+    const saveProfile = async (firebaseUser, data) => {
+        const accountNumber = `${Date.now()}`.slice(-11);
+        await setDoc(doc(db, 'users', firebaseUser.uid), {
+            uid: firebaseUser.uid,
+            name: `${data.firstName.trim()} ${data.lastName.trim()}`,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            middleName: data.middleName,
+            username: data.username,
+            email: data.email.trim(),
+            phone: data.phone,
+            country: data.country,
+            accountType: data.accountType,
+            accountNumber,
+            pin: data.transactionPin,
+            balance: 0.00,
+            currency: 'USD',
+            accountStatus: 'Dormant',
+            kycStatus: 'Unverified',
+            role: 'client',
+            monthlyIncome: 0,
+            monthlyOutgoing: 0,
+            limit: 50000,
+            createdAt: new Date().toISOString()
+        });
+    };
+
+    const showVerificationScreen = async (firebaseUser) => {
+        try {
+            await sendEmailVerification(firebaseUser);
+            setEmailSendFailed(false);
+        } catch (err) {
+            // The account and its profile are valid: an email failure must not
+            // turn a successful registration into a generic error.
+            console.error('Verification email error:', err);
+            setEmailSendFailed(true);
+        }
+        setShowVerification(true);
+        sessionStorage.setItem('finvex_show_verification', 'true');
+    };
+
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
         setError('');
         
+        if (signupInProgress.current) return;
+
         if (isLogin) {
             setLoading(true);
             try {
-                await signInWithEmailAndPassword(auth, formData.email, formData.password);
+                await signInWithEmailAndPassword(auth, formData.email.trim(), formData.password);
                 navigate('/dashboard');
             } catch (err) {
-                setError(t('auth.errors.invalidCredentials', language));
+                console.error('Login error:', err);
+                setError(t(`auth.errors.${getFirebaseErrorKey(err)}`, language));
+            } finally {
                 setLoading(false);
             }
-        } else {
-            if (formData.password !== formData.confirmPassword) return setError(t('auth.errors.passwordMismatch', language));
-            if (!formData.termsAccepted) return setError(t('auth.errors.termsRequired', language));
-            
-            setLoading(true);
-            try {
-                // Block auto-redirect BEFORE creating the account
-                localStorage.setItem('justRegistered', 'true');
-
-                const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-                const firebaseUser = userCredential.user;
-
-                // Generate a unique account number
-                const accountNumber = `${Date.now()}`.slice(-11);
-                
-                await setDoc(doc(db, 'users', firebaseUser.uid), {
-                    uid: firebaseUser.uid,
-                    name: `${formData.firstName} ${formData.lastName}`,
-                    firstName: formData.firstName,
-                    lastName: formData.lastName,
-                    middleName: formData.middleName,
-                    username: formData.username,
-                    email: formData.email,
-                    phone: formData.phone,
-                    country: formData.country,
-                    accountType: formData.accountType,
-                    accountNumber: accountNumber,
-                    pin: formData.transactionPin,
-                    balance: 0.00,
-                    currency: 'USD',
-                    accountStatus: 'Dormant',
-                    kycStatus: 'Unverified',
-                    role: 'client',
-                    monthlyIncome: 0,
-                    monthlyOutgoing: 0,
-                    limit: 50000,
-                    createdAt: new Date().toISOString()
-                });
-
-                // === Send REAL verification email via Firebase ===
-                await sendEmailVerification(firebaseUser);
-                
-                // Show verification screen
-                setIsEmailSent(true);
-            } catch (err) {
-                console.error("Auth error:", err);
-                let msg = t('auth.errors.generalError', language);
-                if (err.code === 'auth/email-already-in-use') msg = t('auth.errors.emailExists', language);
-                setError(msg);
-                setLoading(false);
-            }
+            return;
         }
+
+        const invalid = validateSignupForm(formData);
+        if (invalid) {
+            setStep(invalid.step);
+            return setError(t(`auth.errors.${invalid.errorKey}`, language));
+        }
+
+        signupInProgress.current = true;
+        setLoading(true);
+        sessionStorage.setItem('finvex_post_signup', 'true');
+
+        let firebaseUser = null;
+        try {
+
+                firebaseUser = (await createUserWithEmailAndPassword(auth, formData.email.trim(), formData.password)).user;
+                await saveProfile(firebaseUser, formData);
+                setProfilePendingUid(null);
+                await showVerificationScreen(firebaseUser);
+        } catch (err) {
+            console.error('Auth error:', err);
+            if (firebaseUser && isProfileWriteError(err)) {
+                // Auth account exists but the Firestore profile failed: allow a
+                // targeted retry instead of trapping the user in a duplicate email.
+                setProfilePendingUid(firebaseUser.uid);
+                setError(t('auth.errors.profileRetry', language));
+            } else {
+                setError(t(`auth.errors.${getFirebaseErrorKey(err)}`, language));
+            }
+        } finally {
+            signupInProgress.current = false;
+            setLoading(false);
+        }
+    };
+
+    const handleRetryProfile = async () => {
+        const currentUser = auth.currentUser;
+        if (!currentUser || currentUser.uid !== profilePendingUid || signupInProgress.current) return;
+        setError('');
+        signupInProgress.current = true;
+        setLoading(true);
+        try {
+            await saveProfile(currentUser, formData);
+            setProfilePendingUid(null);
+            await showVerificationScreen(currentUser);
+        } catch (err) {
+            console.error('Profile retry error:', err);
+            setError(t(`auth.errors.${getFirebaseErrorKey(err)}`, language));
+        } finally {
+            signupInProgress.current = false;
+            setLoading(false);
+        }
+    };
+
+    const handleResend = async () => {
+        setResendError(false);
+        try {
+            if (!auth.currentUser) throw new Error('No authenticated user');
+            await sendEmailVerification(auth.currentUser);
+            setEmailSendFailed(false);
+            alert(t('auth.verification.resend', language) + '!');
+        } catch (err) {
+            console.error('Resend error:', err);
+            setResendError(true);
+            alert(t('auth.errors.tooManyRequests', language));
+        }
+    };
+
+    const finishSignup = () => {
+        sessionStorage.removeItem('finvex_post_signup');
+        sessionStorage.removeItem('finvex_show_verification');
+        setShowVerification(false);
+        navigate('/dashboard');
     };
 
     return (
@@ -193,7 +267,7 @@ const Auth = () => {
             {/* Right side Form */}
             <div className="auth-right">
                 
-                {isEmailSent ? (
+                {showVerification ? (
                     <div style={{ width: '100%', maxWidth: '580px', background: 'white', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                         {/* Header Blue */}
                         <div style={{ background: '#1DA1F2', padding: '40px', color: 'white', textAlign: 'center' }}>
@@ -214,8 +288,15 @@ const Auth = () => {
                                         {t('auth.verification.message', language)}
                                     </p>
                                 </div>
-                                <button onClick={() => setIsEmailSent(false)} style={{ background: 'none', border: 'none', color: '#22C55E', cursor: 'pointer', position: 'absolute', top: '16px', right: '16px' }}><X size={16} /></button>
+                                <button onClick={() => setShowVerification(false)} style={{ background: 'none', border: 'none', color: '#22C55E', cursor: 'pointer', position: 'absolute', top: '16px', right: '16px' }}><X size={16} /></button>
                             </div>
+
+                            {emailSendFailed && (
+                                <div role="alert" style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '8px', padding: '14px', marginBottom: '24px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                    <AlertCircle size={18} color="#D97706" style={{ flexShrink: 0, marginTop: '2px' }} />
+                                    <p style={{ fontSize: '13px', color: '#92400E', margin: 0 }}>{t('auth.errors.emailNotSent', language)}</p>
+                                </div>
+                            )}
 
                             <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                                 <div style={{ width: '70px', height: '70px', background: '#38BDF8', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 24px' }}>
@@ -237,25 +318,30 @@ const Auth = () => {
                             {/* Resend email */}
                             <div style={{ marginTop: '24px', textAlign: 'center' }}>
                                 <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>{t('auth.verification.notReceived', language)}</p>
-                                <button 
-                                    onClick={async () => {
-                                        try {
-                                            if (auth.currentUser) {
-                                                await sendEmailVerification(auth.currentUser);
-                                                alert(t('auth.verification.resend', language) + '!');
-                                            }
-                                        } catch(e) { alert('Veuillez patienter avant de renvoyer.'); }
-                                    }}
+                                <button
+                                    onClick={handleResend}
                                     style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
                                 >
                                     {t('auth.verification.resend', language)}
+                                </button>
+                                {resendError && (
+                                    <p style={{ fontSize: '12px', color: '#DC2626', marginTop: '8px' }}>{t('auth.errors.tooManyRequests', language)}</p>
+                                )}
+                            </div>
+
+                            <div style={{ marginTop: '24px', textAlign: 'center' }}>
+                                <button
+                                    onClick={finishSignup}
+                                    style={{ background: 'white', color: 'var(--primary)', border: '1px solid var(--primary)', borderRadius: '8px', padding: '10px 20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                                >
+                                    {t('auth.errors.continue', language)}
                                 </button>
                             </div>
 
                             {/* Dev Button: Remove in production! */}
                             <div style={{ marginTop: '16px', textAlign: 'center' }}>
                                 <button 
-                                    onClick={() => { localStorage.removeItem('justRegistered'); navigate('/verify-account'); }} 
+                                    onClick={() => { setShowVerification(false); sessionStorage.removeItem('finvex_post_signup'); sessionStorage.removeItem('finvex_show_verification'); navigate('/verify-account'); }} 
                                     style={{ background: 'none', border: 'none', color: '#CBD5E1', fontSize: '11px', cursor: 'pointer', textDecoration: 'underline' }}
                                 >
                                     {t('auth.verification.devButton', language)}
@@ -292,7 +378,7 @@ const Auth = () => {
                                         <label style={{ fontSize: '13px', fontWeight: 600 }}>{t('auth.signIn.password', language)}</label>
                                         <div style={{ position: 'relative' }}>
                                             <Lock size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)' }} />
-                                            <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" style={{ width: '100%', padding: '14px 48px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none' }} required />
+                                            <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" autoComplete="current-password" style={{ width: '100%', padding: '14px 48px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none' }} required />
                                             <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', top: '50%', right: '16px', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94A3B8' }}>
                                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                             </button>
@@ -309,7 +395,7 @@ const Auth = () => {
                                 </div>
                             </>
                         ) : (
-                            <div>
+                            <form onSubmit={handleSubmit}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                                     <h2 style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'var(--font-outfit)' }}>{t('auth.signUp.title', language)}</h2>
                                     <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)' }}>{t('auth.signUp.step', language)} {step} {t('auth.signUp.of', language)} 4</span>
@@ -330,6 +416,16 @@ const Auth = () => {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', color: '#DC2626', marginBottom: '24px', fontSize: '14px' }}>
                                         <AlertCircle size={18} /> {error}
                                     </div>
+                                )}
+
+                                {profilePendingUid && (
+                                    <button
+                                        onClick={handleRetryProfile}
+                                        disabled={loading}
+                                        style={{ width: '100%', marginBottom: '20px', padding: '12px', borderRadius: '12px', border: '1px solid #F59E0B', background: '#FFFBEB', color: '#92400E', fontWeight: 600, cursor: 'pointer' }}
+                                    >
+                                        {t('auth.errors.retry', language)}
+                                    </button>
                                 )}
 
                                 {step === 1 && (
@@ -375,21 +471,21 @@ const Auth = () => {
                                             <label style={{ fontSize: '13px', fontWeight: 600 }}>{t('auth.signUp.contact.email', language)} *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Mail size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)' }} />
-                                                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" style={{ width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none' }} />
+                                                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" style={{ width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none' }} required />
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             <label style={{ fontSize: '13px', fontWeight: 600 }}>{t('auth.signUp.contact.phone', language)} *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Smartphone size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)' }} />
-                                                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+1 (234) 567-8901" style={{ width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none' }} />
+                                                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+1 (234) 567-8901" style={{ width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none' }} required />
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             <label style={{ fontSize: '13px', fontWeight: 600 }}>{t('auth.signUp.contact.country', language)} *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Globe size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)' }} />
-                                                <select name="country" value={formData.country} onChange={handleChange} style={{ width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', background: 'white' }}>
+                                                <select name="country" value={formData.country} onChange={handleChange} required style={{ width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', background: 'white' }}>
                                                     <option value="">Select a country</option>
                                                     {countries.map((country, index) => (
                                                         <option key={index} value={country}>{country}</option>
@@ -432,7 +528,7 @@ const Auth = () => {
                                             <label style={{ fontSize: '13px', fontWeight: 600 }}>{t('auth.signUp.account.pin', language)} *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Lock size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)' }} />
-                                                <input type="password" name="transactionPin" maxLength={4} value={formData.transactionPin} onChange={handleChange} placeholder="••••" style={{ width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', letterSpacing: '8px' }} />
+                                                <input type="password" name="transactionPin" maxLength={4} value={formData.transactionPin} onChange={handleChange} placeholder="••••" autoComplete="off" required style={{ width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', letterSpacing: '8px' }} />
                                             </div>
                                             <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('auth.signUp.account.pinDesc', language)}</p>
                                         </div>
@@ -452,7 +548,7 @@ const Auth = () => {
                                             <label style={{ fontSize: '13px', fontWeight: 600 }}>{t('auth.signUp.security.password', language)} *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Lock size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)' }} />
-                                                <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" style={{ width: '100%', padding: '14px 48px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none' }} />
+                                                <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" autoComplete="new-password" required minLength={6} style={{ width: '100%', padding: '14px 48px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none' }} />
                                                 <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', top: '50%', right: '16px', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94A3B8' }}>
                                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                                 </button>
@@ -462,7 +558,7 @@ const Auth = () => {
                                             <label style={{ fontSize: '13px', fontWeight: 600 }}>{t('auth.signUp.security.confirmPassword', language)} *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Lock size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)' }} />
-                                                <input type={showPassword ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" style={{ width: '100%', padding: '14px 48px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none' }} />
+                                                <input type={showPassword ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" autoComplete="new-password" required minLength={6} style={{ width: '100%', padding: '14px 48px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none' }} />
                                             </div>
                                         </div>
                                         <label style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>
@@ -474,11 +570,12 @@ const Auth = () => {
 
                                 <div className="auth-buttons">
                                     {step > 1 && (
-                                        <button onClick={handlePrev} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0', background: 'white', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                                        <button type="button" onClick={handlePrev} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0', background: 'white', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
                                             <ChevronLeft size={18} /> {t('auth.signUp.previous', language) || 'Previous'}
                                         </button>
                                     )}
                                     <button 
+                                        type="button"
                                         onClick={step === 4 ? handleSubmit : handleNext} 
                                         disabled={loading}
                                         style={{ flex: 2, padding: '14px', borderRadius: '12px', background: 'var(--primary)', color: 'white', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
@@ -488,9 +585,9 @@ const Auth = () => {
                                 </div>
 
                                 <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: 'var(--text-muted)' }}>
-                                    {t('auth.signUp.hasAccount', language) || 'Already have an account?'} <span onClick={() => setIsLogin(true)} style={{ color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>{t('auth.signIn.title', language)}</span>
+                                    {t('auth.signUp.hasAccount', language)} <span onClick={() => setIsLogin(true)} style={{ color: 'var(--primary)', fontWeight: 600, cursor: 'pointer' }}>{t('auth.signIn.title', language)}</span>
                                 </div>
-                            </div>
+                            </form>
                         )}
                     </div>
                 )}

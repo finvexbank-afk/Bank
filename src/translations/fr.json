@@ -38,6 +38,7 @@
       "next": "Suivant",
       "previous": "Précédent",
       "createAccount": "Créer un compte",
+      "hasAccount": "Vous avez déjà un compte ?",
       "personal": {
         "title": "Informations personnelles",
         "subtitle": "Veuillez fournir votre nom légal tel qu'il apparaît sur les documents officiels",
@@ -97,7 +98,19 @@
       "emailPhoneRequired": "L'email et le téléphone sont requis.",
       "pinRequired": "Veuillez entrer un PIN à 4 chiffres.",
       "emailExists": "Cet email est déjà enregistré.",
-      "generalError": "Une erreur s'est produite."
+      "generalError": "Une erreur s'est produite.",
+      "invalidEmail": "Veuillez saisir une adresse e-mail valide.",
+      "invalidPhone": "Veuillez saisir un numéro de téléphone valide.",
+      "countryRequired": "Veuillez sélectionner un pays.",
+      "weakPassword": "Le mot de passe doit contenir au moins 6 caractères.",
+      "invalidPin": "Le PIN doit contenir exactement 4 chiffres.",
+      "tooManyRequests": "Trop de tentatives. Veuillez réessayer plus tard.",
+      "networkError": "Erreur réseau. Vérifiez votre connexion et réessayez.",
+      "permissionDenied": "Accès refusé lors de l'enregistrement du profil.",
+      "profileRetry": "Le compte a été créé mais le profil n'a pas pu être enregistré. Réessayez.",
+      "emailNotSent": "Compte créé, mais l'e-mail de vérification n'a pas pu être envoyé. Utilisez le bouton « Renvoyer ».",
+      "retry": "Réessayer l'enregistrement du profil",
+      "continue": "Continuer vers le tableau de bord"
     },
     "loading": "Connexion..."
   }

@@ -38,6 +38,7 @@
       "next": "Next",
       "previous": "Previous",
       "createAccount": "Create Account",
+      "hasAccount": "Already have an account?",
       "personal": {
         "title": "Personal Information",
         "subtitle": "Please provide your legal name as it appears on official documents",
@@ -97,7 +98,19 @@
       "emailPhoneRequired": "Email and Phone are required.",
       "pinRequired": "Please enter a 4-digit PIN.",
       "emailExists": "This email is already registered.",
-      "generalError": "An error occurred."
+      "generalError": "An error occurred.",
+      "invalidEmail": "Please enter a valid email address.",
+      "invalidPhone": "Please enter a valid phone number.",
+      "countryRequired": "Please select a country.",
+      "weakPassword": "Password must be at least 6 characters.",
+      "invalidPin": "PIN must be exactly 4 digits.",
+      "tooManyRequests": "Too many attempts. Please try again later.",
+      "networkError": "Network error. Check your connection and try again.",
+      "permissionDenied": "Permission denied while saving the profile.",
+      "profileRetry": "The account was created but the profile could not be saved. Please retry.",
+      "emailNotSent": "Account created, but the verification email could not be sent. Use the Resend button.",
+      "retry": "Retry profile save",
+      "continue": "Continue to dashboard"
     },
     "loading": "Entering..."
   }

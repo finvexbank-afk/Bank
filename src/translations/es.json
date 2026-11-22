@@ -38,6 +38,7 @@
       "next": "Siguiente",
       "previous": "Anterior",
       "createAccount": "Crear Cuenta",
+      "hasAccount": "¿Ya tiene una cuenta?",
       "personal": {
         "title": "Información personal",
         "subtitle": "Por favor proporciona tu nombre legal como aparece en los documentos oficiales",
@@ -97,7 +98,19 @@
       "emailPhoneRequired": "Correo electrónico y teléfono son requeridos.",
       "pinRequired": "Por favor ingresa un PIN de 4 dígitos.",
       "emailExists": "Este correo electrónico ya está registrado.",
-      "generalError": "Ocurrió un error."
+      "generalError": "Ocurrió un error.",
+      "invalidEmail": "Introduzca una dirección de correo válida.",
+      "invalidPhone": "Introduzca un número de teléfono válido.",
+      "countryRequired": "Seleccione un país.",
+      "weakPassword": "La contraseña debe tener al menos 6 caracteres.",
+      "invalidPin": "El PIN debe tener exactamente 4 dígitos.",
+      "tooManyRequests": "Demasiados intentos. Inténtelo de nuevo más tarde.",
+      "networkError": "Error de red. Compruebe su conexión e inténtelo de nuevo.",
+      "permissionDenied": "Acceso denegado al guardar el perfil.",
+      "profileRetry": "La cuenta se creó pero no se pudo guardar el perfil. Inténtelo de nuevo.",
+      "emailNotSent": "Cuenta creada, pero no se pudo enviar el correo de verificación. Use el botón «Reenviar».",
+      "retry": "Reintentar guardar el perfil",
+      "continue": "Continuar al panel"
     },
     "loading": "Iniciando..."
   }

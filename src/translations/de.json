@@ -38,6 +38,7 @@
       "next": "Weiter",
       "previous": "Zurück",
       "createAccount": "Konto erstellen",
+      "hasAccount": "Sie haben bereits ein Konto?",
       "personal": {
         "title": "Persönliche Informationen",
         "subtitle": "Bitte geben Sie Ihren gesetzlichen Namen an, wie er auf offiziellen Dokumenten erscheint",
@@ -97,7 +98,19 @@
       "emailPhoneRequired": "E-Mail und Telefon sind erforderlich.",
       "pinRequired": "Bitte geben Sie eine 4-stellige PIN ein.",
       "emailExists": "Diese E-Mail ist bereits registriert.",
-      "generalError": "Ein Fehler ist aufgetreten."
+      "generalError": "Ein Fehler ist aufgetreten.",
+      "invalidEmail": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+      "invalidPhone": "Bitte geben Sie eine gültige Telefonnummer ein.",
+      "countryRequired": "Bitte wählen Sie ein Land aus.",
+      "weakPassword": "Das Passwort muss mindestens 6 Zeichen enthalten.",
+      "invalidPin": "Die PIN muss genau 4 Ziffern enthalten.",
+      "tooManyRequests": "Zu viele Versuche. Bitte versuchen Sie es später erneut.",
+      "networkError": "Netzwerkfehler. Bitte prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+      "permissionDenied": "Zugriff beim Speichern des Profils verweigert.",
+      "profileRetry": "Das Konto wurde erstellt, aber das Profil konnte nicht gespeichert werden. Bitte erneut versuchen.",
+      "emailNotSent": "Konto erstellt, aber die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte „Erneut senden“ verwenden.",
+      "retry": "Profil erneut speichern",
+      "continue": "Weiter zum Dashboard"
     },
     "loading": "Anmelden..."
   }

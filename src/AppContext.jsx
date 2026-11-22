@@ -36,8 +36,6 @@ export const AppProvider = ({ children }) => {
             const unsubscribe = onSnapshot(docRef, (docSnap) => {
                 if (docSnap.exists()) {
                     setUser({ id: docSnap.id, ...docSnap.data() });
-                    // Clear registration flag so future logins work normally
-                    localStorage.removeItem('justRegistered');
                 } else {
                     setUser(null);
                 }

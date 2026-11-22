@@ -11,6 +11,47 @@ import { useAppContext } from '../AppContext';
 import MainLayout from '../components/MainLayout';
 import { sendAdminKYCAlert } from '../utils/emailService';
 
+const EMPLOYMENT_OPTIONS = [
+    'Corporate Staff',
+    'Entrepreneur / Business Owner',
+    'Public Sector / Civil Servant',
+    'Retired Executive',
+    'Software Engineer / IT',
+    'Data & Analytics',
+    'Cybersecurity',
+    'Healthcare Professional',
+    'Medical Doctor',
+    'Nurse / Midwife',
+    'Pharmacist',
+    'Teacher / Educator',
+    'Professor / Researcher',
+    'Banking & Finance',
+    'Accountant / Auditor',
+    'Legal Professional',
+    'Sales & Marketing',
+    'Customer Support',
+    'Engineer (Non-IT)',
+    'Architect / Construction',
+    'Skilled Trades',
+    'Manufacturing / Production',
+    'Logistics / Transport',
+    'Agriculture / Farming',
+    'Real Estate',
+    'Insurance',
+    'Hospitality / Tourism',
+    'Media & Creative',
+    'Artist / Designer',
+    'Non-Profit / NGO',
+    'Military / Defense',
+    'Police / Security',
+    'Religious / Clergy',
+    'Student',
+    'Freelancer / Consultant',
+    'Homemaker',
+    'Unemployed / Job Seeker',
+    'Other'
+];
+
 // SUB-COMPONENTS
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
     <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '24px', padding: '16px 0', borderBottom: '1px solid #F1F5F9' }}>
@@ -105,6 +146,7 @@ const Enrollment = () => {
         ssn: '',
         accountType: user?.accountType || 'Checking',
         employmentType: '',
+        otherEmployment: '',
         annualIncome: '',
         address: '',
         city: '',
@@ -117,11 +159,20 @@ const Enrollment = () => {
     });
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({
+            ...formData,
+            [name]: value,
+            ...(name === 'employmentType' && value !== 'Other' ? { otherEmployment: '' } : {})
+        });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (formData.employmentType === 'Other' && !formData.otherEmployment.trim()) {
+            alert('Please specify your profession.');
+            return;
+        }
         setLoading(true);
         try {
             await updateDoc(doc(db, 'users', user.id), {
@@ -218,9 +269,15 @@ const Enrollment = () => {
                             <div className="grid-2-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
                                 <InputField label="National ID / SSN / Tax ID" name="ssn" value={formData.ssn} onChange={handleChange} icon={ShieldCheck} />
                                 <InputField label="Target Account Scope" name="accountType" value={formData.accountType} onChange={handleChange} icon={Layout} options={['Tier 1 Checking', 'High-Yield Savings', 'Institutional Business']} />
-                                <InputField label="Employment Status" name="employmentType" value={formData.employmentType} onChange={handleChange} icon={Building2} options={['Corporate Staff', 'Entrepreneur', 'Public Sector', 'Retired Executive']} />
+                                <InputField label="Profession" name="employmentType" value={formData.employmentType} onChange={handleChange} icon={Building2} options={EMPLOYMENT_OPTIONS} />
                                 <InputField label="Annual Gross Liquidity" name="annualIncome" value={formData.annualIncome} onChange={handleChange} icon={CreditCard} options={['€10k - €50k', '€50k - €150k', '€150k - €500k', '€500k+']} />
                             </div>
+
+                            {formData.employmentType === 'Other' && (
+                                <div style={{ marginTop: '24px' }}>
+                                    <InputField label="Please specify your profession" name="otherEmployment" value={formData.otherEmployment} onChange={handleChange} icon={Info} placeholder="e.g. Marine biologist" />
+                                </div>
+                            )}
                         </div>
 
                         {/* ADDRESS */}
