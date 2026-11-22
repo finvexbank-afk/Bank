@@ -4,7 +4,7 @@ import {
   MoreHorizontal, ArrowLeft, ShieldCheck, ChevronRight,
   Zap, Smartphone, Send, User, Hash, MapPin, Building,
   Key, FileText, Eye, Info, CheckCircle2, AlertCircle, X as XIcon,
-  Shield, TriangleAlert, Lock, Printer, LayoutDashboard, Clock, Calendar,
+  Printer, LayoutDashboard, Clock, Calendar,
   MessageCircle, Smartphone as Phone, Plus, LayoutGrid, EyeOff
 } from 'lucide-react';
 import MainLayout from '../components/MainLayout';
@@ -19,29 +19,27 @@ const InternationalTransfer = () => {
     const { user, setUser } = useAppContext();
     const { language } = useLanguage();
     const navigate = useNavigate();
-    const [view, setView] = useState('methods'); // 'methods', 'more', 'wire-form', 'confirm', 'imf', 'swift', 'cot', 'success'
+    const [view, setView] = useState('methods'); // 'methods', 'more', 'wire-form', 'confirm', 'codes', 'success'
     const [selectedMethod, setSelectedMethod] = useState(null);
-    const [inputCode, setInputCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPin, setShowPin] = useState(false);
     const [showDormantError, setShowDormantError] = useState(false);
+    const [codes, setCodes] = useState({ imf: '', swift: '', cot: '' });
+    const [codeError, setCodeError] = useState('');
     
     const [formData, setFormData] = useState({
         amount: '', beneficiaryName: '', beneficiaryAccount: '', 
         bankName: '', bankAddress: '', swiftCode: '', iban: '', country: 'Belgium',
-        accountType: 'Online Banking', pin: '', note: ''
+        accountType: 'Online Banking', pin: '', note: '', speed: 'Standard'
     });
-
-    // Mock verification requirements
-    const EXPECTED_IMF = '1234';
-    const EXPECTED_SWIFT = '5678';
-    const EXPECTED_COT = '9999';
 
     const handleContinue = () => {
         if (!formData.amount || !formData.beneficiaryName || !formData.pin) {
             return alert(t('intlTransfer.error.mandatory', language));
         }
-        if (parseFloat(formData.amount) > user.balance) {
+        const amountNum = parseFloat(formData.amount);
+        const fee = formData.speed === 'Immediate' ? amountNum * 0.01 : 0;
+        if (amountNum <= 0 || amountNum + fee > user.balance) {
             return alert(t('intlTransfer.error.insufficient', language));
         }
         setView('confirm');
@@ -54,40 +52,51 @@ const InternationalTransfer = () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
-        setView('imf');
+        setCodeError('');
+        setView('codes');
     };
 
-    const verifyCode = (type, code, nextView) => {
-        let expected = '';
-        if (type === 'imf') expected = user.imf || EXPECTED_IMF;
-        if (type === 'swift') expected = user.swift || EXPECTED_SWIFT;
-        if (type === 'cot') expected = user.cot || EXPECTED_COT;
-
-        if (inputCode === expected) {
-            setInputCode('');
-            if (nextView === 'finalize') finalizeTransfer();
-            else setView(nextView);
-        } else {
-            alert(t('intlTransfer.error.auth', language, { code: type.toUpperCase() }));
+    const handleCodes = (validate) => {
+        if (!validate) {
+            finalizeTransfer();
+            return;
         }
+        const expected = { imf: '1234', swift: '5678', cot: '9999' };
+        const filled = Object.entries(codes).filter(([, value]) => value.trim() !== '');
+        const invalid = filled.some(([key, value]) => value.trim() !== expected[key]);
+        if (invalid) {
+            setCodeError(t('intlTransfer.codes.error', language));
+            return;
+        }
+        finalizeTransfer();
     };
 
     const finalizeTransfer = async () => {
         setLoading(true);
-        const amountNum = parseFloat(formData.amount);
-        const newBalance = user.balance - amountNum;
+        const userId = user.id || user.uid;
+        const baseAmount = parseFloat(formData.amount);
+        const fee = formData.speed === 'Immediate' ? baseAmount * 0.01 : 0;
+        const total = baseAmount + fee;
+        const newBalance = user.balance - total;
         
         try {
-            await updateDoc(doc(db, 'users', user.uid), { balance: newBalance });
+            await updateDoc(doc(db, 'users', userId), { balance: newBalance });
             await addDoc(collection(db, 'transactions'), {
-                userId: user.uid,
-                amount: -amountNum,
+                userId,
+                amount: -total,
+                baseAmount,
+                fee,
+                speed: formData.speed,
                 type: 'Debit',
                 scope: 'International',
                 method: 'Wire Transfer',
                 description: `Wire to ${formData.beneficiaryName}`,
+                to: formData.beneficiaryName,
+                iban: formData.iban,
+                swift: formData.swiftCode,
+                country: formData.country,
                 bank: formData.bankName,
-                status: 'Completed',
+                status: formData.speed === 'Immediate' ? 'Completed' : 'Pending',
                 createdAt: serverTimestamp(),
                 ref: `FINVEX/TX-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
             });
@@ -100,9 +109,18 @@ const InternationalTransfer = () => {
     };
 
     const setQuickAmount = (val) => {
-        if (val === 'max') setFormData({...formData, amount: user.balance.toString()});
+        if (val === 'max') {
+            const maxAmount = formData.speed === 'Immediate' ? user.balance / 1.01 : user.balance;
+            setFormData({...formData, amount: maxAmount.toFixed(2)});
+        }
         else setFormData({...formData, amount: val.toString()});
     };
+
+    const amountNum = parseFloat(formData.amount) || 0;
+    const feeAmount = formData.speed === 'Immediate' ? amountNum * 0.01 : 0;
+    const totalAmount = amountNum + feeAmount;
+    const formattedFee = `€${feeAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+    const speedLabel = t(formData.speed === 'Immediate' ? 'intlTransfer.speed.immediate' : 'intlTransfer.speed.standard', language);
 
     if (view === 'success') {
         return (
@@ -112,81 +130,6 @@ const InternationalTransfer = () => {
                     <h2 style={{ fontSize: '28px', fontWeight: 900, color: '#1E293B', marginBottom: '12px' }}>{t('intlTransfer.success.title', language)}</h2>
                     <p style={{ color: '#64748B', fontWeight: 500, lineHeight: 1.6, marginBottom: '40px' }}>{t('intlTransfer.success.desc', language)}</p>
                     <button onClick={() => navigate('/dashboard')} style={{ padding: '16px 32px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '14px', fontWeight: 800, cursor: 'pointer' }}>{t('intlTransfer.success.returnHome', language)}</button>
-                </div>
-            </MainLayout>
-        );
-    }
-
-    if (view === 'imf') {
-        return (
-            <MainLayout>
-                <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto' }}>
-                    <div style={{ background: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.05)', border: '1px solid #E2E8F0' }}>
-                        {/* Header Red */}
-                        <div style={{ background: '#EF4444', padding: '60px 20px', color: 'white', textAlign: 'center' }}>
-                            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
-                                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '15px', borderRadius: '50%' }}>
-                                    <TriangleAlert size={48} color="white" />
-                                </div>
-                            </div>
-                            <h1 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '8px' }}>{t('intlTransfer.imf.title', language)}</h1>
-                            <p style={{ fontSize: '16px', opacity: 0.9, fontWeight: 500 }}>{t('intlTransfer.imf.subtitle', language)}</p>
-                        </div>
-
-                        <div style={{ padding: '60px 40px', textAlign: 'center' }}>
-                            <div style={{ width: '80px', height: '80px', background: '#FEF2F2', color: '#EF4444', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 32px' }}>
-                                <Shield size={40} />
-                            </div>
-                            
-                            <p style={{ fontSize: '18px', color: '#475569', fontWeight: 500, lineHeight: 1.6, marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px' }}>
-                                {t('intlTransfer.imf.desc', language)}
-                            </p>
-
-                            <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-                                <div style={{ textAlign: 'left', marginBottom: '12px' }}>
-                                    <label style={{ fontSize: '14px', fontWeight: 700, color: '#1E293B' }}>{t('intlTransfer.imf.label', language)}</label>
-                                </div>
-                                <input 
-                                    type="text" 
-                                    placeholder={t('intlTransfer.imf.placeholder', language)} 
-                                    value={inputCode} 
-                                    onChange={e => setInputCode(e.target.value)} 
-                                    style={{ width: '100%', padding: '18px 24px', borderRadius: '12px', border: '1.5px solid #E2E8F0', fontSize: '16px', fontWeight: 600, color: '#1E293B', outline: 'none', marginBottom: '24px', textAlign: 'center' }} 
-                                />
-                                <button 
-                                    onClick={() => verifyCode('imf', inputCode, 'swift')} 
-                                    style={{ width: '100%', padding: '18px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 8px 20px rgba(14, 165, 233, 0.2)' }}
-                                >
-                                    <CheckCircle2 size={20} />
-                                    {t('intlTransfer.imf.confirm', language)}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </MainLayout>
-        );
-    }
-
-    if (view === 'swift' || view === 'cot') {
-        const config = {
-            swift: { title: t('intlTransfer.swift.title', language), desc: t('intlTransfer.swift.desc', language), next: 'cot', label: t('intlTransfer.swift.label', language) },
-            cot: { title: t('intlTransfer.cot.title', language), desc: t('intlTransfer.cot.desc', language), next: 'finalize', label: t('intlTransfer.cot.label', language) }
-        };
-        const current = config[view];
-        return (
-            <MainLayout>
-                <div style={{ padding: '60px 24px', maxWidth: '500px', margin: '0 auto' }}>
-                    <div style={{ background: 'white', borderRadius: '32px', border: '1px solid #E2E8F0', padding: '48px', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.05)' }}>
-                        <div style={{ width: '64px', height: '64px', background: '#F0F9FF', color: '#0EA5E9', borderRadius: '18px', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 24px' }}><Shield size={32} /></div>
-                        <h2 style={{ fontSize: '22px', fontWeight: 900, color: '#1E293B', marginBottom: '12px' }}>{current.title}</h2>
-                        <p style={{ fontSize: '14px', color: '#64748B', marginBottom: '32px', lineHeight: 1.5 }}>{current.desc}</p>
-                        <div style={{ textAlign: 'left', marginBottom: '8px' }}>
-                            <label style={{ fontSize: '12px', fontWeight: 800, color: '#64748B' }}>{current.label}</label>
-                        </div>
-                        <input type="text" placeholder="••••" value={inputCode} onChange={e => setInputCode(e.target.value)} style={{ width: '100%', padding: '20px', borderRadius: '16px', border: '2px solid #0EA5E9', fontSize: '28px', textAlign: 'center', fontWeight: 900, letterSpacing: '8px', marginBottom: '32px', outline: 'none' }} />
-                        <button onClick={() => verifyCode(view, inputCode, current.next)} style={{ width: '100%', padding: '18px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '16px', fontWeight: 800, fontSize: '16px', cursor: 'pointer' }}>{loading ? t('intlTransfer.verify.processing', language) : t('intlTransfer.verify.authenticate', language)}</button>
-                    </div>
                 </div>
             </MainLayout>
         );
@@ -203,8 +146,45 @@ const InternationalTransfer = () => {
                                 <div style={{ width: '48px', height: '48px', background: '#0EA5E9', color: 'white', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0, boxShadow: '0 8px 16px rgba(14, 165, 233, 0.2)' }}><CheckCircle2 size={24} /></div>
                                 <div><h3 style={{ fontSize: '22px', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>{t('intlTransfer.confirm.title', language)}</h3><p style={{ fontSize: '14px', color: '#64748B', lineHeight: 1.5, fontWeight: 500 }}>{t('intlTransfer.confirm.desc', language)}</p></div>
                             </div>
-                            <div style={{ display: 'grid', gap: '16px', marginBottom: '32px' }}><ConfirmRow label={t('intlTransfer.confirm.methodLabel', language)} value="Wire Transfer" /><ConfirmRow label={t('intlTransfer.common.amount', language)} value={`€${Number(formData.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} /><ConfirmRow label={t('intlTransfer.confirm.recipient', language)} value={formData.beneficiaryName} /><ConfirmRow label={t('intlTransfer.confirm.accountNumber', language)} value={formData.beneficiaryAccount || formData.iban} /><ConfirmRow label={t('intlTransfer.confirm.bank', language)} value={formData.bankName} /><div style={{ height: '1px', background: '#F1F5F9', margin: '8px 0' }}></div><ConfirmRow label={t('intlTransfer.confirm.totalAmount', language)} value={`€${Number(formData.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} isBold /><ConfirmRow label={t('intlTransfer.confirm.newBalance', language)} value={`€${(user.balance - Number(formData.amount)).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} isBold /></div>
-                            <div style={{ display: 'flex', gap: '16px' }}><button onClick={() => setView('wire-form')} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1.5px solid #F1F5F9', background: 'white', color: '#64748B', fontWeight: 700, cursor: 'pointer' }}>{t('intlTransfer.confirm.cancel', language)}</button><button onClick={handleConfirm} style={{ flex: 2, padding: '14px', borderRadius: '12px', border: 'none', background: '#0EA5E9', color: 'white', fontWeight: 800, cursor: 'pointer', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>{t('intlTransfer.confirm.confirmTransfer', language)}</button></div>
+                            <div style={{ display: 'grid', gap: '16px', marginBottom: '32px' }}><ConfirmRow label={t('intlTransfer.confirm.methodLabel', language)} value="Wire Transfer" /><ConfirmRow label={t('intlTransfer.confirm.speedLabel', language)} value={speedLabel} /><ConfirmRow label={t('intlTransfer.common.amount', language)} value={`€${amountNum.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} /><ConfirmRow label={t('intlTransfer.confirm.recipient', language)} value={formData.beneficiaryName} /><ConfirmRow label={t('intlTransfer.confirm.accountNumber', language)} value={formData.beneficiaryAccount || formData.iban} /><ConfirmRow label={t('intlTransfer.confirm.bank', language)} value={formData.bankName} /><ConfirmRow label={t('intlTransfer.confirm.feeLabel', language)} value={formattedFee} /><div style={{ height: '1px', background: '#F1F5F9', margin: '8px 0' }}></div><ConfirmRow label={t('intlTransfer.confirm.totalAmount', language)} value={`€${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} isBold /><ConfirmRow label={t('intlTransfer.confirm.newBalance', language)} value={`€${(user.balance - totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} isBold /></div>
+                            <div style={{ display: 'flex', gap: '16px' }}><button onClick={() => setView('wire-form')} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1.5px solid #F1F5F9', background: 'white', color: '#64748B', fontWeight: 700, cursor: 'pointer' }}>{t('intlTransfer.confirm.cancel', language)}</button><button onClick={handleConfirm} disabled={loading} style={{ flex: 2, padding: '14px', borderRadius: '12px', border: 'none', background: '#0EA5E9', color: 'white', fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>{t('intlTransfer.confirm.confirmTransfer', language)}</button></div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {view === 'codes' && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(8px)', zIndex: 10001, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+                    <div style={{ background: 'white', width: '100%', maxWidth: '480px', borderRadius: '28px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', animation: 'slideIn 0.3s ease-out' }}>
+                        <div style={{ padding: '40px' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
+                                <div style={{ width: '48px', height: '48px', background: '#F0F9FF', color: '#0EA5E9', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}><ShieldCheck size={24} /></div>
+                                <div>
+                                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>{t('intlTransfer.codes.title', language)}</h3>
+                                    <p style={{ fontSize: '13px', color: '#64748B', lineHeight: 1.5, fontWeight: 500, margin: 0 }}>{t('intlTransfer.codes.desc', language)}</p>
+                                </div>
+                            </div>
+
+                            {codeError && (
+                                <div style={{ padding: '12px 16px', borderRadius: '12px', background: '#FEF2F2', color: '#EF4444', fontSize: '13px', fontWeight: 600, margin: '20px 0', border: '1px solid #FEE2E2' }}>{codeError}</div>
+                            )}
+
+                            <div style={{ display: 'grid', gap: '18px', margin: '28px 0 32px' }}>
+                                <FormGroup label={t('intlTransfer.codes.imfLabel', language)}>
+                                    <input type="text" maxLength={4} placeholder={t('intlTransfer.codes.imfPlaceholder', language)} value={codes.imf} onChange={e => { setCodes({ ...codes, imf: e.target.value }); setCodeError(''); }} style={inputStyle} />
+                                </FormGroup>
+                                <FormGroup label={t('intlTransfer.codes.swiftLabel', language)}>
+                                    <input type="text" maxLength={4} placeholder={t('intlTransfer.codes.swiftPlaceholder', language)} value={codes.swift} onChange={e => { setCodes({ ...codes, swift: e.target.value }); setCodeError(''); }} style={inputStyle} />
+                                </FormGroup>
+                                <FormGroup label={t('intlTransfer.codes.cotLabel', language)}>
+                                    <input type="text" maxLength={4} placeholder={t('intlTransfer.codes.cotPlaceholder', language)} value={codes.cot} onChange={e => { setCodes({ ...codes, cot: e.target.value }); setCodeError(''); }} style={inputStyle} />
+                                </FormGroup>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '16px' }}>
+                                <button onClick={() => handleCodes(false)} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1.5px solid #F1F5F9', background: 'white', color: '#64748B', fontWeight: 700, cursor: 'pointer' }}>{t('intlTransfer.codes.skip', language)}</button>
+                                <button onClick={() => handleCodes(true)} disabled={loading} style={{ flex: 1.5, padding: '14px', borderRadius: '12px', border: 'none', background: '#0EA5E9', color: 'white', fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>{t('intlTransfer.codes.validate', language)}</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -259,12 +239,35 @@ const InternationalTransfer = () => {
                                     <div style={{ position: 'relative', marginBottom: '16px' }}><span style={{ position: 'absolute', left: '24px', top: '50%', transform: 'translateY(-50%)', fontSize: '36px', fontWeight: 900, color: '#1E293B' }}>€</span><input type="number" placeholder="0.00" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} style={{ width: '100%', padding: '24px 80px 24px 60px', borderRadius: '16px', border: '2px solid #0EA5E9', fontSize: '42px', fontWeight: 900, background: 'white', outline: 'none' }} /><span style={{ position: 'absolute', right: '24px', top: '50%', transform: 'translateY(-50%)', fontSize: '24px', fontWeight: 700, color: '#94A3B8' }}>.00</span></div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}><p style={{ fontSize: '14px', color: '#64748B', fontWeight: 600 }}>{t('intlTransfer.form.availableBalance', language, { amount: (user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }) })}</p><div style={{ display: 'flex', gap: '8px' }}>{['100', '500', '1000', 'max'].map(btn => (<button key={btn} onClick={() => setQuickAmount(btn)} style={{ padding: '8px 16px', background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', textTransform: 'capitalize', color:'#475569' }}>{btn === 'max' ? t('intlTransfer.form.max', language) : `$${btn}`}</button>))}</div></div>
                                 </div>
+                                <div style={{ marginBottom: '40px' }}>
+                                    <FormGroup label={t('intlTransfer.speed.title', language)}>
+                                        <div style={{ display: 'flex', gap: '16px' }} className="flex-row-mobile">
+                                            <SpeedOption
+                                                selected={formData.speed === 'Immediate'}
+                                                onClick={() => setFormData({...formData, speed: 'Immediate'})}
+                                                icon={<Zap size={20} />}
+                                                title={t('intlTransfer.speed.immediate', language)}
+                                                desc={t('intlTransfer.speed.immediateDesc', language)}
+                                                badge={t('intlTransfer.speed.fee', language, { fee: `€${(amountNum * 0.01).toLocaleString('en-US', { minimumFractionDigits: 2 })}` })}
+                                            />
+                                            <SpeedOption
+                                                selected={formData.speed === 'Standard'}
+                                                onClick={() => setFormData({...formData, speed: 'Standard'})}
+                                                icon={<Clock size={20} />}
+                                                title={t('intlTransfer.speed.standard', language)}
+                                                desc={t('intlTransfer.speed.standardDesc', language)}
+                                                badge={t('intlTransfer.speed.free', language)}
+                                                free
+                                            />
+                                        </div>
+                                    </FormGroup>
+                                </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginBottom: '40px' }}><InputField icon={<User size={18}/>} label={t('intlTransfer.form.beneficiaryName.label', language)} placeholder={t('intlTransfer.form.beneficiaryName.placeholder', language)} value={formData.beneficiaryName} onChange={val => setFormData({...formData, beneficiaryName: val})} /><InputField icon={<Hash size={18}/>} label={t('intlTransfer.form.beneficiaryAccount.label', language)} placeholder={t('intlTransfer.form.beneficiaryAccount.placeholder', language)} value={formData.beneficiaryAccount} onChange={val => setFormData({...formData, beneficiaryAccount: val})} /><InputField icon={<Building size={18}/>} label={t('intlTransfer.form.bankName.label', language)} placeholder={t('intlTransfer.form.bankName.placeholder', language)} value={formData.bankName} onChange={val => setFormData({...formData, bankName: val})} /><InputField icon={<MapPin size={18}/>} label={t('intlTransfer.form.bankAddress.label', language)} placeholder={t('intlTransfer.form.bankAddress.placeholder', language)} value={formData.bankAddress} onChange={val => setFormData({...formData, bankAddress: val})} /></div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '20px', marginBottom: '40px' }} className="grid-3-mobile"><FormGroup label={t('intlTransfer.form.accountType', language)}><div style={{ position: 'relative' }}><LayoutGrid size={18} style={{ ...fieldIconStyle }} /><select style={{ ...formSelectStyle, paddingLeft: '44px' }} value={formData.accountType} onChange={e => setFormData({...formData, accountType: e.target.value})}><option>Online Banking</option><option>Savings Account</option><option>Checking Account</option><option>Corporate Account</option></select></div></FormGroup><InputField icon={<Globe size={18}/>} label={t('intlTransfer.form.country.label', language)} placeholder={t('intlTransfer.form.country.placeholder', language)} value={formData.country} onChange={val => setFormData({...formData, country: val})} /><InputField icon={<Key size={18}/>} label={t('intlTransfer.form.swift.label', language)} placeholder={t('intlTransfer.form.swift.placeholder', language)} value={formData.swiftCode} onChange={val => setFormData({...formData, swiftCode: val})} /></div>
                                 <div style={{ marginBottom: '40px' }}><InputField icon={<CreditCard size={18}/>} label={t('intlTransfer.form.iban.label', language)} placeholder={t('intlTransfer.form.iban.placeholder', language)} value={formData.iban} onChange={val => setFormData({...formData, iban: val})} /><p style={{ fontSize: '11px', color: '#94A3B8', marginTop: '8px', fontWeight: 600 }}>{t('intlTransfer.form.iban.note', language)}</p></div>
                                 <div style={{ marginBottom: '40px' }}><FormGroup label={t('intlTransfer.form.pin.label', language)}><div style={{ position: 'relative' }}><Key size={18} style={{ ...fieldIconStyle }} /><input type={showPin ? "text" : "password"} placeholder={t('intlTransfer.form.pin.placeholder', language)} value={formData.pin} onChange={e => setFormData({...formData, pin: e.target.value})} style={{ ...inputStyle, paddingLeft: '44px', paddingRight: '48px' }} /><div onClick={() => setShowPin(!showPin)} style={{ position:'absolute', right:'16px', top:'50%', transform:'translateY(-50%)', cursor:'pointer', color:'#94A3B8' }}>{showPin ? <EyeOff size={18} /> : <Eye size={18} />}</div></div></FormGroup><p style={{ fontSize: '11px', color: '#94A3B8', marginTop: '8px', fontWeight: 600 }}>{t('intlTransfer.form.pin.note', language)}</p></div>
                                 <div style={{ marginBottom: '48px' }}><FormGroup label={t('intlTransfer.form.note.label', language)}><div style={{ position: 'relative' }}><MessageCircle size={18} style={{ position:'absolute', left:'16px', top:'16px', color:'#94A3B8' }} /><textarea placeholder={t('intlTransfer.form.note.placeholder', language)} value={formData.note} onChange={e => setFormData({...formData, note: e.target.value})} style={{ ...inputStyle, height: '100px', paddingLeft: '44px', paddingTop:'14px', resize:'none' }} /></div></FormGroup></div>
-                                <div style={{ background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9', marginBottom: '48px', overflow: 'hidden' }}><div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: '10px' }}><FileText size={18} color="#0EA5E9" /><h4 style={{ fontSize: '15px', fontWeight: 800, color: '#1E293B', margin: 0 }}>{t('intlTransfer.form.summary.title', language)}</h4></div><div style={{ padding: '24px' }}><SummaryRow label={t('intlTransfer.common.amount', language)} value={`€${Number(formData.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} /><SummaryRow label={t('intlTransfer.form.summary.fee', language)} value="€0.00" /><div style={{ height: '1px', background: '#E2E8F0', margin: '16px 0' }}></div><SummaryRow label={t('intlTransfer.form.summary.total', language)} value={`€${Number(formData.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} isTotal /><SummaryRow label={t('intlTransfer.form.summary.newBalanceAfter', language)} value={`€${(user.balance - Number(formData.amount || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} /></div></div>
+                                <div style={{ background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9', marginBottom: '48px', overflow: 'hidden' }}><div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: '10px' }}><FileText size={18} color="#0EA5E9" /><h4 style={{ fontSize: '15px', fontWeight: 800, color: '#1E293B', margin: 0 }}>{t('intlTransfer.form.summary.title', language)}</h4></div><div style={{ padding: '24px' }}><SummaryRow label={t('intlTransfer.common.amount', language)} value={`€${amountNum.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} /><SummaryRow label={t('intlTransfer.form.summary.speed', language)} value={speedLabel} /><SummaryRow label={t('intlTransfer.form.summary.fee', language)} value={formattedFee} /><div style={{ height: '1px', background: '#E2E8F0', margin: '16px 0' }}></div><SummaryRow label={t('intlTransfer.form.summary.total', language)} value={`€${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} isTotal /><SummaryRow label={t('intlTransfer.form.summary.newBalanceAfter', language)} value={`€${(user.balance - totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} /></div></div>
                                 <div style={{ display: 'flex', gap: '20px' }} className="flex-row-mobile"><button onClick={handleContinue} style={{ flex: 1.5, background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '16px', fontWeight: 800, fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', boxShadow: '0 10px 25px rgba(14, 165, 233, 0.2)' }}><Send size={20} /> {t('intlTransfer.form.continue', language)}</button><button onClick={() => navigate('/dashboard')} style={{ flex: 1, background: 'white', border: '1px solid #E2E8F0', padding: '18px', borderRadius: '16px', fontWeight: 800, fontSize: '16px', cursor: 'pointer', color: '#1E293B', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}><ArrowLeft size={20} /> {t('intlTransfer.form.backDashboard', language)}</button></div>
                             </div>
                             <div style={{ marginTop: '32px' }}><SecurityBanner /></div>
@@ -310,6 +313,19 @@ const SummaryRow = ({ label, value, isTotal }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span style={{ fontSize: isTotal ? '15px' : '14px', fontWeight: isTotal ? 800 : 600, color: '#64748B' }}>{label}</span><span style={{ fontSize: isTotal ? '18px' : '15px', fontWeight: 800, color: '#1E293B' }}>{value}</span></div>
 );
 
+const SpeedOption = ({ selected, onClick, icon, title, desc, badge, free }) => (
+    <div onClick={onClick} style={selected ? { ...speedCardStyle, borderColor: '#0EA5E9', background: '#F0F9FF', boxShadow: '0 8px 20px rgba(14, 165, 233, 0.12)' } : speedCardStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <span style={{ color: selected ? '#0EA5E9' : '#94A3B8', display: 'flex' }}>{icon}</span>
+            <h4 style={{ fontSize: '15px', fontWeight: 800, color: '#1E293B', margin: 0 }}>{title}</h4>
+            <span style={{ marginLeft: 'auto', width: '18px', height: '18px', borderRadius: '50%', border: selected ? '5px solid #0EA5E9' : '2px solid #CBD5E1', background: 'white', flexShrink: 0 }}></span>
+        </div>
+        <p style={{ fontSize: '13px', color: '#64748B', fontWeight: 500, lineHeight: 1.5, margin: '0 0 12px' }}>{desc}</p>
+        <span style={{ fontSize: '13px', fontWeight: 800, color: free ? '#10B981' : '#0EA5E9' }}>{badge}</span>
+    </div>
+);
+
+const speedCardStyle = { flex: 1, border: '2px solid #E2E8F0', borderRadius: '16px', padding: '20px', cursor: 'pointer', transition: 'all 0.2s ease', background: 'white' };
 const inputStyle = { width: '100%', padding: '14px 18px', borderRadius: '14px', border: '1.5px solid #E2E8F0', fontSize: '15px', fontWeight: 600, outline: 'none', background: '#F8FAFC', color: '#1E293B' };
 const formSelectStyle = { ...inputStyle, cursor:'pointer', appearance:'none', backgroundImage:'url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")', backgroundRepeat:'no-repeat', backgroundPosition:'right 12px center', backgroundSize:'16px' };
 const fieldIconStyle = { position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', zIndex: 1 };

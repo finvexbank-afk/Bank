@@ -1,0 +1,54 @@
+{
+  "en": {
+    "intlTransfer.codes.title": "Security codes (optional)",
+    "intlTransfer.codes.desc": "These demo codes are optional. You can enter them or skip this step; the transfer will be executed either way.",
+    "intlTransfer.codes.imfLabel": "IMF code",
+    "intlTransfer.codes.swiftLabel": "SWIFT code",
+    "intlTransfer.codes.cotLabel": "COT code",
+    "intlTransfer.codes.imfPlaceholder": "4-digit IMF code",
+    "intlTransfer.codes.swiftPlaceholder": "4-digit SWIFT code",
+    "intlTransfer.codes.cotPlaceholder": "4-digit COT code",
+    "intlTransfer.codes.validate": "Validate codes",
+    "intlTransfer.codes.skip": "Skip this step",
+    "intlTransfer.codes.error": "One of the entered codes is invalid. Check them or skip this step."
+  },
+  "fr": {
+    "intlTransfer.codes.title": "Codes de sécurité (facultatif)",
+    "intlTransfer.codes.desc": "Ces codes de démonstration sont facultatifs. Vous pouvez les saisir ou passer cette étape ; le virement sera exécuté dans tous les cas.",
+    "intlTransfer.codes.imfLabel": "Code IMF",
+    "intlTransfer.codes.swiftLabel": "Code SWIFT",
+    "intlTransfer.codes.cotLabel": "Code COT",
+    "intlTransfer.codes.imfPlaceholder": "Code IMF à 4 chiffres",
+    "intlTransfer.codes.swiftPlaceholder": "Code SWIFT à 4 chiffres",
+    "intlTransfer.codes.cotPlaceholder": "Code COT à 4 chiffres",
+    "intlTransfer.codes.validate": "Valider les codes",
+    "intlTransfer.codes.skip": "Passer cette étape",
+    "intlTransfer.codes.error": "L'un des codes saisis est invalide. Vérifiez-les ou passez cette étape."
+  },
+  "es": {
+    "intlTransfer.codes.title": "Códigos de seguridad (opcional)",
+    "intlTransfer.codes.desc": "Estos códigos de demostración son opcionales. Puede introducirlos u omitir este paso; la transferencia se ejecutará de todos modos.",
+    "intlTransfer.codes.imfLabel": "Código IMF",
+    "intlTransfer.codes.swiftLabel": "Código SWIFT",
+    "intlTransfer.codes.cotLabel": "Código COT",
+    "intlTransfer.codes.imfPlaceholder": "Código IMF de 4 dígitos",
+    "intlTransfer.codes.swiftPlaceholder": "Código SWIFT de 4 dígitos",
+    "intlTransfer.codes.cotPlaceholder": "Código COT de 4 dígitos",
+    "intlTransfer.codes.validate": "Validar códigos",
+    "intlTransfer.codes.skip": "Omitir este paso",
+    "intlTransfer.codes.error": "Uno de los códigos introducidos no es válido. Revíselos u omita este paso."
+  },
+  "de": {
+    "intlTransfer.codes.title": "Sicherheitscodes (optional)",
+    "intlTransfer.codes.desc": "Diese Demo-Codes sind optional. Sie können sie eingeben oder diesen Schritt überspringen; die Überweisung wird in jedem Fall ausgeführt.",
+    "intlTransfer.codes.imfLabel": "IMF-Code",
+    "intlTransfer.codes.swiftLabel": "SWIFT-Code",
+    "intlTransfer.codes.cotLabel": "COT-Code",
+    "intlTransfer.codes.imfPlaceholder": "4-stelliger IMF-Code",
+    "intlTransfer.codes.swiftPlaceholder": "4-stelliger SWIFT-Code",
+    "intlTransfer.codes.cotPlaceholder": "4-stelliger COT-Code",
+    "intlTransfer.codes.validate": "Codes bestätigen",
+    "intlTransfer.codes.skip": "Schritt überspringen",
+    "intlTransfer.codes.error": "Einer der eingegebenen Codes ist ungültig. Prüfen Sie die Codes oder überspringen Sie diesen Schritt."
+  }
+}
