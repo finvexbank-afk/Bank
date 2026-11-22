@@ -3,10 +3,13 @@ import { Shield, Fingerprint, Lock, CheckCircle, AlertCircle } from 'lucide-reac
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../AppContext';
 import LanguageSelector from '../components/LanguageSelector';
+import { t } from '../translations';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const PinVerification = () => {
     const navigate = useNavigate();
     const { user } = useAppContext();
+    const { language } = useLanguage();
     const [pin, setPin] = useState('');
     const [status, setStatus] = useState(''); // '', 'success', 'error'
     const [loading, setLoading] = useState(false);
@@ -57,8 +60,8 @@ const PinVerification = () => {
                     }}>
                         <Fingerprint size={32} />
                     </div>
-                    <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Verify Your Identity</h2>
-                    <p style={{ fontSize: '13px', opacity: 0.9 }}>Please enter your secure 4-digit PIN to continue</p>
+                    <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>{t('pin.title', language)}</h2>
+                    <p style={{ fontSize: '13px', opacity: 0.9 }}>{t('pin.subtitle', language)}</p>
                 </div>
 
                 {/* Content Section */}
@@ -91,18 +94,18 @@ const PinVerification = () => {
                         </div>
                     </div>
 
-                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1E293B', marginBottom: '8px' }}>{user?.name || 'User Name'}</h3>
+                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1E293B', marginBottom: '8px' }}>{user?.name || t('pin.nameFallback', language)}</h3>
                     
                     {status === 'success' ? (
-                        <p style={{ fontSize: '12px', color: '#10B981', fontWeight: 600, marginBottom: '20px' }}>PIN verified successfully</p>
+                        <p style={{ fontSize: '12px', color: '#10B981', fontWeight: 600, marginBottom: '20px' }}>{t('pin.success', language)}</p>
                     ) : status === 'error' ? (
-                        <p style={{ fontSize: '12px', color: '#EF4444', fontWeight: 600, marginBottom: '20px' }}>Incorrect PIN. Please try again.</p>
+                        <p style={{ fontSize: '12px', color: '#EF4444', fontWeight: 600, marginBottom: '20px' }}>{t('pin.error', language)}</p>
                     ) : (
                         <div style={{ height: '34px' }}></div>
                     )}
 
                     <div style={{ textAlign: 'left' }}>
-                        <label style={{ display: 'block', fontSize: '13px', color: '#64748B', marginBottom: '12px' }}>Enter your 4-digit verification PIN</label>
+                        <label style={{ display: 'block', fontSize: '13px', color: '#64748B', marginBottom: '12px' }}>{t('pin.label', language)}</label>
                         <input 
                             type="password"
                             maxLength={4}
@@ -129,7 +132,7 @@ const PinVerification = () => {
                             opacity: pin.length < 4 ? 0.6 : 1
                         }}
                     >
-                        {loading ? 'Verifying...' : 'Verify PIN'}
+                        {loading ? t('pin.button.verifying', language) : t('pin.button.verify', language)}
                     </button>
                 </div>
 
@@ -137,7 +140,7 @@ const PinVerification = () => {
                 <div style={{ background: '#F8FAFC', padding: '20px 32px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                     <Lock size={16} color="#94A3B8" style={{ marginTop: '2px' }} />
                     <p style={{ fontSize: '11px', color: '#64748B', textAlign: 'left', lineHeight: 1.5 }}>
-                        Your security is our priority. PIN verification protects your account from unauthorized access.
+                        {t('pin.footer', language)}
                     </p>
                 </div>
             </div>

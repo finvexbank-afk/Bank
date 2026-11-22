@@ -493,7 +493,7 @@ const Auth = () => {
                                             <div style={{ position: 'relative' }}>
                                                 <Globe size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)' }} />
                                                 <select name="country" value={formData.country} onChange={handleChange} required style={{ width: '100%', padding: '14px 16px 14px 48px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', background: 'white' }}>
-                                                    <option value="">Select a country</option>
+                                                    <option value="">{t('auth.selectCountry', language)}</option>
                                                     {countries.map((country, index) => (
                                                         <option key={index} value={country}>{country}</option>
                                                     ))}
@@ -570,7 +570,7 @@ const Auth = () => {
                                         </div>
                                         <label style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '13px', color: 'var(--text-muted)', cursor: 'pointer' }}>
                                             <input type="checkbox" name="termsAccepted" checked={formData.termsAccepted} onChange={handleChange} style={{ marginTop: '3px', accentColor: 'var(--primary)' }} />
-                                            <span>{t('auth.signUp.security.terms', language)} <a href="#" style={{ color: 'var(--primary)', fontWeight: 600 }}>Terms of Service</a> and <a href="#" style={{ color: 'var(--primary)', fontWeight: 600 }}>Privacy Policy</a></span>
+                                            <span>{t('auth.signUp.security.terms', language)} <a href="#" style={{ color: 'var(--primary)', fontWeight: 600 }}>{t('auth.termsOfService', language)}</a> {t('auth.and', language)} <a href="#" style={{ color: 'var(--primary)', fontWeight: 600 }}>{t('auth.privacyPolicy', language)}</a></span>
                                         </label>
                                     </div>
                                 )}

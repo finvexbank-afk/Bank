@@ -10,9 +10,12 @@ import MainLayout from '../components/MainLayout';
 import { useAppContext } from '../AppContext';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { t } from '../translations';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Cards = () => {
     const { user, card } = useAppContext();
+    const { language } = useLanguage();
     const navigate = useNavigate();
     const [view, setView] = useState('list'); // 'list', 'apply', 'details'
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,7 +48,7 @@ const Cards = () => {
             setView('list');
         } catch (error) {
             console.error("Error applying for card:", error);
-            alert("Failed to submit application. Please try again.");
+            alert(t('cards.submitFailed', language));
         } finally {
             setIsSubmitting(false);
         }
@@ -61,10 +64,10 @@ const Cards = () => {
                 <div style={{ padding: 'clamp(16px, 4vw, 32px)', maxWidth: '1000px', margin: '0 auto' }}>
                     <div className="flex-row-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', gap: '16px' }}>
                         <div>
-                            <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '4px' }}>Dashboard {'\u003E'} Cards {'\u003E'} Details</p>
-                            <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B' }}>Card Details</h1>
+                            <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '4px' }}>{t('cards.crumbDashboard', language)} {'\u003E'} {t('cards.crumbCards', language)} {'\u003E'} {t('cards.crumbDetails', language)}</p>
+                            <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B' }}>{t('cards.detailsTitle', language)}</h1>
                         </div>
-                        <button onClick={() => setView('list')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', color: '#64748B', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}><ArrowLeft size={18} /> Back</button>
+                        <button onClick={() => setView('list')} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', color: '#64748B', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}><ArrowLeft size={18} /> {t('cards.back', language)}</button>
                     </div>
 
                     <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #E2E8F0', padding: 'clamp(24px, 6vw, 60px) clamp(16px, 4vw, 40px)', position: 'relative' }}>
@@ -72,16 +75,16 @@ const Cards = () => {
                         <div className="flex-row-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', gap: '20px' }}>
                             <div style={{ background: statusBg, color: statusColor, padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 {isCardActive ? <CheckCircle size={16} /> : <Hourglass size={16} />}
-                                {isCardActive ? 'Active' : 'Pending'}
+                                {isCardActive ? t('cards.statusActive', language) : t('cards.statusPending', language)}
                             </div>
                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                 {isCardActive && (
                                     <>
-                                        <button className="mobile-full" style={{ background: '#FEF3C7', color: '#B45309', border: '1px solid #FDE68A', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> Deactivate</button>
-                                        <button className="mobile-full" style={{ background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}><ShieldAlert size={14} /> Block</button>
+                                        <button className="mobile-full" style={{ background: '#FEF3C7', color: '#B45309', border: '1px solid #FDE68A', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> {t('cards.deactivate', language)}</button>
+                                        <button className="mobile-full" style={{ background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}><ShieldAlert size={14} /> {t('cards.block', language)}</button>
                                     </>
                                 )}
-                                <button className="mobile-full" style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px' }}><List size={14} /> Log</button>
+                                <button className="mobile-full" style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px' }}><List size={14} /> {t('cards.log', language)}</button>
                             </div>
                         </div>
 
@@ -111,8 +114,8 @@ const Cards = () => {
                                             {isCardActive && showNumbers ? '4924 4128 9933 3921' : '•••• •••• •••• ' + (isCardActive ? '3921' : '****')}
                                         </p>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' }}>
-                                            <div><p style={{ fontSize: '9px', opacity: 0.7 }}>CARD HOLDER</p><p style={{ fontWeight: 700, fontSize: '14px' }}>{user?.name?.toUpperCase()}</p></div>
-                                            <div><p style={{ fontSize: '9px', opacity: 0.7 }}>VALID THRU</p><p style={{ fontWeight: 700, fontSize: '14px' }}>{isCardActive ? '05/28' : '--/--'}</p></div>
+                                            <div><p style={{ fontSize: '9px', opacity: 0.7 }}>{t('cards.cardHolder', language)}</p><p style={{ fontWeight: 700, fontSize: '14px' }}>{user?.name?.toUpperCase()}</p></div>
+                                            <div><p style={{ fontSize: '9px', opacity: 0.7 }}>{t('cards.validThru', language)}</p><p style={{ fontWeight: 700, fontSize: '14px' }}>{isCardActive ? '05/28' : '--/--'}</p></div>
                                         </div>
                                     </div>
                                 ) : (
@@ -127,9 +130,9 @@ const Cards = () => {
                                 )}
                             </div>
                             <div style={{ display: 'flex', gap: '12px' }}>
-                                <button onClick={() => setFlipped(!flipped)} style={{ padding: '10px 20px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', fontWeight: 700, fontSize: '14px', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><RefreshCcw size={16} /> Flip</button>
+                                <button onClick={() => setFlipped(!flipped)} style={{ padding: '10px 20px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', fontWeight: 700, fontSize: '14px', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><RefreshCcw size={16} /> {t('cards.flip', language)}</button>
                                 <button onClick={() => setShowNumbers(!showNumbers)} style={{ padding: '10px 20px', background: '#F0F9FF', border: '1px solid #0EA5E9', borderRadius: '10px', fontWeight: 700, fontSize: '14px', color: '#0EA5E9', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                                    {showNumbers ? <><EyeOff size={16} /> Hide</> : <><Eye size={16} /> Show</>}
+                                    {showNumbers ? <><EyeOff size={16} /> {t('cards.hide', language)}</> : <><Eye size={16} /> {t('cards.show', language)}</>}
                                 </button>
                             </div>
                         </div>
@@ -137,29 +140,29 @@ const Cards = () => {
 
                     {/* Info Grid (Responsive) */}
                     <div className="grid-details-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '32px' }}>
-                        <DetailInfo label="CARD NUMBER" value={isCardActive && showNumbers ? '4924 4128 9933 3921' : '•••• •••• •••• ' + (isCardActive ? '3921' : '****')} hasEye />
-                        <DetailInfo label="EXPIRATION DATE" value={isCardActive ? '05/2028' : '-- / ----'} hasEye />
+                        <DetailInfo label={t('cards.cardNumber', language)} value={isCardActive && showNumbers ? '4924 4128 9933 3921' : '•••• •••• •••• ' + (isCardActive ? '3921' : '****')} hasEye />
+                        <DetailInfo label={t('cards.expirationDate', language)} value={isCardActive ? '05/2028' : '-- / ----'} hasEye />
                         <DetailInfo label="CVV" value={isCardActive && showNumbers ? '885' : '•••'} hasEye />
-                        <DetailInfo label="CARD TYPE" value="Visa" />
-                        <DetailInfo label="CARD LEVEL" value={cardLevel} />
-                        <DetailInfo label="CURRENT BALANCE" value="€0.00" />
+                        <DetailInfo label={t('cards.cardTypeLabel', language)} value="Visa" />
+                        <DetailInfo label={t('cards.cardLevelLabel', language)} value={cardLevel} />
+                        <DetailInfo label={t('cards.currentBalance', language)} value="€0.00" />
                     </div>
 
                     {/* Additional Details */}
                     <div style={{ marginTop: '32px', background: 'white', borderRadius: '20px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
                         <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', background: '#F8FAFC' }}>
-                            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1E293B' }}>Management details</h3>
+                            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1E293B' }}>{t('cards.managementDetails', language)}</h3>
                         </div>
                         <div className="grid-details-mobile" style={{ padding: '32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '40px' }}>
                             <div>
-                                <p style={{ fontSize: '13px', fontWeight: 600, color: '#64748B', marginBottom: '8px' }}>Billing Address</p>
+                                <p style={{ fontSize: '13px', fontWeight: 600, color: '#64748B', marginBottom: '8px' }}>{t('cards.billingAddress', language)}</p>
                                 <p style={{ fontSize: '15px', color: '#1E293B' }}>123 Rue du client, Paris, France</p>
                             </div>
                             <div>
-                                <p style={{ fontSize: '13px', fontWeight: 600, color: '#64748B', marginBottom: '16px' }}>Card Limits</p>
-                                <LimitRow label="Daily Limit" value="€10,000.00" />
-                                <LimitRow label="Monthly Limit" value="€20,000.00" />
-                                <LimitRow label="Issued Date" value="May 27, 2025" />
+                                <p style={{ fontSize: '13px', fontWeight: 600, color: '#64748B', marginBottom: '16px' }}>{t('cards.cardLimits', language)}</p>
+                                <LimitRow label={t('cards.dailyLimit', language)} value="€10,000.00" />
+                                <LimitRow label={t('cards.monthlyLimit', language)} value="€20,000.00" />
+                                <LimitRow label={t('cards.issuedDate', language)} value={t('cards.issuedDateValue', language)} />
                             </div>
                         </div>
                     </div>
@@ -179,32 +182,32 @@ const Cards = () => {
             <MainLayout>
                 <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-                        <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Apply for Virtual Card</h1>
-                        <button onClick={() => setView('list')} style={{ padding: '10px 16px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', cursor: 'pointer' }}>Cancel</button>
+                        <h1 style={{ fontSize: '24px', fontWeight: 800 }}>{t('cards.applyTitle', language)}</h1>
+                        <button onClick={() => setView('list')} style={{ padding: '10px 16px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', cursor: 'pointer' }}>{t('cards.cancel', language)}</button>
                     </div>
                     <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #E2E8F0', padding: 'clamp(24px, 5vw, 40px)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', padding: '16px', background: '#F0F9FF', borderRadius: '12px', border: '1px solid #B9E6FE' }}>
                             <Info size={20} color="#0EA5E9" />
-                            <p style={{ fontSize: '13px', color: '#0EA5E9', fontWeight: 500 }}>Your virtual card will be ready for approval instantly.</p>
+                            <p style={{ fontSize: '13px', color: '#0EA5E9', fontWeight: 500 }}>{t('cards.instantApproval', language)}</p>
                         </div>
                         <div style={{ marginBottom: '32px' }}>
-                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#475569', marginBottom: '10px' }}>Select Card Tier</label>
+                            <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#475569', marginBottom: '10px' }}>{t('cards.selectTier', language)}</label>
                             <select onChange={(e) => setCardLevel(e.target.value)} style={{ width: '100%', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '15px', outline: 'none' }}>
-                                <option value="Standard">Standard (Personal) - €5.00/yr</option>
-                                <option value="Gold">Gold (Business) - €15.00/yr</option>
-                                <option value="Platinum">Platinum (Enterprise) - €25.00/yr</option>
+                                <option value="Standard">{t('cards.tierStandard', language)}</option>
+                                <option value="Gold">{t('cards.tierGold', language)}</option>
+                                <option value="Platinum">{t('cards.tierPlatinum', language)}</option>
                             </select>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '40px' }}>
                             <input type="checkbox" id="terms" style={{ width: '20px', height: '20px', marginTop: '2px' }} />
-                            <label htmlFor="terms" style={{ fontSize: '14px', color: '#64748B', lineHeight: 1.5 }}>I agree to the virtual card issuance fee and the digital banking terms of use.</label>
+                            <label htmlFor="terms" style={{ fontSize: '14px', color: '#64748B', lineHeight: 1.5 }}>{t('cards.termsAgree', language)}</label>
                         </div>
                         <button 
                             disabled={isSubmitting}
                             onClick={handleApply} 
                             style={{ width: '100%', padding: '18px', background: isSubmitting ? '#94A3B8' : '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '16px', cursor: isSubmitting ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)' }}
                         >
-                            {isSubmitting ? 'Processing...' : 'Confirm and Pay Fee'}
+                            {isSubmitting ? t('cards.processing', language) : t('cards.confirmPayFee', language)}
                         </button>
                     </div>
                 </div>
@@ -216,30 +219,30 @@ const Cards = () => {
         <MainLayout>
             <div style={{ padding: 'clamp(16px, 4vw, 32px)', maxWidth: '1200px', margin: '0 auto' }}>
                 <div className="flex-row-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', gap: '20px' }}>
-                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B' }}>Virtual Cards</h1>
-                    <button onClick={() => setView('apply')} style={{ padding: '14px 28px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)' }}><Plus size={20} /> Request New Card</button>
+                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B' }}>{t('cards.listTitle', language)}</h1>
+                    <button onClick={() => setView('apply')} style={{ padding: '14px 28px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)' }}><Plus size={20} /> {t('cards.requestNewCard', language)}</button>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '40px' }}>
-                    <StatBox label="Active Cards" value={isCardActive ? "1" : "0"} color="#0EA5E9" icon={<CreditCard size={28} />} />
-                    <StatBox label="Pending Review" value={hasPendingApplication && !isCardActive ? "1" : "0"} color="#F59E0B" icon={<Hourglass size={28} />} />
-                    <StatBox label="Linked Balance" value="€ 0.00" color="#10B981" icon={<Wallet size={28} />} />
+                    <StatBox label={t('cards.activeCards', language)} value={isCardActive ? "1" : "0"} color="#0EA5E9" icon={<CreditCard size={28} />} />
+                    <StatBox label={t('cards.pendingReview', language)} value={hasPendingApplication && !isCardActive ? "1" : "0"} color="#F59E0B" icon={<Hourglass size={28} />} />
+                    <StatBox label={t('cards.linkedBalance', language)} value="€ 0.00" color="#10B981" icon={<Wallet size={28} />} />
                 </div>
 
                 <div style={{ background: 'white', borderRadius: '24px', border: '1px solid #E2E8F0', padding: 'clamp(20px, 5vw, 40px)', minHeight: '400px' }}>
-                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginBottom: '32px' }}>Account Inventory</h3>
+                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginBottom: '32px' }}>{t('cards.accountInventory', language)}</h3>
                     {hasPendingApplication ? (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px' }}>
                             <div style={{ border: '1px solid #F1F5F9', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '360px', background: '#F8FAFC', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
-                                    <span style={{ background: isCardActive ? '#D1FAE5' : '#FEF3C7', color: isCardActive ? '#059669' : '#D97706', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800 }}>{isCardActive ? 'ACTIVE' : 'IN REVIEW'}</span>
+                                    <span style={{ background: isCardActive ? '#D1FAE5' : '#FEF3C7', color: isCardActive ? '#059669' : '#D97706', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800 }}>{isCardActive ? t('cards.statusActiveUpper', language) : t('cards.statusReviewUpper', language)}</span>
                                     <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 700 }}>{card?.level?.toUpperCase() || cardLevel.toUpperCase()}</span>
                                 </div>
                                 <div style={{ width: '100%', aspectRatio: '1.58/1', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', borderRadius: '12px', padding: '24px', color: 'white', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
                                     <p style={{ fontWeight: 700, fontSize: '13px' }}>FINVEX BANK</p>
                                     <p style={{ fontSize: '18px', fontWeight: 700, marginTop: 'auto', letterSpacing: '3px' }}>{isCardActive ? '4924 4128 9933 3921' : '•••• •••• •••• ****'}</p>
                                 </div>
-                                <button onClick={() => setView('details')} style={{ width: '100%', padding: '14px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', color: '#1E293B', fontWeight: 700, cursor: 'pointer', transition: '0.2s' }}>Manager Card</button>
+                                <button onClick={() => setView('details')} style={{ width: '100%', padding: '14px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', color: '#1E293B', fontWeight: 700, cursor: 'pointer', transition: '0.2s' }}>{t('cards.manageCard', language)}</button>
                             </div>
                         </div>
                     ) : (
@@ -247,8 +250,8 @@ const Cards = () => {
                             <div style={{ width: '64px', height: '64px', background: '#F8FAFC', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 24px' }}>
                                 <CreditCard size={32} color="#94A3B8" />
                             </div>
-                            <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#1E293B', marginBottom: '8px' }}>No payment cards detected</h4>
-                            <p style={{ fontSize: '14px', color: '#64748B' }}>Add your first virtual card to enable secure online settlements.</p>
+                            <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#1E293B', marginBottom: '8px' }}>{t('cards.noCards', language)}</h4>
+                            <p style={{ fontSize: '14px', color: '#64748B' }}>{t('cards.addFirstCard', language)}</p>
                         </div>
                     )}
                 </div>

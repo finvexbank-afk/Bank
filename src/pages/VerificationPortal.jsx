@@ -6,9 +6,12 @@ import {
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
 import { useAppContext } from '../AppContext';
+import { t } from '../translations';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const VerificationPortal = () => {
     const { user } = useAppContext();
+    const { language } = useLanguage();
     const navigate = useNavigate();
 
     if (!user) return null;
@@ -23,13 +26,13 @@ const VerificationPortal = () => {
                 
                 {/* Breadcrumbs */}
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
-                    <span>Dashboard</span>
+                    <span>{t('verification.breadcrumb.dashboard', language)}</span>
                     <ChevronRight size={14} />
-                    <span style={{ color: 'var(--text-dark)', fontWeight: 600 }}>Account Verification</span>
+                    <span style={{ color: 'var(--text-dark)', fontWeight: 600 }}>{t('verification.breadcrumb.title', language)}</span>
                 </div>
 
                 <div style={{ marginBottom: '32px' }}>
-                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B' }}>Identity Verification</h1>
+                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B' }}>{t('verification.title', language)}</h1>
                 </div>
 
                 {/* Success Banner (If Pending) */}
@@ -43,9 +46,9 @@ const VerificationPortal = () => {
                             <CheckCircle size={32} />
                         </div>
                         <div style={{ flex: 1 }}>
-                            <h4 style={{fontSize: '16px', fontWeight: 800, color: '#064E3B', marginBottom: '4px'}}>Application Submitted</h4>
+                            <h4 style={{fontSize: '16px', fontWeight: 800, color: '#064E3B', marginBottom: '4px'}}>{t('verification.pending.title', language)}</h4>
                             <p style={{ color: '#065F46', fontSize: '14px', fontWeight: 500, lineHeight: 1.5 }}>
-                                Your verification documents are currently under review by our audit team. You will be notified via email within 24-48 business hours.
+                                {t('verification.pending.message', language)}
                             </p>
                         </div>
                     </div>
@@ -57,7 +60,7 @@ const VerificationPortal = () => {
                     {/* Card Header */}
                     <div style={{ padding: '24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: '12px', background: '#F8FAFC' }}>
                         <div style={{ color: '#0EA5E9' }}><ShieldCheck size={26} /></div>
-                        <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B' }}>{user.kycStatus === 'Pending' ? 'Status: In Review' : 'Mandatory AML/KYC Verification'}</h3>
+                        <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B' }}>{user.kycStatus === 'Pending' ? t('verification.card.review', language) : t('verification.card.mandatory', language)}</h3>
                     </div>
 
                     <div style={{ padding: 'clamp(24px, 5vw, 40px)' }}>
@@ -69,15 +72,15 @@ const VerificationPortal = () => {
                                     <User size={28} color="white" />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <h4 style={{ fontSize: '22px', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>Security Onboarding</h4>
-                                    <p style={{ fontSize: '14px', color: '#64748B', marginBottom: '24px', fontWeight: 500 }}>Complete the protocol to unlock global access</p>
+                                    <h4 style={{ fontSize: '22px', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>{t('verification.welcome.title', language)}</h4>
+                                    <p style={{ fontSize: '14px', color: '#64748B', marginBottom: '24px', fontWeight: 500 }}>{t('verification.welcome.subtitle', language)}</p>
                                     
                                     <div style={{ color: '#334155', lineHeight: 1.7, fontSize: '15px' }}>
-                                        <p style={{ fontWeight: 800, marginBottom: '16px', color: '#1E293B' }}>Dear {user.name},</p>
-                                        <p style={{ marginBottom: '16px' }}>To comply with international financial regulations and ensure the highest tier of security for your assets, we require a one-time identity verification (KYC).</p>
-                                        <p style={{ marginBottom: '16px' }}>Our encrypted verification system is trusted by over two million institutional and retail clients worldwide. Processing is handled locally to guarantee your data sovereignty.</p>
-                                        <p style={{ marginBottom: '16px' }}>Please review the terms of service below. Once accepted, you will be redirected to the secure document upload portal.</p>
-                                        <p style={{ fontWeight: 600, color: '#0EA5E9' }}>Support: legal@finvex-bank.com</p>
+                                        <p style={{ fontWeight: 800, marginBottom: '16px', color: '#1E293B' }}>{t('verification.welcome.dear', language, { name: user.name })}</p>
+                                        <p style={{ marginBottom: '16px' }}>{t('verification.welcome.p1', language)}</p>
+                                        <p style={{ marginBottom: '16px' }}>{t('verification.welcome.p2', language)}</p>
+                                        <p style={{ marginBottom: '16px' }}>{t('verification.welcome.p3', language)}</p>
+                                        <p style={{ fontWeight: 600, color: '#0EA5E9' }}>{t('verification.welcome.support', language)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -88,7 +91,7 @@ const VerificationPortal = () => {
                             <div style={{ border: '1px solid #E2E8F0', borderRadius: '20px', padding: 'clamp(20px, 4vw, 32px)', marginBottom: '32px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', color: '#0EA5E9' }}>
                                     <FileText size={22} />
-                                    <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B' }}>Service Agreement</h4>
+                                    <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B' }}>{t('verification.terms.title', language)}</h4>
                                 </div>
 
                                 <div style={{ 
@@ -102,17 +105,17 @@ const VerificationPortal = () => {
                                     border: '1px solid #E2E8F0',
                                     lineHeight: 1.7
                                 }}>
-                                    <p style={{fontWeight: 700, color: '#1E293B', marginBottom: '12px'}}>1. KYC COMPLIANCE</p>
-                                    <p style={{marginBottom: '16px'}}>By proceeding, you agree to provide valid, government-issued identification. We utilize state-of-the-art encryption to protect your documentation. Accounts failing to verify within 30 days may face temporary service limitations.</p>
+                                    <p style={{fontWeight: 700, color: '#1E293B', marginBottom: '12px'}}>{t('verification.terms.s1.title', language)}</p>
+                                    <p style={{marginBottom: '16px'}}>{t('verification.terms.s1.body', language)}</p>
                                     
-                                    <p style={{fontWeight: 700, color: '#1E293B', marginBottom: '12px'}}>2. DATA PROTECTION</p>
-                                    <p style={{marginBottom: '16px'}}>Finvex Bank adheres to GDPR and international data standards. Your identity details are used strictly for regulatory compliance and are never shared with third-party marketing entities.</p>
+                                    <p style={{fontWeight: 700, color: '#1E293B', marginBottom: '12px'}}>{t('verification.terms.s2.title', language)}</p>
+                                    <p style={{marginBottom: '16px'}}>{t('verification.terms.s2.body', language)}</p>
                                     
-                                    <p style={{fontWeight: 700, color: '#1E293B', marginBottom: '12px'}}>3. TERMINOLOGY</p>
+                                    <p style={{fontWeight: 700, color: '#1E293B', marginBottom: '12px'}}>{t('verification.terms.s3.title', language)}</p>
                                     <ul style={{ paddingLeft: '20px', marginBottom: '16px' }}>
-                                        <li><strong>IDENTITY DETAILS:</strong> Government ID, Passport, or Residency permits.</li>
-                                        <li><strong>AML:</strong> Anti-Money Laundering regulatory framework.</li>
-                                        <li><strong>USER:</strong> The legal individual holder of this banking account.</li>
+                                        <li><strong>{t('verification.terms.identityLabel', language)}</strong> {t('verification.terms.identityText', language)}</li>
+                                        <li><strong>{t('verification.terms.amlLabel', language)}</strong> {t('verification.terms.amlText', language)}</li>
+                                        <li><strong>{t('verification.terms.userLabel', language)}</strong> {t('verification.terms.userText', language)}</li>
                                     </ul>
                                 </div>
 
@@ -136,7 +139,7 @@ const VerificationPortal = () => {
                                             boxShadow: '0 4px 15px rgba(14, 165, 233, 0.3)'
                                         }}
                                     >
-                                        <CheckCircle size={20} /> Accept & Start
+                                        <CheckCircle size={20} /> {t('verification.buttons.accept', language)}
                                     </button>
                                     <button 
                                         onClick={() => navigate('/dashboard')}
@@ -156,7 +159,7 @@ const VerificationPortal = () => {
                                             cursor: 'pointer' 
                                         }}
                                     >
-                                        Decline
+                                        {t('verification.buttons.decline', language)}
                                     </button>
                                 </div>
                             </div>
@@ -165,9 +168,9 @@ const VerificationPortal = () => {
                                 <div style={{ width: '72px', height: '72px', background: '#F0F9FF', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 24px', color: '#0EA5E9' }}>
                                     <Clock size={40} />
                                 </div>
-                                <h4 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginBottom: '12px' }}>Validation Pending</h4>
+                                <h4 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginBottom: '12px' }}>{t('verification.pendingCard.title', language)}</h4>
                                 <p style={{ color: '#64748B', fontSize: '15px', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
-                                    Our security department is currently auditing your submission. You will have full access to all banking features once the audit is approved.
+                                    {t('verification.pendingCard.message', language)}
                                 </p>
                             </div>
                         )}
@@ -179,12 +182,12 @@ const VerificationPortal = () => {
                                     <HelpCircle size={24} />
                                 </div>
                                 <div>
-                                    <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#1E293B', marginBottom: '4px' }}>Need assistance?</h4>
-                                    <p style={{ fontSize: '13px', color: '#64748B', fontWeight: 500 }}>Live chat is available 24/7 for verification guidance.</p>
+                                    <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#1E293B', marginBottom: '4px' }}>{t('verification.help.title', language)}</h4>
+                                    <p style={{ fontSize: '13px', color: '#64748B', fontWeight: 500 }}>{t('verification.help.subtitle', language)}</p>
                                 </div>
                             </div>
                             <button style={{ padding: '12px 24px', background: 'white', border: '1px solid #B9E6FE', borderRadius: '10px', color: '#0EA5E9', fontWeight: 800, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                <MessageSquare size={18} /> Chat with Legal
+                                <MessageSquare size={18} /> {t('verification.help.button', language)}
                             </button>
                         </div>
 

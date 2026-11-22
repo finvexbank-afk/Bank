@@ -6,9 +6,12 @@ import {
 } from 'lucide-react';
 import MainLayout from '../components/MainLayout';
 import { useAppContext } from '../AppContext';
+import { t } from '../translations';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Settings = () => {
     const { user, setUser } = useAppContext();
+    const { language } = useLanguage();
     if (!user) return null;
 
     const [activeTab, setActiveTab] = useState('profile');
@@ -30,7 +33,7 @@ const Settings = () => {
 
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
-        alert("Account number copied!");
+        alert(t('settings.alert.accountCopied', language));
     };
 
     return (
@@ -39,8 +42,8 @@ const Settings = () => {
                 
                 {/* Header Section */}
                 <div style={{ marginBottom: '32px' }}>
-                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>Account Settings</h1>
-                    <p style={{ fontSize: '13px', color: '#64748B' }}>Dashboard {'\u003E'} <span style={{fontWeight:600, color:'#1E293B'}}>Settings</span></p>
+                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>{t('settings.title', language)}</h1>
+                    <p style={{ fontSize: '13px', color: '#64748B' }}>{t('settings.breadcrumb.dashboard', language)} {'\u003E'} <span style={{fontWeight:600, color:'#1E293B'}}>{t('settings.breadcrumb.settings', language)}</span></p>
                 </div>
 
                 <div className="grid-2-settings">
@@ -60,7 +63,7 @@ const Settings = () => {
                                     </button>
                                 </div>
                                 <h3 style={{ color: 'white', fontSize: '20px', fontWeight: 700, marginBottom: '4px' }}>{firstName} {lastName}</h3>
-                                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>Account #{user.accountNumber || '85979175073'}</p>
+                                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>{t('settings.accountLabel', language, { number: user.accountNumber || '85979175073' })}</p>
                                 
                                 <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '20px', overflow: 'hidden', lineHeight: 0 }}>
                                     <svg viewBox="0 0 500 150" preserveAspectRatio="none" style={{height: '100%', width: '100%'}}>
@@ -73,19 +76,19 @@ const Settings = () => {
                                 <NavTab 
                                     active={activeTab === 'profile'} 
                                     icon={<User size={18} />} 
-                                    label="Profile Information" 
+                                    label={t('settings.nav.profile', language)} 
                                     onClick={() => setActiveTab('profile')} 
                                 />
                                 <NavTab 
                                     active={activeTab === 'security'} 
                                     icon={<Shield size={18} />} 
-                                    label="Security Settings" 
+                                    label={t('settings.nav.security', language)} 
                                     onClick={() => setActiveTab('security')} 
                                 />
                                 <NavTab 
                                     active={activeTab === 'pin'} 
                                     icon={<Lock size={18} />} 
-                                    label="Transaction PIN" 
+                                    label={t('settings.nav.pin', language)} 
                                     onClick={() => setActiveTab('pin')} 
                                 />
                             </div>
@@ -97,13 +100,13 @@ const Settings = () => {
                                 <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#0EA5E9', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>
                                     <HelpCircle size={20} />
                                 </div>
-                                <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#1E293B' }}>Need Help?</h4>
+                                <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#1E293B' }}>{t('settings.help.title', language)}</h4>
                             </div>
                             <p style={{ fontSize: '14px', color: '#64748B', lineHeight: '1.6', marginBottom: '24px' }}>
-                                Contact our support team if you need assistance with your account settings or have any questions.
+                                {t('settings.help.text', language)}
                             </p>
                             <button style={{ color: '#0EA5E9', background: 'none', border: 'none', padding: 0, fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                Contact Support <ChevronRight size={18} />
+                                {t('settings.help.button', language)} <ChevronRight size={18} />
                             </button>
                         </div>
                     </div>
@@ -114,18 +117,18 @@ const Settings = () => {
                             <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                                     <User size={20} color="#0EA5E9" />
-                                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B' }}>Profile Information</h3>
+                                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B' }}>{t('settings.nav.profile', language)}</h3>
                                 </div>
-                                <p style={{ color: '#64748B', fontSize: '14px', marginBottom: '32px' }}>Your personal information and account details</p>
+                                <p style={{ color: '#64748B', fontSize: '14px', marginBottom: '32px' }}>{t('settings.profile.subtitle', language)}</p>
 
                                 <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                     <div className="grid-2-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
-                                        <InputGroup label="First Name" icon={<User size={18} color="#94A3B8" />} value={firstName} onChange={setFirstName} />
-                                        <InputGroup label="Last Name" icon={<User size={18} color="#94A3B8" />} value={lastName} onChange={setLastName} />
+                                        <InputGroup label={t('settings.form.firstName', language)} icon={<User size={18} color="#94A3B8" />} value={firstName} onChange={setFirstName} />
+                                        <InputGroup label={t('settings.form.lastName', language)} icon={<User size={18} color="#94A3B8" />} value={lastName} onChange={setLastName} />
                                     </div>
 
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#475569', marginBottom: '10px' }}>Account Number</label>
+                                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, color: '#475569', marginBottom: '10px' }}>{t('settings.form.accountNumber', language)}</label>
                                         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                             <div style={{ position: 'absolute', left: '16px', color: '#94A3B8' }}>#</div>
                                             <input 
@@ -141,17 +144,17 @@ const Settings = () => {
                                                 <Copy size={18} />
                                             </button>
                                         </div>
-                                        <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '8px' }}>This is your unique account identifier</p>
+                                        <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '8px' }}>{t('settings.form.accountHint', language)}</p>
                                     </div>
 
-                                    <InputGroup label="Email Address" icon={<Mail size={18} color="#94A3B8" />} value={email} onChange={setEmail} type="email" />
-                                    <InputGroup label="Date of Birth" icon={<Calendar size={18} color="#94A3B8" />} value={dob} onChange={setDob} placeholder="DD/MM/YYYY" />
-                                    <InputGroup label="Phone Number" icon={<Phone size={18} color="#94A3B8" />} value={phone} onChange={setPhone} />
+                                    <InputGroup label={t('settings.form.email', language)} icon={<Mail size={18} color="#94A3B8" />} value={email} onChange={setEmail} type="email" />
+                                    <InputGroup label={t('settings.form.dob', language)} icon={<Calendar size={18} color="#94A3B8" />} value={dob} onChange={setDob} placeholder="DD/MM/YYYY" />
+                                    <InputGroup label={t('settings.form.phone', language)} icon={<Phone size={18} color="#94A3B8" />} value={phone} onChange={setPhone} />
 
                                     <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
                                         <button type="submit" style={{ width: '100%', maxWidth: '280px', padding: '16px 32px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)', transition: 'transform 0.2s' }}>
                                             {showSuccess ? <CheckCircle2 size={18} /> : <Save size={18} />}
-                                            {showSuccess ? 'Saved successfully' : 'Save Changes'}
+                                            {showSuccess ? t('settings.form.saved', language) : t('settings.form.save', language)}
                                         </button>
                                     </div>
                                 </form>
@@ -162,15 +165,15 @@ const Settings = () => {
                             <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                                     <Shield size={20} color="#0EA5E9" />
-                                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B' }}>Security Settings</h3>
+                                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B' }}>{t('settings.nav.security', language)}</h3>
                                 </div>
-                                <p style={{ color: '#64748B', fontSize: '14px', marginBottom: '32px' }}>Manage your account security and authentication</p>
+                                <p style={{ color: '#64748B', fontSize: '14px', marginBottom: '32px' }}>{t('settings.security.subtitle', language)}</p>
                                 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                     <button style={{ padding: '20px', borderRadius: '16px', background: '#F8FAFC', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                             <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#0EA5E9' }}><Lock size={20} /></div>
-                                            <div style={{ textAlign: 'left' }}><h4 style={{ fontWeight: 700, fontSize: '15px' }}>Change Password</h4><p style={{ fontSize: '13px', color: '#64748B' }}>Update your login password regularly</p></div>
+                                            <div style={{ textAlign: 'left' }}><h4 style={{ fontWeight: 700, fontSize: '15px' }}>{t('settings.security.password.title', language)}</h4><p style={{ fontSize: '13px', color: '#64748B' }}>{t('settings.security.password.subtitle', language)}</p></div>
                                         </div>
                                         <ChevronRight size={20} color="#94A3B8" />
                                     </button>
@@ -178,7 +181,7 @@ const Settings = () => {
                                     <button style={{ padding: '20px', borderRadius: '16px', background: '#F8FAFC', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                             <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#0EA5E9' }}><Smartphone size={20} /></div>
-                                            <div style={{ textAlign: 'left' }}><h4 style={{ fontWeight: 700, fontSize: '15px' }}>Two-Factor Authentication</h4><p style={{ fontSize: '13px', color: '#64748B' }}>Add an extra layer of security</p></div>
+                                            <div style={{ textAlign: 'left' }}><h4 style={{ fontWeight: 700, fontSize: '15px' }}>{t('settings.security.twoFactor.title', language)}</h4><p style={{ fontSize: '13px', color: '#64748B' }}>{t('settings.security.twoFactor.subtitle', language)}</p></div>
                                         </div>
                                         <div style={{ background: '#CBD5E1', width: '40px', height: '20px', borderRadius: '10px', position: 'relative' }}>
                                             <div style={{ width: '16px', height: '16px', background: 'white', borderRadius: '50%', position: 'absolute', left: '2px', top: '2px' }}></div>

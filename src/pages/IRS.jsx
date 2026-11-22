@@ -2,17 +2,20 @@ import React from 'react';
 import { FileText, AlertTriangle, ArrowRight, ShieldCheck, Info } from 'lucide-react';
 import MainLayout from '../components/MainLayout';
 import { useAppContext } from '../AppContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { t } from '../translations';
 
 const IRS = () => {
     const { user } = useAppContext();
+    const { language } = useLanguage();
     if (!user) return null;
 
     return (
         <MainLayout>
             <div className="dashboard-body" style={{ display: 'block', maxWidth: '800px', margin: '0 auto', padding: 'clamp(16px, 4vw, 32px)' }}>
                 <div style={{ marginBottom: '32px' }}>
-                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B' }}>Tax Settlement</h1>
-                    <p style={{ color: '#64748B', fontSize: '14px', marginTop: '4px' }}>Real-time IRS refund tracking and automated reconciliation.</p>
+                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B' }}>{t('irs.title', language)}</h1>
+                    <p style={{ color: '#64748B', fontSize: '14px', marginTop: '4px' }}>{t('irs.subtitle', language)}</p>
                 </div>
 
                 <div style={{ display: 'flex', gap: '24px', flexDirection: 'column' }}>
@@ -31,9 +34,9 @@ const IRS = () => {
                             <FileText size={48} color="white" />
                         </div>
                         <div>
-                            <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>Claim Your IRS Refund</h2>
+                            <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>{t('irs.hero.title', language)}</h2>
                             <p style={{ opacity: 0.9, lineHeight: 1.6, fontSize: '15px' }}>
-                                Finvex Bank institutional gateway allows for direct reconciliation of tax refunds from global authorities straight into your liquidity balance.
+                                {t('irs.hero.desc', language)}
                             </p>
                         </div>
                     </div>
@@ -42,12 +45,12 @@ const IRS = () => {
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', padding: '24px', background: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: '20px', color: '#991B1B' }}>
                         <AlertTriangle size={24} style={{ flexShrink: 0, marginTop: '2px' }} />
                         <div>
-                            <h4 style={{ fontWeight: 800, fontSize: '16px', marginBottom: '4px' }}>Verification Required: Tax ID</h4>
+                            <h4 style={{ fontWeight: 800, fontSize: '16px', marginBottom: '4px' }}>{t('irs.alert.title', language)}</h4>
                             <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#B91C1C' }}>
-                                Automated records fetch failed. To proceed with the reconciliation, please provide a valid Tax File Number (TFN) or Social Security Identification.
+                                {t('irs.alert.desc', language)}
                             </p>
                             <button style={{ marginTop: '20px', padding: '12px 24px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.2)' }}>
-                                Link Tax Identification
+                                {t('irs.alert.button', language)}
                             </button>
                         </div>
                     </div>
@@ -55,31 +58,31 @@ const IRS = () => {
                     {/* Security Process Card */}
                     <div style={{ padding: 'clamp(24px, 4vw, 32px)', background: 'white', border: '1px solid #E2E8F0', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
                         <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <ShieldCheck size={22} color="#0EA5E9" /> Institutional Compliance Workflow
+                            <ShieldCheck size={22} color="#0EA5E9" /> {t('irs.workflow.title', language)}
                         </h3>
                         
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
                             <ProcessStep 
                                 number="1" 
-                                title="Identity Reconciliation" 
-                                desc="We synchronize your Finvex encryption keys with the respective tax jurisdiction databases." 
+                                title={t('irs.step1.title', language)} 
+                                desc={t('irs.step1.desc', language)} 
                             />
                             <ProcessStep 
                                 number="2" 
-                                title="IMF Protocol Validation" 
-                                desc="A valid International Monetary Fund (IMF) clearance code is required for cross-border tax injections." 
+                                title={t('irs.step2.title', language)} 
+                                desc={t('irs.step2.desc', language)} 
                             />
                             <ProcessStep 
                                 number="3" 
-                                title="Settlement & Liquidity" 
-                                desc={`Refunds are processed in realtime and credited to your primary EUR balance.`} 
+                                title={t('irs.step3.title', language)} 
+                                desc={t('irs.step3.desc', language)} 
                             />
                         </div>
 
                         <div style={{ marginTop: '40px', padding: '20px', background: '#F8FAFC', borderRadius: '16px', display: 'flex', gap: '12px', border: '1px solid #F1F5F9' }}>
                             <Info size={20} color="#64748B" style={{flexShrink:0}} />
                             <p style={{fontSize: '13px', color: '#64748B', lineHeight: 1.5, fontWeight: 500}}>
-                                Refund processing typically takes 3-5 business days once all regulatory codes are validated by our compliance audit team.
+                                {t('irs.info', language)}
                             </p>
                         </div>
                     </div>

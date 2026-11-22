@@ -10,6 +10,8 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { useAppContext } from '../AppContext';
 import MainLayout from '../components/MainLayout';
 import { sendAdminKYCAlert } from '../utils/emailService';
+import { t } from '../translations';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const EMPLOYMENT_OPTIONS = [
     'Corporate Staff',
@@ -52,6 +54,44 @@ const EMPLOYMENT_OPTIONS = [
     'Other'
 ];
 
+const EMPLOYMENT_LABEL_KEYS = [
+    'corporateStaff', 'entrepreneur', 'publicSector', 'retiredExecutive',
+    'softwareEngineer', 'dataAnalytics', 'cybersecurity', 'healthcare',
+    'medicalDoctor', 'nurseMidwife', 'pharmacist', 'teacher',
+    'professor', 'bankingFinance', 'accountantAuditor', 'legal',
+    'salesMarketing', 'customerSupport', 'engineerNonIt', 'architectConstruction',
+    'skilledTrades', 'manufacturing', 'logisticsTransport', 'agriculture',
+    'realEstate', 'insurance', 'hospitalityTourism', 'mediaCreative',
+    'artistDesigner', 'nonProfitNgo', 'militaryDefense', 'policeSecurity',
+    'religiousClergy', 'student', 'freelancerConsultant', 'homemaker',
+    'unemployedJobSeeker', 'other'
+];
+
+const HONORIFIC_OPTIONS = [
+    { value: 'Mr.', labelKey: 'enrollment.honorific.mr' },
+    { value: 'Mrs.', labelKey: 'enrollment.honorific.mrs' },
+    { value: 'Ms.', labelKey: 'enrollment.honorific.ms' },
+    { value: 'Dr.', labelKey: 'enrollment.honorific.dr' },
+    { value: 'Professor', labelKey: 'enrollment.honorific.professor' }
+];
+
+const GENDER_OPTIONS = [
+    { value: 'Male', labelKey: 'enrollment.gender.male' },
+    { value: 'Female', labelKey: 'enrollment.gender.female' },
+    { value: 'Non-Binary', labelKey: 'enrollment.gender.nonBinary' }
+];
+
+const ACCOUNT_SCOPE_OPTIONS = [
+    { value: 'Tier 1 Checking', labelKey: 'enrollment.accountScope.tier1' },
+    { value: 'High-Yield Savings', labelKey: 'enrollment.accountScope.highYield' },
+    { value: 'Institutional Business', labelKey: 'enrollment.accountScope.institutional' }
+];
+
+const PROFESSION_OPTIONS = EMPLOYMENT_OPTIONS.map((value, i) => ({
+    value,
+    labelKey: 'enrollment.professions.' + EMPLOYMENT_LABEL_KEYS[i]
+}));
+
 // SUB-COMPONENTS
 const SectionHeader = ({ icon: Icon, title, subtitle }) => (
     <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '24px', padding: '16px 0', borderBottom: '1px solid #F1F5F9' }}>
@@ -65,36 +105,45 @@ const SectionHeader = ({ icon: Icon, title, subtitle }) => (
     </div>
 );
 
-const InputField = ({ label, name, type = "text", placeholder, icon: Icon, options, value, onChange }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label style={{ fontSize: '14px', fontWeight: 700, color: '#475569' }}>{label} *</label>
-        <div style={{ position: 'relative' }}>
-            {Icon && <Icon size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', left: '14px', transform: 'translateY(-50%)' }} />}
-            {options ? (
-                <select 
-                    name={name} 
-                    value={value} 
-                    onChange={onChange}
-                    style={{ width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', background: 'white', fontSize: '15px', fontWeight: 600, appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', backgroundSize: '16px' }}
-                >
-                    <option value="">Select {label}</option>
-                    {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-            ) : (
-                <input 
-                    type={type} 
-                    name={name} 
-                    value={value} 
-                    onChange={onChange} 
-                    placeholder={placeholder} 
-                    style={{ width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '15px', fontWeight: 600, color: '#1E293B' }} 
-                />
-            )}
+const InputField = ({ label, name, type = "text", placeholder, icon: Icon, options, value, onChange }) => {
+    const { language } = useLanguage();
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ fontSize: '14px', fontWeight: 700, color: '#475569' }}>{label} *</label>
+            <div style={{ position: 'relative' }}>
+                {Icon && <Icon size={18} color="#94A3B8" style={{ position: 'absolute', top: '50%', left: '14px', transform: 'translateY(-50%)' }} />}
+                {options ? (
+                    <select 
+                        name={name} 
+                        value={value} 
+                        onChange={onChange}
+                        style={{ width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', background: 'white', fontSize: '15px', fontWeight: 600, appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', backgroundSize: '16px' }}
+                    >
+                        <option value="">{t('enrollment.select', language, { label })}</option>
+                        {options.map(opt => {
+                            if (typeof opt === 'string') {
+                                return <option key={opt} value={opt}>{opt}</option>;
+                            }
+                            return <option key={opt.value} value={opt.value}>{opt.labelKey ? t(opt.labelKey, language) : opt.label}</option>;
+                        })}
+                    </select>
+                ) : (
+                    <input 
+                        type={type} 
+                        name={name} 
+                        value={value} 
+                        onChange={onChange} 
+                        placeholder={placeholder} 
+                        style={{ width: '100%', padding: '14px 14px 14px 44px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '15px', fontWeight: 600, color: '#1E293B' }} 
+                    />
+                )}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const UploadBox = ({ label }) => {
+    const { language } = useLanguage();
     const fileRef = useRef();
     const [fileName, setFileName] = useState('');
 
@@ -118,9 +167,9 @@ const UploadBox = ({ label }) => {
                     </div>
                     <div>
                         <p style={{ fontSize: '15px', fontWeight: 800, color: '#1E293B', marginBottom: '4px' }}>
-                            {fileName ? fileName : 'Select identification file'}
+                            {fileName ? fileName : t('enrollment.selectFile', language)}
                         </p>
-                        <p style={{ fontSize: '12px', color: '#64748B', fontWeight: 500 }}>High-resolution photo required (max 5MB)</p>
+                        <p style={{ fontSize: '12px', color: '#64748B', fontWeight: 500 }}>{t('enrollment.fileRequirement', language)}</p>
                     </div>
                 </div>
             </div>
@@ -130,6 +179,7 @@ const UploadBox = ({ label }) => {
 
 const Enrollment = () => {
     const { user } = useAppContext();
+    const { language } = useLanguage();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -170,7 +220,7 @@ const Enrollment = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (formData.employmentType === 'Other' && !formData.otherEmployment.trim()) {
-            alert('Please specify your profession.');
+            alert(t('enrollment.error.specifyProfession', language));
             return;
         }
         setLoading(true);
@@ -194,7 +244,7 @@ const Enrollment = () => {
             }, 5000);
         } catch (error) {
             console.error("KYC Submission Error:", error);
-            alert("Failed to submit application.");
+            alert(t('enrollment.error.submitFailed', language));
         } finally {
             setLoading(false);
         }
@@ -218,9 +268,9 @@ const Enrollment = () => {
                             <CheckCircle size={32} />
                         </div>
                         <div style={{ flex: 1 }}>
-                            <h4 style={{fontSize:'16px', fontWeight:800, color:'#064E3B', marginBottom:'4px'}}>Verification Dispatched</h4>
+                            <h4 style={{fontSize:'16px', fontWeight:800, color:'#064E3B', marginBottom:'4px'}}>{t('enrollment.success.title', language)}</h4>
                             <p style={{ color: '#065F46', fontSize: '14px', fontWeight: 500, lineHeight: 1.5 }}>
-                                Identity dossier successfully submitted. Audit pending. Keep tabs on your mailbox for status updates.
+                                {t('enrollment.success.message', language)}
                             </p>
                         </div>
                         <button onClick={() => setShowSuccess(false)} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer' }}>
@@ -231,11 +281,11 @@ const Enrollment = () => {
 
                 {/* Header */}
                 <div style={{ marginBottom: '32px' }}>
-                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B' }}>Identity Dossier</h1>
+                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#1E293B' }}>{t('enrollment.title', language)}</h1>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '13px', color: '#64748B', marginTop: '8px' }}>
-                        <span>Verification</span>
+                        <span>{t('enrollment.breadcrumb.verification', language)}</span>
                         <ChevronRight size={14} />
-                        <span style={{ color: '#1E293B', fontWeight: 600 }}>AML Submission</span>
+                        <span style={{ color: '#1E293B', fontWeight: 600 }}>{t('enrollment.breadcrumb.submission', language)}</span>
                     </div>
                 </div>
 
@@ -243,73 +293,73 @@ const Enrollment = () => {
                     <div style={{ padding: '24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: '12px', background: '#F8FAFC' }}>
                         <div style={{ color: '#0EA5E9' }}><ShieldCheck size={26} /></div>
                         <div>
-                            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B' }}>Secure KYC Enrollment</h3>
-                            <p style={{ fontSize: '12px', color: '#64748B', fontWeight: 500 }}>All data is encrypted with 256-bit institutional standards.</p>
+                            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B' }}>{t('enrollment.card.title', language)}</h3>
+                            <p style={{ fontSize: '12px', color: '#64748B', fontWeight: 500 }}>{t('enrollment.card.subtitle', language)}</p>
                         </div>
                     </div>
 
                     <form onSubmit={handleSubmit} style={{ padding: 'clamp(20px, 5vw, 40px)' }}>
                         {/* PERSONAL DETAILS */}
                         <div style={{ border: '1px solid #F1F5F9', borderRadius: '20px', padding: 'clamp(20px, 4vw, 32px)', marginBottom: '32px' }}>
-                            <SectionHeader icon={User} title="Individual Profile" subtitle="Full legal identity as shown on identification" />
+                            <SectionHeader icon={User} title={t('enrollment.section.personal.title', language)} subtitle={t('enrollment.section.personal.subtitle', language)} />
                             <div className="grid-2-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-                                <InputField label="Full Legal Name" name="fullName" value={formData.fullName} onChange={handleChange} icon={User} />
-                                <InputField label="Secure Email" name="email" value={formData.email} onChange={handleChange} icon={Mail} />
-                                <InputField label="Primary Phone" name="phone" value={formData.phone} onChange={handleChange} icon={Smartphone} />
-                                <InputField label="Honorific" name="title" value={formData.title} onChange={handleChange} icon={Info} options={['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Professor']} />
-                                <InputField label="Gender Identification" name="gender" value={formData.gender} onChange={handleChange} icon={User} options={['Male', 'Female', 'Non-Binary']} />
-                                <InputField label="Postal Code" name="zipcode" value={formData.zipcode} onChange={handleChange} icon={MapPin} />
-                                <InputField label="Birth Date" name="dob" value={formData.dob} onChange={handleChange} icon={Camera} type="date" />
+                                <InputField label={t('enrollment.field.fullName', language)} name="fullName" value={formData.fullName} onChange={handleChange} icon={User} />
+                                <InputField label={t('enrollment.field.secureEmail', language)} name="email" value={formData.email} onChange={handleChange} icon={Mail} />
+                                <InputField label={t('enrollment.field.primaryPhone', language)} name="phone" value={formData.phone} onChange={handleChange} icon={Smartphone} />
+                                <InputField label={t('enrollment.field.honorific', language)} name="title" value={formData.title} onChange={handleChange} icon={Info} options={HONORIFIC_OPTIONS} />
+                                <InputField label={t('enrollment.field.gender', language)} name="gender" value={formData.gender} onChange={handleChange} icon={User} options={GENDER_OPTIONS} />
+                                <InputField label={t('enrollment.field.postalCode', language)} name="zipcode" value={formData.zipcode} onChange={handleChange} icon={MapPin} />
+                                <InputField label={t('enrollment.field.birthDate', language)} name="dob" value={formData.dob} onChange={handleChange} icon={Camera} type="date" />
                             </div>
                         </div>
 
                         {/* EMPLOYMENT */}
                         <div style={{ border: '1px solid #F1F5F9', borderRadius: '20px', padding: 'clamp(20px, 4vw, 32px)', marginBottom: '32px' }}>
-                            <SectionHeader icon={Briefcase} title="Financial Profile" subtitle="Employment and liquidity range assessment" />
+                            <SectionHeader icon={Briefcase} title={t('enrollment.section.financial.title', language)} subtitle={t('enrollment.section.financial.subtitle', language)} />
                             <div className="grid-2-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-                                <InputField label="National ID / SSN / Tax ID" name="ssn" value={formData.ssn} onChange={handleChange} icon={ShieldCheck} />
-                                <InputField label="Target Account Scope" name="accountType" value={formData.accountType} onChange={handleChange} icon={Layout} options={['Tier 1 Checking', 'High-Yield Savings', 'Institutional Business']} />
-                                <InputField label="Profession" name="employmentType" value={formData.employmentType} onChange={handleChange} icon={Building2} options={EMPLOYMENT_OPTIONS} />
-                                <InputField label="Annual Gross Liquidity" name="annualIncome" value={formData.annualIncome} onChange={handleChange} icon={CreditCard} options={['€10k - €50k', '€50k - €150k', '€150k - €500k', '€500k+']} />
+                                <InputField label={t('enrollment.field.nationalId', language)} name="ssn" value={formData.ssn} onChange={handleChange} icon={ShieldCheck} />
+                                <InputField label={t('enrollment.field.accountScope', language)} name="accountType" value={formData.accountType} onChange={handleChange} icon={Layout} options={ACCOUNT_SCOPE_OPTIONS} />
+                                <InputField label={t('enrollment.field.profession', language)} name="employmentType" value={formData.employmentType} onChange={handleChange} icon={Building2} options={PROFESSION_OPTIONS} />
+                                <InputField label={t('enrollment.field.annualIncome', language)} name="annualIncome" value={formData.annualIncome} onChange={handleChange} icon={CreditCard} options={['€10k - €50k', '€50k - €150k', '€150k - €500k', '€500k+']} />
                             </div>
 
                             {formData.employmentType === 'Other' && (
                                 <div style={{ marginTop: '24px' }}>
-                                    <InputField label="Please specify your profession" name="otherEmployment" value={formData.otherEmployment} onChange={handleChange} icon={Info} placeholder="e.g. Marine biologist" />
+                                    <InputField label={t('enrollment.field.otherProfession', language)} name="otherEmployment" value={formData.otherEmployment} onChange={handleChange} icon={Info} placeholder={t('enrollment.placeholder.otherProfession', language)} />
                                 </div>
                             )}
                         </div>
 
                         {/* ADDRESS */}
                         <div style={{ border: '1px solid #F1F5F9', borderRadius: '20px', padding: 'clamp(20px, 4vw, 32px)', marginBottom: '32px' }}>
-                            <SectionHeader icon={MapPin} title="Residency Ledger" />
+                            <SectionHeader icon={MapPin} title={t('enrollment.section.address.title', language)} />
                             <div className="grid-2-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-                                <InputField label="Residential Address" name="address" value={formData.address} onChange={handleChange} icon={Layout} />
-                                <InputField label="City Town" name="city" value={formData.city} onChange={handleChange} icon={Building2} />
-                                <InputField label="Province State" name="state" value={formData.state} onChange={handleChange} icon={MapPin} />
-                                <InputField label="Primary Nationality" name="nationality" value={formData.nationality} onChange={handleChange} icon={Globe} />
+                                <InputField label={t('enrollment.field.address', language)} name="address" value={formData.address} onChange={handleChange} icon={Layout} />
+                                <InputField label={t('enrollment.field.city', language)} name="city" value={formData.city} onChange={handleChange} icon={Building2} />
+                                <InputField label={t('enrollment.field.state', language)} name="state" value={formData.state} onChange={handleChange} icon={MapPin} />
+                                <InputField label={t('enrollment.field.nationality', language)} name="nationality" value={formData.nationality} onChange={handleChange} icon={Globe} />
                             </div>
                         </div>
 
                         {/* DOCUMENTS */}
                         <div style={{ border: '1px solid #F1F5F9', borderRadius: '20px', padding: 'clamp(20px, 4vw, 32px)', marginBottom: '40px' }}>
-                            <SectionHeader icon={FileText} title="Document Archive" subtitle="Selection of government-issued identification" />
+                            <SectionHeader icon={FileText} title={t('enrollment.section.documents.title', language)} subtitle={t('enrollment.section.documents.subtitle', language)} />
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '16px', marginBottom: '32px' }}>
                                 {[
-                                    { id: 'Passport', label: "Passport", icon: Globe }, 
-                                    { id: 'ID', label: 'National ID', icon: Layout }, 
-                                    { id: 'License', label: 'License', icon: CreditCard }
+                                    { id: 'Passport', labelKey: 'enrollment.document.passport', icon: Globe }, 
+                                    { id: 'ID', labelKey: 'enrollment.document.nationalId', icon: Layout }, 
+                                    { id: 'License', labelKey: 'enrollment.document.license', icon: CreditCard }
                                 ].map(doc => (
                                     <div key={doc.id} onClick={() => setDocType(doc.id)} style={{ padding: '20px', border: `2px solid ${docType === doc.id ? '#0EA5E9' : '#F1F5F9'}`, borderRadius: '16px', cursor: 'pointer', textAlign: 'center', background: docType === doc.id ? '#F0F9FF' : 'white', transition: '0.2s' }}>
                                         <div style={{ color: docType === doc.id ? '#0EA5E9' : '#94A3B8', marginBottom: '10px' }}><doc.icon size={24} style={{ margin: '0 auto' }} /></div>
-                                        <p style={{ fontSize: '13px', fontWeight: 800, color: docType === doc.id ? '#0EA5E9' : '#64748B' }}>{doc.label}</p>
+                                        <p style={{ fontSize: '13px', fontWeight: 800, color: docType === doc.id ? '#0EA5E9' : '#64748B' }}>{t(doc.labelKey, language)}</p>
                                     </div>
                                 ))}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                                <UploadBox label="Primary identification (Front)" />
-                                <UploadBox label="Identification (Rear)" />
-                                <UploadBox label="Biometric Portrait Photo" />
+                                <UploadBox label={t('enrollment.upload.front', language)} />
+                                <UploadBox label={t('enrollment.upload.rear', language)} />
+                                <UploadBox label={t('enrollment.upload.photo', language)} />
                             </div>
                         </div>
 
@@ -329,7 +379,7 @@ const Enrollment = () => {
                                 boxShadow: '0 10px 25px rgba(14, 165, 233, 0.3)' 
                             }}
                         >
-                            {loading ? 'Transmitting Dossier...' : 'Finalize and Submit'}
+                            {loading ? t('enrollment.submit.sending', language) : t('enrollment.submit.finalize', language)}
                         </button>
                     </form>
                 </div>

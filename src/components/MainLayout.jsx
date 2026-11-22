@@ -7,12 +7,15 @@ import {
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import TransferModal from './TransferModal';
 import { useAppContext } from '../AppContext';
+import { t } from '../translations';
+import { useLanguage } from '../contexts/LanguageContext';
 import LanguageSelector from './LanguageSelector';
 
 const MainLayout = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, isTransferModalOpen, setIsTransferModalOpen, logout } = useAppContext();
+    const { language } = useLanguage();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     if (!user) {
@@ -54,7 +57,7 @@ const MainLayout = ({ children }) => {
                         <div className="avatar">
                             {(user.name || "U").charAt(0)}
                         </div>
-                        <p className="profile-name">{user.name || 'User'}</p>
+                        <p className="profile-name">{user.name || t('common.user', language)}</p>
                         <p className="profile-id">ID: {user.uid?.substring(0, 8) || '85979175073'}</p>
                         
                         <div 
@@ -72,42 +75,42 @@ const MainLayout = ({ children }) => {
                             ) : (
                                 <AlertCircle size={14} />
                             )}
-                            {user.kycStatus === 'Verified' ? 'KYC Verified' : 'Verify KYC'}
+                            {user.kycStatus === 'Verified' ? t('layout.kycVerified', language) : t('layout.verifyKyc', language)}
                         </div>
 
                         <div className="btn-group" style={{ marginTop: '16px' }}>
-                            <button className="btn-outline" onClick={() => { navigate('/settings'); closeSidebar(); }}><User size={14} /> Profile</button>
-                            <button className="btn-outline" onClick={logout} style={{ color: 'var(--primary)' }}><LogOut size={14} /> Logout</button>
+                            <button className="btn-outline" onClick={() => { navigate('/settings'); closeSidebar(); }}><User size={14} /> {t('layout.profile', language)}</button>
+                            <button className="btn-outline" onClick={logout} style={{ color: 'var(--primary)' }}><LogOut size={14} /> {t('layout.logout', language)}</button>
                         </div>
                     </div>
                 </div>
 
                 <div className="sidebar-nav">
                     <div className="nav-section">
-                        <p className="nav-title">MAIN MENU</p>
-                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/dashboard'); closeSidebar(); }} className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}><Home size={18} /> Dashboard</a>
-                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/transactions'); closeSidebar(); }} className={`nav-item ${isActive('/transactions') ? 'active' : ''}`}><Activity size={18} /> Transactions</a>
-                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/cards'); closeSidebar(); }} className={`nav-item ${isActive('/cards') ? 'active' : ''}`}><CreditCard size={18} /> Cards</a>
+                        <p className="nav-title">{t('layout.mainMenu', language)}</p>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/dashboard'); closeSidebar(); }} className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}><Home size={18} /> {t('layout.dashboard', language)}</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/transactions'); closeSidebar(); }} className={`nav-item ${isActive('/transactions') ? 'active' : ''}`}><Activity size={18} /> {t('layout.transactions', language)}</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/cards'); closeSidebar(); }} className={`nav-item ${isActive('/cards') ? 'active' : ''}`}><CreditCard size={18} /> {t('layout.cards', language)}</a>
                     </div>
  
                     <div className="nav-section">
-                        <p className="nav-title">TRANSFERS</p>
-                        <a href="#" onClick={(e) => { e.preventDefault(); setIsTransferModalOpen(true); closeSidebar(); }} className="nav-item"><Send size={18} /> Local Transfer</a>
-                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/international-transfer'); closeSidebar(); }} className={`nav-item ${isActive('/international-transfer') ? 'active' : ''}`}><Globe size={18} /> International Wire</a>
-                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/deposit'); closeSidebar(); }} className={`nav-item ${isActive('/deposit') ? 'active' : ''}`}><Download size={18} /> Deposit</a>
+                        <p className="nav-title">{t('layout.transfers', language)}</p>
+                        <a href="#" onClick={(e) => { e.preventDefault(); setIsTransferModalOpen(true); closeSidebar(); }} className="nav-item"><Send size={18} /> {t('layout.localTransfer', language)}</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/international-transfer'); closeSidebar(); }} className={`nav-item ${isActive('/international-transfer') ? 'active' : ''}`}><Globe size={18} /> {t('layout.internationalWire', language)}</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/deposit'); closeSidebar(); }} className={`nav-item ${isActive('/deposit') ? 'active' : ''}`}><Download size={18} /> {t('layout.deposit', language)}</a>
                     </div>
                     
                     <div className="nav-section">
-                        <p className="nav-title">SERVICES</p>
-                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/loan-request'); closeSidebar(); }} className={`nav-item ${isActive('/loan-request') ? 'active' : ''}`}><Landmark size={18} /> Loan Request</a>
-                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/irs'); closeSidebar(); }} className={`nav-item ${isActive('/irs') ? 'active' : ''}`}><FileText size={18} /> IRS Tax Refund</a>
-                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/loan-history'); closeSidebar(); }} className={`nav-item ${isActive('/loan-history') ? 'active' : ''}`}><History size={18} /> Loan History</a>
+                        <p className="nav-title">{t('layout.services', language)}</p>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/loan-request'); closeSidebar(); }} className={`nav-item ${isActive('/loan-request') ? 'active' : ''}`}><Landmark size={18} /> {t('layout.loanRequest', language)}</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/irs'); closeSidebar(); }} className={`nav-item ${isActive('/irs') ? 'active' : ''}`}><FileText size={18} /> {t('layout.irsTaxRefund', language)}</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/loan-history'); closeSidebar(); }} className={`nav-item ${isActive('/loan-history') ? 'active' : ''}`}><History size={18} /> {t('layout.loanHistory', language)}</a>
                     </div>
                     
                     <div className="nav-section">
-                        <p className="nav-title">ACCOUNT</p>
-                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/settings'); closeSidebar(); }} className={`nav-item ${isActive('/settings') ? 'active' : ''}`}><Settings size={18} /> Settings</a>
-                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/support'); closeSidebar(); }} className={`nav-item ${isActive('/support') ? 'active' : ''}`}><LifeBuoy size={18} /> Support Ticket</a>
+                        <p className="nav-title">{t('layout.accountSection', language)}</p>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/settings'); closeSidebar(); }} className={`nav-item ${isActive('/settings') ? 'active' : ''}`}><Settings size={18} /> {t('layout.settings', language)}</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigate('/support'); closeSidebar(); }} className={`nav-item ${isActive('/support') ? 'active' : ''}`}><LifeBuoy size={18} /> {t('layout.supportTicket', language)}</a>
                     </div>
                 </div>
             </aside>
@@ -123,7 +126,7 @@ const MainLayout = ({ children }) => {
                         </div>
                         <div className="date-display">
                             <Calendar size={18} />
-                            Today
+                            {t('layout.today', language)}
                         </div>
                     </div>
                     
@@ -133,18 +136,18 @@ const MainLayout = ({ children }) => {
                             <CreditCard size={16} /> {formatMoney(user.balance)}
                         </div>
                         <button className="icon-btn" style={{ width: '36px', height: '36px' }}><Bell size={18} /></button>
-                        <button className="icon-btn" style={{ width: '36px', height: '36px' }} onClick={() => navigate('/admin')} title="Go to Admin Panel"><Settings size={18} /></button>
+                        <button className="icon-btn" style={{ width: '36px', height: '36px' }} onClick={() => navigate('/admin')} title={t('layout.adminPanelTooltip', language)}><Settings size={18} /></button>
                     </div>
                 </header>
 
                 {children}
 
                 <footer className="desktop-footer">
-                    <div>© 2025 Finvex Bank. All rights reserved.</div>
+                    <div>{t('layout.copyright', language)}</div>
                     <div className="footer-links">
-                        <a href="#">Privacy Policy</a>
-                        <a href="#">Terms of Service</a>
-                        <a href="#">Contact Support</a>
+                        <a href="#">{t('layout.privacyPolicy', language)}</a>
+                        <a href="#">{t('layout.termsOfService', language)}</a>
+                        <a href="#">{t('layout.contactSupport', language)}</a>
                     </div>
                 </footer>
             </main>
@@ -153,22 +156,22 @@ const MainLayout = ({ children }) => {
             <div className="mobile-nav">
                 <div className={`mn-item ${isActive('/dashboard') ? 'active' : ''}`} onClick={() => navigate('/dashboard')}>
                     <Home size={22} />
-                    <span>Home</span>
+                    <span>{t('layout.home', language)}</span>
                 </div>
                 <div className={`mn-item ${isActive('/transactions') ? 'active' : ''}`} onClick={() => navigate('/transactions')}>
                     <Activity size={22} />
-                    <span>Activity</span>
+                    <span>{t('layout.activity', language)}</span>
                 </div>
                 <div className="mn-fab" onClick={() => setIsTransferModalOpen(true)}>
                     <Send size={24} />
                 </div>
                 <div className={`mn-item ${isActive('/cards') ? 'active' : ''}`} onClick={() => navigate('/cards')}>
                     <CreditCard size={22} />
-                    <span>Cards</span>
+                    <span>{t('layout.cards', language)}</span>
                 </div>
                 <div className={`mn-item ${isActive('/settings') ? 'active' : ''}`} onClick={() => navigate('/settings')}>
                     <User size={22} />
-                    <span>Account</span>
+                    <span>{t('layout.accountSection', language)}</span>
                 </div>
             </div>
 

@@ -17,9 +17,12 @@ import { collection, doc, updateDoc, onSnapshot, query, orderBy, addDoc, serverT
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { countries } from '../data/countries';
 import LanguageSelector from '../components/LanguageSelector';
+import { useLanguage } from '../contexts/LanguageContext';
+import { t } from '../translations';
 
 const AdminDashboard = () => {
     const { user, logout } = useAppContext();
+    const { language } = useLanguage();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [expandedMenus, setExpandedMenus] = useState(['loans', 'cards', 'settings']);
@@ -61,7 +64,7 @@ const AdminDashboard = () => {
 
     const approveKYC = async (uid) => {
         await updateDoc(doc(db, 'users', uid), { kycStatus: 'Verified', accountStatus: 'Active' });
-        alert("Account Verified!");
+        alert(t('admin.alert.accountVerified', language));
     };
 
     const handleTransaction = async (txId, status) => {
@@ -115,28 +118,28 @@ const AdminDashboard = () => {
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '12px 0' }}>
-                    <NavItem active={activeTab === 'dashboard'} icon={<LayoutDashboard size={18} />} label="Global Overview" onClick={() => {setActiveTab('dashboard'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
-                    <NavItem active={activeTab === 'manage-users'} icon={<Users size={18} />} label="User Directory" onClick={() => {setActiveTab('manage-users'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
-                    <NavItem active={activeTab === 'create-user'} icon={<UserPlus size={18} />} label="Deploy New User" onClick={() => {setActiveTab('create-user'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
-                    <NavItem active={activeTab === 'kyc'} icon={<ShieldCheck size={18} />} label="KYC Verifications" onClick={() => {setActiveTab('kyc'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                    <NavItem active={activeTab === 'dashboard'} icon={<LayoutDashboard size={18} />} label={t('admin.nav.overview', language)} onClick={() => {setActiveTab('dashboard'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                    <NavItem active={activeTab === 'manage-users'} icon={<Users size={18} />} label={t('admin.nav.userDirectory', language)} onClick={() => {setActiveTab('manage-users'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                    <NavItem active={activeTab === 'create-user'} icon={<UserPlus size={18} />} label={t('admin.nav.deployUser', language)} onClick={() => {setActiveTab('create-user'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                    <NavItem active={activeTab === 'kyc'} icon={<ShieldCheck size={18} />} label={t('admin.nav.kyc', language)} onClick={() => {setActiveTab('kyc'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
                     
-                    <CollapsibleItem icon={<ArrowUpRight size={18} />} label="Transaction Ledger" expanded={expandedMenus.includes('ledger')} onToggle={() => toggleMenu('ledger')}>
-                        <SubNavItem label="Outbound Wires" active={activeTab === 'transfers'} onClick={() => {setActiveTab('transfers'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
-                        <SubNavItem label="Inbound Deposits" active={activeTab === 'deposits'} onClick={() => {setActiveTab('deposits'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                    <CollapsibleItem icon={<ArrowUpRight size={18} />} label={t('admin.nav.ledger', language)} expanded={expandedMenus.includes('ledger')} onToggle={() => toggleMenu('ledger')}>
+                        <SubNavItem label={t('admin.nav.outboundWires', language)} active={activeTab === 'transfers'} onClick={() => {setActiveTab('transfers'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                        <SubNavItem label={t('admin.nav.inboundDeposits', language)} active={activeTab === 'deposits'} onClick={() => {setActiveTab('deposits'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
                     </CollapsibleItem>
 
-                    <CollapsibleItem icon={<Landmark size={18} />} label="Lending Services" expanded={expandedMenus.includes('loans')} onToggle={() => toggleMenu('loans')}>
-                        <SubNavItem label="Pending Requests" active={activeTab === 'loan-requests'} onClick={() => {setActiveTab('loan-requests'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                    <CollapsibleItem icon={<Landmark size={18} />} label={t('admin.nav.lending', language)} expanded={expandedMenus.includes('loans')} onToggle={() => toggleMenu('loans')}>
+                        <SubNavItem label={t('admin.nav.pendingRequests', language)} active={activeTab === 'loan-requests'} onClick={() => {setActiveTab('loan-requests'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
                     </CollapsibleItem>
 
-                    <CollapsibleItem icon={<CardIcon size={18} />} label="Card Infrastructure" expanded={expandedMenus.includes('cards')} onToggle={() => toggleMenu('cards')}>
-                        <SubNavItem label="Issuance Requests" active={activeTab === 'card-requests'} onClick={() => {setActiveTab('card-requests'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                    <CollapsibleItem icon={<CardIcon size={18} />} label={t('admin.nav.cardInfra', language)} expanded={expandedMenus.includes('cards')} onToggle={() => toggleMenu('cards')}>
+                        <SubNavItem label={t('admin.nav.issuanceRequests', language)} active={activeTab === 'card-requests'} onClick={() => {setActiveTab('card-requests'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
                     </CollapsibleItem>
                 </div>
 
                 <div style={{ padding: '20px 24px', borderTop: '1px solid #F1F5F9' }}>
                      <button onClick={logout} style={{ width: '100%', padding: '12px', background: '#FEF2F2', color: '#EF4444', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', transition: '0.2s' }}>
-                        <LogOut size={16} /> Termination Session
+                        <LogOut size={16} /> {t('admin.nav.terminateSession', language)}
                      </button>
                 </div>
             </aside>
@@ -155,14 +158,14 @@ const AdminDashboard = () => {
                     {activeTab === 'dashboard' && viewMode === 'list' && (
                         <>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }} className="flex-row-mobile">
-                                <div><h1 style={{ fontSize: '28px', fontWeight: 900, color: '#1E293B' }}>Institutional Terminal</h1><p style={{ color: '#64748B', fontWeight: 500 }}>heartbeat and liquidity overview.</p></div>
+                                <div><h1 style={{ fontSize: '28px', fontWeight: 900, color: '#1E293B' }}>{t('admin.dash.title', language)}</h1><p style={{ color: '#64748B', fontWeight: 500 }}>{t('admin.dash.subtitle', language)}</p></div>
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '40px' }}>
-                                <ComplexStat icon={<Wallet color="#F59E0B" />} label="Aggregated Balance" value={`€${totalDepositValue.toLocaleString()}`} color="#FFFBEB" />
-                                <ComplexStat icon={<RefreshCw color="#3B82F6" />} label="Inbound Backlog" value={pendingDeposits.length} color="#EFF6FF" />
-                                <ComplexStat icon={<ArrowUpRight color="#EF4444" />} label="Velocity Volume" value={`€${totalTransfersValue.toLocaleString()}`} color="#FEF2F2" />
-                                <ComplexStat icon={<RefreshCw color="#6366F1" />} label="Wire Verification" value={pendingTransfers.length} color="#EEF2FF" />
+                                <ComplexStat icon={<Wallet color="#F59E0B" />} label={t('admin.dash.aggregatedBalance', language)} value={`€${totalDepositValue.toLocaleString()}`} color="#FFFBEB" />
+                                <ComplexStat icon={<RefreshCw color="#3B82F6" />} label={t('admin.dash.inboundBacklog', language)} value={pendingDeposits.length} color="#EFF6FF" />
+                                <ComplexStat icon={<ArrowUpRight color="#EF4444" />} label={t('admin.dash.velocityVolume', language)} value={`€${totalTransfersValue.toLocaleString()}`} color="#FEF2F2" />
+                                <ComplexStat icon={<RefreshCw color="#6366F1" />} label={t('admin.dash.wireVerification', language)} value={pendingTransfers.length} color="#EEF2FF" />
                             </div>
                         </>
                     )}
@@ -183,7 +186,7 @@ const AdminDashboard = () => {
                                 setSelectedUser({...selectedUser, ...newData});
                             }}
                             onDelete={async () => {
-                                if(window.confirm(`⚠️ DELETION: Permanent removal of ${selectedUser.name}?`)) {
+                                if(window.confirm(t('admin.alert.deleteUser', language, { name: selectedUser.name }))) {
                                     await deleteDoc(doc(db, 'users', selectedUser.id));
                                     setViewMode('list');
                                     setSelectedUser(null);
@@ -194,13 +197,13 @@ const AdminDashboard = () => {
 
                     {activeTab === 'create-user' && <CreateUserForm />}
                     {activeTab === 'kyc' && <KycPanel users={users.filter(u => u.kycStatus && u.kycStatus !== 'Unverified')} onApprove={approveKYC} />}
-                    {activeTab === 'transfers' && <TransactionPanel transactions={transactions.filter(t => t.type === 'Transfer' || t.type === 'International Wire' || t.type === 'debit')} onUpdate={handleTransaction} title="Global Wire Settlement" />}
-                    {activeTab === 'deposits' && <TransactionPanel transactions={transactions.filter(t => t.type === 'Deposit' || t.type === 'credit')} onUpdate={handleTransaction} title="Treasury Inbound Management" />}
+                    {activeTab === 'transfers' && <TransactionPanel transactions={transactions.filter(t => t.type === 'Transfer' || t.type === 'International Wire' || t.type === 'debit')} onUpdate={handleTransaction} title={t('admin.panel.wireSettlement', language)} />}
+                    {activeTab === 'deposits' && <TransactionPanel transactions={transactions.filter(t => t.type === 'Deposit' || t.type === 'credit')} onUpdate={handleTransaction} title={t('admin.panel.treasuryInbound', language)} />}
                     {activeTab === 'loan-requests' && <LoanPanel loans={loans.filter(l => l.status === 'Pending')} onUpdate={handleLoan} />}
                     {activeTab === 'card-requests' && <CardPanel cards={cards.filter(c => c.status === 'Pending')} onUpdate={async (id) => {
                         const ref = doc(db, 'cards', id);
                         await updateDoc(ref, { status: 'Active', number: '5172 '+Math.floor(1000+Math.random()*9000)+' '+Math.floor(1000+Math.random()*9000)+' '+Math.floor(1000+Math.random()*9000), expiry: '08/30', cvv: Math.floor(100+Math.random()*900).toString() });
-                        alert("Infrastructure Deployment: SECURE CARD ACTIVATED");
+                        alert(t('admin.alert.cardActivated', language));
                     }} />}
                 </div>
             </main>
@@ -253,6 +256,7 @@ const ComplexStat = ({ icon, label, value, color }) => (
 );
 
 const UsersPanel = ({ users, onManage }) => {
+    const { language } = useLanguage();
     const [search, setSearch] = useState('');
 
     const filtered = users.filter(u => 
@@ -264,11 +268,11 @@ const UsersPanel = ({ users, onManage }) => {
     return (
         <div style={{ background: 'white', borderRadius: '24px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
             <div style={{ padding: '24px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                <h3 style={{ fontWeight: 900, fontSize: '18px' }}>User Directory Control</h3>
+                <h3 style={{ fontWeight: 900, fontSize: '18px' }}>{t('admin.users.title', language)}</h3>
                 <div style={{ position: 'relative', maxWidth: '300px', width: '100%' }}>
                     <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
                     <input 
-                        placeholder="Search name, username or err..." 
+                        placeholder={t('admin.users.search', language)} 
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         style={{ width: '100%', padding: '10px 10px 10px 40px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '13px', fontWeight: 600, background: '#F8FAFC' }} 
@@ -280,12 +284,12 @@ const UsersPanel = ({ users, onManage }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead style={{ background: '#F8FAFC' }}>
                         <tr>
-                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>Client Name</th>
-                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>Username</th>
-                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>Email</th>
-                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>Status</th>
-                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>Date Registered</th>
-                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>Action</th>
+                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>{t('admin.users.col.name', language)}</th>
+                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>{t('admin.users.col.username', language)}</th>
+                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>{t('admin.users.col.email', language)}</th>
+                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>{t('admin.users.col.status', language)}</th>
+                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>{t('admin.users.col.registered', language)}</th>
+                            <th style={{ padding: '16px 24px', fontSize: '12px', color: '#64748B', fontWeight: 800, textTransform: 'uppercase' }}>{t('admin.users.col.action', language)}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -308,7 +312,7 @@ const UsersPanel = ({ users, onManage }) => {
                                 </td>
                                 <td style={{ padding: '18px 24px' }}>{u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
                                 <td style={{ padding: '18px 24px' }}>
-                                    <button onClick={() => onManage(u)} style={{ background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 800 }}>Manage</button>
+                                    <button onClick={() => onManage(u)} style={{ background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 800 }}>{t('admin.users.manage', language)}</button>
                                 </td>
                             </tr>
                         ))}
@@ -320,6 +324,7 @@ const UsersPanel = ({ users, onManage }) => {
 };
 
 const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
+    const { language } = useLanguage();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [actionType, setActionType] = useState(null);
     const [formData, setFormData] = useState({
@@ -334,12 +339,12 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
 
     const handleFundSubmit = async () => {
         const amt = parseFloat(formData.amount);
-        if (isNaN(amt)) { alert("Institutional Order Denied: Invalid Liquidity Amount."); return; }
+        if (isNaN(amt)) { alert(t('admin.alert.invalidAmount', language)); return; }
         
         let newBalance = user.balance || 0;
         if (formData.type === 'Fund/Add') newBalance += amt;
         else if (formData.type === 'Debit/Subtract') newBalance -= amt;
-        else { alert("Protocol Specification Missing: Select adjustment type."); return; }
+        else { alert(t('admin.alert.selectType', language)); return; }
 
         await onUpdate({ balance: newBalance });
         
@@ -353,7 +358,7 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
             createdAt: formData.date ? new Date(formData.date) : serverTimestamp()
         });
 
-        alert(`TREASURY RECORD UPDATED: Account ${formData.type === 'Fund/Add' ? 'Funded' : 'Debited'} successfully.`);
+        alert(formData.type === 'Fund/Add' ? t('admin.alert.recordFunded', language) : t('admin.alert.recordDebited', language));
         setActionType(null);
     };
 
@@ -366,42 +371,42 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
                     <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#1E293B' }}>{user.name}</h1>
                 </div>
                 <div style={{ display: 'flex', gap: '12px', position: 'relative' }}>
-                    <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: '#2563EB', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 700 }}><ArrowLeft size={18} /> back</button>
-                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: '#8B5CF6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 700 }}>Actions <ChevronDown size={18} /></button>
+                    <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: '#2563EB', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 700 }}><ArrowLeft size={18} /> {t('admin.details.back', language)}</button>
+                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: '#8B5CF6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 700 }}>{t('admin.details.actions', language)} <ChevronDown size={18} /></button>
                     
                     {isMenuOpen && (
                         <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #E2E8F0', zIndex: 100, width: '240px', padding: '8px 0' }}>
-                            <ActionMenuItem icon={<DollarSign size={16}/>} label="Fund/Debit Account" onClick={() => { setActionType('fund'); setIsMenuOpen(false); }} />
-                            <ActionMenuItem icon={<ImageIcon size={16}/>} label="Change Profile Pics" onClick={() => setIsMenuOpen(false)} />
-                            <ActionMenuItem icon={<Key size={16}/>} label="Reset Password" onClick={() => setIsMenuOpen(false)} />
+                            <ActionMenuItem icon={<DollarSign size={16}/>} label={t('admin.details.action.fundDebit', language)} onClick={() => { setActionType('fund'); setIsMenuOpen(false); }} />
+                            <ActionMenuItem icon={<ImageIcon size={16}/>} label={t('admin.details.action.changePhoto', language)} onClick={() => setIsMenuOpen(false)} />
+                            <ActionMenuItem icon={<Key size={16}/>} label={t('admin.details.action.resetPassword', language)} onClick={() => setIsMenuOpen(false)} />
                             {user.accountStatus === 'Dormant' ? (
-                                <ActionMenuItem icon={<Power size={16}/>} label="Set Account as Active" onClick={() => { onUpdate({ accountStatus: 'Active' }); setIsMenuOpen(false); }} color="#10B981" />
+                                <ActionMenuItem icon={<Power size={16}/>} label={t('admin.details.action.setActive', language)} onClick={() => { onUpdate({ accountStatus: 'Active' }); setIsMenuOpen(false); }} color="#10B981" />
                             ) : (
-                                <ActionMenuItem icon={<ShieldAlert size={16}/>} label="Set Account as Dormant" onClick={() => { onUpdate({ accountStatus: 'Dormant' }); setIsMenuOpen(false); }} color="#F59E0B" />
+                                <ActionMenuItem icon={<ShieldAlert size={16}/>} label={t('admin.details.action.setDormant', language)} onClick={() => { onUpdate({ accountStatus: 'Dormant' }); setIsMenuOpen(false); }} color="#F59E0B" />
                             )}
-                            <ActionMenuItem icon={<Edit3 size={16}/>} label="Edit User Profile" onClick={() => setIsMenuOpen(false)} />
-                            <ActionMenuItem icon={<Trash2 size={16}/>} label={`Delete ${user.name.split(' ')[0]}`} onClick={() => { onDelete(); setIsMenuOpen(false); }} color="#EF4444" />
+                            <ActionMenuItem icon={<Edit3 size={16}/>} label={t('admin.details.action.editProfile', language)} onClick={() => setIsMenuOpen(false)} />
+                            <ActionMenuItem icon={<Trash2 size={16}/>} label={t('admin.details.action.delete', language, { name: user.name.split(' ')[0] })} onClick={() => { onDelete(); setIsMenuOpen(false); }} color="#EF4444" />
                         </div>
                     )}
                 </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-                <DetailStatCard label="Account Balance" val={`€${(user.balance || 0).toLocaleString()}`} />
-                <DetailStatCard label="Account Limit" val="€500,000" />
-                <DetailStatCard label="Loans" val="No Loan" />
+                <DetailStatCard label={t('admin.details.balance', language)} val={`€${(user.balance || 0).toLocaleString()}`} />
+                <DetailStatCard label={t('admin.details.limit', language)} val="€500,000" />
+                <DetailStatCard label={t('admin.details.loans', language)} val={t('admin.details.noLoan', language)} />
                 <DetailStatCard label="KYC" val={user.kycStatus === 'Verified' ? 'Verified' : 'Pending'} pill={user.kycStatus === 'Verified'} />
             </div>
 
             <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                <div style={{ padding: '24px', borderBottom: '1px solid #F1F5F9' }}><h3 style={{ fontSize: '13px', fontWeight: 900, color: '#94A3B8', textTransform: 'uppercase' }}>USER INFORMATION</h3></div>
-                <InfoRow label="Fullname" val={user.name} />
-                <InfoRow label="Email Address" val={user.email} />
-                <InfoRow label="Mobile Number" val={user.phone || 'N/A'} />
-                <InfoRow label="Account Number" val={user.accountNumber || 'N/A'} />
-                <InfoRow label="4 Digit Transaction Pin" val={user.pin || 'N/A'} />
-                <InfoRow label="IRS Filing No." val={user.irs || 'N/A'} />
-                <InfoRow label="IMF Code" val={user.imf || 'N/A'} />
+                <div style={{ padding: '24px', borderBottom: '1px solid #F1F5F9' }}><h3 style={{ fontSize: '13px', fontWeight: 900, color: '#94A3B8', textTransform: 'uppercase' }}>{t('admin.details.userInfo', language)}</h3></div>
+                <InfoRow label={t('admin.details.fullname', language)} val={user.name} />
+                <InfoRow label={t('admin.details.email', language)} val={user.email} />
+                <InfoRow label={t('admin.details.mobile', language)} val={user.phone || 'N/A'} />
+                <InfoRow label={t('admin.details.accountNumber', language)} val={user.accountNumber || 'N/A'} />
+                <InfoRow label={t('admin.details.pin', language)} val={user.pin || 'N/A'} />
+                <InfoRow label={t('admin.details.irs', language)} val={user.irs || 'N/A'} />
+                <InfoRow label={t('admin.details.imf', language)} val={user.imf || 'N/A'} />
             </div>
 
             {/* FUND/DEBIT MODAL */}
@@ -411,58 +416,58 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
                         <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{display:'flex', alignItems:'center', gap:'16px'}}>
                                 <div style={{width:'40px', height:'40px', borderRadius:'50%', background:'#E0F2FE', display:'flex', alignItems:'center', justifyContent:'center', color:'#0EA5E9'}}><UserCircle size={26}/></div>
-                                <h3 style={{fontWeight:900, fontSize:'18px', color:'#1E293B'}}>Fund/Debit Account.</h3>
+                                <h3 style={{fontWeight:900, fontSize:'18px', color:'#1E293B'}}>{t('admin.modal.title', language)}</h3>
                             </div>
                             <button onClick={() => setActionType(null)} style={{background:'none', border:'none', color:'#94A3B8'}}><X size={20}/></button>
                         </div>
                         
                         <div style={{ padding: '32px', display:'grid', gap:'24px' }}>
-                            <FormGroup label="Amount">
+                            <FormGroup label={t('admin.modal.amount', language)}>
                                 <input 
                                     type="number" 
-                                    placeholder="Enter amount" 
+                                    placeholder={t('admin.modal.enterAmount', language)} 
                                     value={formData.amount}
                                     onChange={e => setFormData({...formData, amount: e.target.value})}
                                     style={formInputLarge} 
                                 />
                             </FormGroup>
 
-                            <FormGroup label="Select where to Fund/Debit">
+                            <FormGroup label={t('admin.modal.selectLocation', language)}>
                                 <select value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} style={formSelectStyle}>
-                                    <option>Account Balance</option>
-                                    <option>Fixed Deposit</option>
-                                    <option>Savings Vault</option>
+                                    <option value="Account Balance">{t('admin.modal.location.balance', language)}</option>
+                                    <option value="Fixed Deposit">{t('admin.modal.location.fixedDeposit', language)}</option>
+                                    <option value="Savings Vault">{t('admin.modal.location.savingsVault', language)}</option>
                                 </select>
                             </FormGroup>
 
-                            <FormGroup label="Select Fund to add, debit to subtract.">
+                            <FormGroup label={t('admin.modal.selectTypeLabel', language)}>
                                 <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} style={formSelectStyle}>
-                                    <option>Select type</option>
-                                    <option>Fund/Add</option>
-                                    <option>Debit/Subtract</option>
+                                    <option value="Select type">{t('admin.modal.selectType', language)}</option>
+                                    <option value="Fund/Add">{t('admin.modal.fundAdd', language)}</option>
+                                    <option value="Debit/Subtract">{t('admin.modal.debitSubtract', language)}</option>
                                 </select>
                             </FormGroup>
 
-                            <FormGroup label="Transfer Scope.">
+                            <FormGroup label={t('admin.modal.transferScope', language)}>
                                 <select value={formData.scope} onChange={e => setFormData({...formData, scope: e.target.value})} style={formSelectStyle}>
-                                    <option>Select type</option>
-                                    <option>Local Inflow</option>
-                                    <option>International Settlement</option>
-                                    <option>Internal Balancing</option>
-                                    <option>Treasury Reconciliation</option>
+                                    <option value="Select type">{t('admin.modal.selectType', language)}</option>
+                                    <option value="Local Inflow">{t('admin.modal.scope.localInflow', language)}</option>
+                                    <option value="International Settlement">{t('admin.modal.scope.international', language)}</option>
+                                    <option value="Internal Balancing">{t('admin.modal.scope.internalBalancing', language)}</option>
+                                    <option value="Treasury Reconciliation">{t('admin.modal.scope.treasury', language)}</option>
                                 </select>
                             </FormGroup>
 
-                            <FormGroup label="Description">
+                            <FormGroup label={t('admin.modal.description', language)}>
                                 <input 
-                                    placeholder="Institutional description..." 
+                                    placeholder={t('admin.modal.descriptionPlaceholder', language)} 
                                     value={formData.desc}
                                     onChange={e => setFormData({...formData, desc: e.target.value})}
                                     style={formInputStyle} 
                                 />
                             </FormGroup>
 
-                            <FormGroup label="Date (You can back date transaction here)">
+                            <FormGroup label={t('admin.modal.dateLabel', language)}>
                                 <input 
                                     type="datetime-local" 
                                     value={formData.date}
@@ -471,17 +476,17 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
                                 />
                             </FormGroup>
 
-                            <FormGroup label="Send Email and SMS to User">
+                            <FormGroup label={t('admin.modal.notifyLabel', language)}>
                                 <select value={formData.notify} onChange={e => setFormData({...formData, notify: e.target.value})} style={formSelectStyle}>
-                                    <option>No</option>
-                                    <option>Yes (Instant Alert)</option>
+                                    <option value="No">{t('admin.modal.no', language)}</option>
+                                    <option value="Yes (Instant Alert)">{t('admin.modal.yesInstant', language)}</option>
                                 </select>
                             </FormGroup>
 
                             <button 
                                 onClick={handleFundSubmit}
                                 style={{ width: '100%', padding: '16px', background: '#2563EB', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 900, marginTop: '12px', fontSize:'15px', letterSpacing:'0.02em', boxShadow:'0 10px 25px rgba(37,99,235,0.2)' }}>
-                                Fund Account
+                                {t('admin.modal.fundButton', language)}
                             </button>
                         </div>
                     </div>
@@ -530,6 +535,7 @@ const InfoRow = ({ label, val }) => (
 );
 
 const CreateUserForm = () => {
+    const { language } = useLanguage();
     const [data, setData] = useState({ 
         firstName: '', middleName: '', lastName: '', username: '', email: '', 
         phone: '', dob: '', accountType: 'Checking', accountNumber: Math.floor(10000000000 + Math.random() * 90000000000).toString(),
@@ -559,32 +565,32 @@ const CreateUserForm = () => {
                 role: 'user',
                 createdAt: serverTimestamp()
             });
-            alert("✅ INFRASTRUCTURE DEPLOYMENT SUCCESSFUL.");
+            alert(t('admin.alert.userCreated', language));
         } catch (err) { alert(err.message); }
         setLoading(false);
     };
 
     return (
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#1E293B', marginBottom:'32px' }}>Client Deployment</h1>
+            <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#1E293B', marginBottom:'32px' }}>{t('admin.create.title', language)}</h1>
             <div style={{ background: 'white', padding: '40px', borderRadius: '24px', border: '1px solid #E2E8F0' }}>
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '32px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-                        <FormInput label="First Name" data={data} setData={setData} field="firstName" required />
-                        <FormInput label="Last Name" data={data} setData={setData} field="lastName" required />
-                        <FormInput label="Corporate Email" data={data} setData={setData} field="email" type="email" required />
-                        <FormInput label="Access Code" data={data} setData={setData} field="password" type="password" required />
+                        <FormInput label={t('admin.create.firstName', language)} data={data} setData={setData} field="firstName" required />
+                        <FormInput label={t('admin.create.lastName', language)} data={data} setData={setData} field="lastName" required />
+                        <FormInput label={t('admin.create.email', language)} data={data} setData={setData} field="email" type="email" required />
+                        <FormInput label={t('admin.create.password', language)} data={data} setData={setData} field="password" type="password" required />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-                        <FormInput label="Phone Number" data={data} setData={setData} field="phone" type="tel" />
+                        <FormInput label={t('admin.create.phone', language)} data={data} setData={setData} field="phone" type="tel" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '12px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>Country</label>
+                            <label style={{ fontSize: '12px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>{t('admin.create.country', language)}</label>
                             <select 
                                 value={data.country} 
                                 onChange={e=>setData({...data, country: e.target.value})} 
                                 style={formInputStyle}
                             >
-                                <option value="">Select a country</option>
+                                <option value="">{t('admin.create.selectCountry', language)}</option>
                                 {countries.map((country, index) => (
                                     <option key={index} value={country}>{country}</option>
                                 ))}
@@ -592,7 +598,7 @@ const CreateUserForm = () => {
                         </div>
                     </div>
                     <button disabled={loading} style={{ padding: '20px', background: '#2563EB', color: 'white', border: 'none', borderRadius: '16px', fontWeight: 900 }}>
-                        {loading ? 'DEPLOYING...' : 'DEPLOY CLIENT NODE'}
+                        {loading ? t('admin.create.deploying', language) : t('admin.create.deploy', language)}
                     </button>
                 </form>
             </div>
@@ -607,24 +613,29 @@ const FormInput = ({ label, data, setData, field, type="text", options, required
     </div>
 );
 
-const KycPanel = ({ users, onApprove }) => (
-    <div style={{ background: 'white', borderRadius: '24px', border: '1px solid #E2E8F0', padding: '32px' }}>
-        <h3 style={{ fontSize: '20px', fontWeight: 900, marginBottom: '24px' }}>Identity Verification Queue</h3>
-        {users.map(u => (
-            <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9', marginBottom:'12px' }}>
-                <div style={{ fontWeight: 800 }}>{u.name}</div>
-                <button onClick={() => onApprove(u.id)} style={{ padding: '10px 24px', background: '#10B981', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 800 }}>Verify</button>
-            </div>
-        ))}
-    </div>
-);
+const KycPanel = ({ users, onApprove }) => {
+    const { language } = useLanguage();
+    return (
+        <div style={{ background: 'white', borderRadius: '24px', border: '1px solid #E2E8F0', padding: '32px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 900, marginBottom: '24px' }}>{t('admin.kyc.title', language)}</h3>
+            {users.map(u => (
+                <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #F1F5F9', marginBottom:'12px' }}>
+                    <div style={{ fontWeight: 800 }}>{u.name}</div>
+                    <button onClick={() => onApprove(u.id)} style={{ padding: '10px 24px', background: '#10B981', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 800 }}>{t('admin.kyc.verify', language)}</button>
+                </div>
+            ))}
+        </div>
+    );
+};
 
-const TransactionPanel = ({ transactions, onUpdate, title }) => (
-    <div style={{ background: 'white', borderRadius: '24px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-        <div style={{ padding: '24px', background: '#F8FAFC', borderBottom: '1px solid #F1F5F9' }}><h3 style={{ fontWeight: 900, fontSize: '18px' }}>{title} Ledger</h3></div>
-        <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead><tr style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase' }}><th style={{ padding: '16px 24px' }}>Timeline</th><th style={{ padding: '16px 24px' }}>Liquidity</th><th style={{ padding: '16px 24px' }}>Clearance</th></tr></thead>
+const TransactionPanel = ({ transactions, onUpdate, title }) => {
+    const { language } = useLanguage();
+    return (
+        <div style={{ background: 'white', borderRadius: '24px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+            <div style={{ padding: '24px', background: '#F8FAFC', borderBottom: '1px solid #F1F5F9' }}><h3 style={{ fontWeight: 900, fontSize: '18px' }}>{title}</h3></div>
+            <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead><tr style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase' }}><th style={{ padding: '16px 24px' }}>{t('admin.panel.timeline', language)}</th><th style={{ padding: '16px 24px' }}>{t('admin.panel.liquidity', language)}</th><th style={{ padding: '16px 24px' }}>{t('admin.panel.clearance', language)}</th></tr></thead>
                 <tbody>
                     {transactions.map(tx => (
                         <tr key={tx.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
@@ -637,34 +648,41 @@ const TransactionPanel = ({ transactions, onUpdate, title }) => (
                             </td>
                         </tr>
                     ))}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
-const LoanPanel = ({ loans, onUpdate }) => (
-    <div style={{ background: 'white', padding: '32px', borderRadius: '24px', border: '1px solid #E2E8F0' }}>
-        <h3 style={{fontSize:'20px', fontWeight:900, marginBottom:'24px'}}>Financial Assistance Registry</h3>
-        {loans.map(l => (
-            <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9', marginBottom:'12px' }}>
-                <div><h4 style={{fontWeight:900}}>{l.userName}</h4><p style={{color:'#2563EB'}}>€{l.amount?.toLocaleString()}</p></div>
-                <button onClick={()=>onUpdate(l.id, 'Approved')} style={{ padding: '12px 24px', background: '#10B981', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 800 }}>Clear</button>
-            </div>
-        ))}
-    </div>
-);
+const LoanPanel = ({ loans, onUpdate }) => {
+    const { language } = useLanguage();
+    return (
+        <div style={{ background: 'white', padding: '32px', borderRadius: '24px', border: '1px solid #E2E8F0' }}>
+            <h3 style={{fontSize:'20px', fontWeight:900, marginBottom:'24px'}}>{t('admin.loan.title', language)}</h3>
+            {loans.map(l => (
+                <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9', marginBottom:'12px' }}>
+                    <div><h4 style={{fontWeight:900}}>{l.userName}</h4><p style={{color:'#2563EB'}}>€{l.amount?.toLocaleString()}</p></div>
+                    <button onClick={()=>onUpdate(l.id, 'Approved')} style={{ padding: '12px 24px', background: '#10B981', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 800 }}>{t('admin.loan.clear', language)}</button>
+                </div>
+            ))}
+        </div>
+    );
+};
 
-const CardPanel = ({ cards, onUpdate }) => (
-    <div style={{ background: 'white', padding: '32px', borderRadius: '24px', border: '1px solid #E2E8F0' }}>
-        <h3 style={{fontSize:'20px', fontWeight:900, marginBottom:'24px'}}>Terminal Asset Deployment</h3>
-        {cards.map(c => (
-            <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9', marginBottom:'12px' }}>
-                <h4 style={{fontWeight:900}}>{c.type} Infrastructure</h4>
-                <button onClick={()=>onUpdate(c.id)} style={{ padding: '12px 24px', background: '#2563EB', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 900 }}>PROVISION</button>
-            </div>
-        ))}
-    </div>
-);
+const CardPanel = ({ cards, onUpdate }) => {
+    const { language } = useLanguage();
+    return (
+        <div style={{ background: 'white', padding: '32px', borderRadius: '24px', border: '1px solid #E2E8F0' }}>
+            <h3 style={{fontSize:'20px', fontWeight:900, marginBottom:'24px'}}>{t('admin.card.title', language)}</h3>
+            {cards.map(c => (
+                <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9', marginBottom:'12px' }}>
+                    <h4 style={{fontWeight:900}}>{c.type} {t('admin.card.infrastructure', language)}</h4>
+                    <button onClick={()=>onUpdate(c.id)} style={{ padding: '12px 24px', background: '#2563EB', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 900 }}>{t('admin.card.provision', language)}</button>
+                </div>
+            ))}
+        </div>
+    );
+};
 
 export default AdminDashboard;

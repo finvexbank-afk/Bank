@@ -8,9 +8,12 @@ import LanguageSelector from '../components/LanguageSelector';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { useLanguage } from '../contexts/LanguageContext';
+import { t } from '../translations';
 
 const AdminLogin = () => {
     const navigate = useNavigate();
+    const { language } = useLanguage();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -34,11 +37,11 @@ const AdminLogin = () => {
             } else {
                 // If not admin, sign out immediately
                 await auth.signOut();
-                setError('Access denied. This account does not have administrator privileges.');
+                setError(t('adminLogin.error.accessDenied', language));
             }
         } catch (err) {
             console.error(err);
-            setError('Invalid email or password. Please try again.');
+            setError(t('adminLogin.error.invalidCredentials', language));
         } finally {
             setLoading(false);
         }
@@ -70,7 +73,7 @@ const AdminLogin = () => {
                     <Building2 size={32} />
                 </div>
                 <h1 style={{ color: 'white', fontSize: '28px', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>Finvex Bank</h1>
-                <p style={{ color: '#94A3B8', fontSize: '14px', marginTop: '8px' }}>Administrative Control Panel</p>
+                <p style={{ color: '#94A3B8', fontSize: '14px', marginTop: '8px' }}>{t('adminLogin.subtitle', language)}</p>
             </div>
 
             {/* Login Card */}
@@ -80,8 +83,8 @@ const AdminLogin = () => {
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
             }}>
                 <div style={{ marginBottom: '32px' }}>
-                    <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#1E293B', marginBottom: '8px' }}>Admin Portal</h2>
-                    <p style={{ fontSize: '14px', color: '#64748B' }}>Enter your administrator credentials to continue.</p>
+                    <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#1E293B', marginBottom: '8px' }}>{t('adminLogin.portal', language)}</h2>
+                    <p style={{ fontSize: '14px', color: '#64748B' }}>{t('adminLogin.portalDesc', language)}</p>
                 </div>
 
                 {error && (
@@ -98,7 +101,7 @@ const AdminLogin = () => {
 
                 <form onSubmit={handleLogin}>
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Admin Email</label>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>{t('adminLogin.email', language)}</label>
                         <div style={{ position: 'relative' }}>
                             <Mail size={18} color="#94A3B8" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
                             <input 
@@ -116,7 +119,7 @@ const AdminLogin = () => {
                     </div>
 
                     <div style={{ marginBottom: '32px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>Security Password</label>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>{t('adminLogin.password', language)}</label>
                         <div style={{ position: 'relative' }}>
                             <Lock size={18} color="#94A3B8" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
                             <input 
@@ -150,9 +153,9 @@ const AdminLogin = () => {
                             boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
                         }}
                     >
-                        {loading ? 'Authenticating...' : (
+                        {loading ? t('adminLogin.authenticating', language) : (
                             <>
-                                Access Dashboard <ChevronRight size={18} />
+                                {t('adminLogin.accessDashboard', language)} <ChevronRight size={18} />
                             </>
                         )}
                     </button>
@@ -163,18 +166,18 @@ const AdminLogin = () => {
                         onClick={() => navigate('/auth')}
                         style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '13px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}
                     >
-                        <ArrowLeft size={16} /> User Login Portal
+                        <ArrowLeft size={16} /> {t('adminLogin.userLogin', language)}
                     </button>
                 </div>
             </div>
 
             {/* Footer */}
             <div style={{ marginTop: '40px', color: '#475569', fontSize: '12px', textAlign: 'center' }}>
-                <p>© 2025 Finvex Banking Group. Internal Systems. Authorized access only.</p>
+                <p>{t('adminLogin.footer', language)}</p>
                 <div style={{ marginTop: '8px', display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                    <span style={{ cursor: 'pointer' }}>Security Policy</span>
-                    <span style={{ cursor: 'pointer' }}>Audits</span>
-                    <span style={{ cursor: 'pointer' }}>System Status</span>
+                    <span style={{ cursor: 'pointer' }}>{t('adminLogin.securityPolicy', language)}</span>
+                    <span style={{ cursor: 'pointer' }}>{t('adminLogin.audits', language)}</span>
+                    <span style={{ cursor: 'pointer' }}>{t('adminLogin.systemStatus', language)}</span>
                 </div>
             </div>
         </div>

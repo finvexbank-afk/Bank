@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { ChevronLeft, Globe } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { t } from '../translations';
 
 const LanguageSelector = ({ position = 'bottom-left' }) => {
-    const { currentLanguage, languages, changeLanguage } = useLanguage();
+    const { language, currentLanguage, languages, changeLanguage } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
 
     const positionStyles = {
@@ -105,7 +106,7 @@ const LanguageSelector = ({ position = 'bottom-left' }) => {
                             marginBottom: '4px'
                         }}>
                             <Globe size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                            Language
+                            {t('language.selector.title', language)}
                         </div>
                         
                         {Object.values(languages).map((lang) => (

@@ -10,28 +10,31 @@ const translations = {
     es
 };
 
-export const t = (key, language = 'en') => {
-    const keys = key.split('.');
-    let translation = translations[language];
-    
-    for (const k of keys) {
-        if (translation && translation[k]) {
-            translation = translation[k];
-        } else {
-            // Fallback to English if key not found
-            translation = translations.en;
-            for (const fallbackKey of keys) {
-                if (translation && translation[fallbackKey]) {
-                    translation = translation[fallbackKey];
-                } else {
-                    return key; // Return key if not found anywhere
-                }
+const interpolate = (value, vars) => {
+    if (!vars || typeof value !== 'string') return value;
+    return value.replace(/\{\{(\w+)\}\}/g, (match, name) => (
+        Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : match
+    ));
+};
+
+export const t = (key, language = 'en', vars) => {
+    const resolve = (locale) => {
+        const catalog = translations[locale] || {};
+        // Flat dotted keys are stored verbatim; nested keys remain supported.
+        if (typeof catalog[key] === 'string') return catalog[key];
+        let value = catalog;
+        for (const part of key.split('.')) {
+            if (value && typeof value === 'object' && typeof value[part] !== 'undefined') {
+                value = value[part];
+            } else {
+                return undefined;
             }
-            break;
         }
-    }
-    
-    return translation || key;
+        return typeof value === 'string' ? value : undefined;
+    };
+
+    const translated = resolve(language) ?? resolve('en');
+    return interpolate(translated ?? key, vars);
 };
 
 export default translations;

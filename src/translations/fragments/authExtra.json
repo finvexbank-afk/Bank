@@ -1,0 +1,26 @@
+{
+  "en": {
+    "auth.selectCountry": "Select a country",
+    "auth.termsOfService": "Terms of Service",
+    "auth.privacyPolicy": "Privacy Policy",
+    "auth.and": "and"
+  },
+  "fr": {
+    "auth.selectCountry": "Sélectionnez un pays",
+    "auth.termsOfService": "Conditions d'utilisation",
+    "auth.privacyPolicy": "Politique de confidentialité",
+    "auth.and": "et"
+  },
+  "es": {
+    "auth.selectCountry": "Selecciona un país",
+    "auth.termsOfService": "Términos del servicio",
+    "auth.privacyPolicy": "Política de privacidad",
+    "auth.and": "y"
+  },
+  "de": {
+    "auth.selectCountry": "Land auswählen",
+    "auth.termsOfService": "Nutzungsbedingungen",
+    "auth.privacyPolicy": "Datenschutzrichtlinie",
+    "auth.and": "und"
+  }
+}
