@@ -266,7 +266,14 @@ const Auth = () => {
 
             {/* Right side Form */}
             <div className="auth-right">
-                
+
+                {/* Mobile header: on small screens the blue banner (and its language
+                    selector) is hidden, so expose both here on every auth step. */}
+                <div className="auth-mobile-header">
+                    <img src="/logo/logo-noir.png" alt="Finvex Bank" style={{ maxHeight: '34px', width: 'auto', objectFit: 'contain' }} />
+                    <LanguageSelector position="inline" />
+                </div>
+
                 {showVerification ? (
                     <div style={{ width: '100%', maxWidth: '580px', background: 'white', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                         {/* Header Blue */}

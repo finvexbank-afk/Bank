@@ -4,6 +4,7 @@ import {
     ChevronRight, ArrowLeft, ShieldAlert 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import LanguageSelector from '../components/LanguageSelector';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -53,6 +54,11 @@ const AdminLogin = () => {
             alignItems: 'center',
             padding: '20px'
         }}>
+            {/* Language selector stays available on mobile */}
+            <div style={{ width: '100%', maxWidth: '440px', display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+                <LanguageSelector position="inline" />
+            </div>
+
             {/* Header / Logo */}
             <div style={{ marginBottom: '40px', textAlign: 'center' }}>
                 <div style={{ 

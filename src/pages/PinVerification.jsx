@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Fingerprint, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../AppContext';
+import LanguageSelector from '../components/LanguageSelector';
 
 const PinVerification = () => {
     const navigate = useNavigate();
@@ -37,6 +38,9 @@ const PinVerification = () => {
             display: 'flex', justifyContent: 'center', alignItems: 'center',
             padding: '20px'
         }}>
+            <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 10 }}>
+                <LanguageSelector position="inline" />
+            </div>
             <div style={{ 
                 width: '100%', maxWidth: '400px', background: 'white', 
                 borderRadius: '24px', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' 
