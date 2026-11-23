@@ -29,6 +29,7 @@ dist-ssr
 # Firebase service account keys (never commit)
 serviceAccount*.json
 firebase-service-account*.json
+*firebase-adminsdk*.json
 
 # Env
 .env

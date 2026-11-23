@@ -913,5 +913,10 @@
   "admin.alert.passwordResetFailed": "No se pudo enviar el correo de restablecimiento.",
   "admin.alert.authDeletionNotice": "Perfil de Firestore eliminado. La cuenta de acceso de Firebase debe eliminarse en el servidor.",
   "admin.alert.deleteUserComplete": "Cuenta eliminada completamente (Firestore y acceso Firebase).",
-  "admin.alert.emailSyncFailed": "Perfil actualizado, pero falló la sincronización del correo de acceso. Revisa la configuración de Firebase del servidor."
+  "admin.alert.emailSyncFailed": "Perfil actualizado, pero falló la sincronización del correo de acceso. Revisa la configuración de Firebase del servidor.",
+  "admin.mobile.overview": "Inicio",
+  "admin.mobile.users": "Clientes",
+  "admin.mobile.create": "Crear",
+  "admin.mobile.kyc": "KYC",
+  "admin.mobile.ledger": "Operaciones"
 }

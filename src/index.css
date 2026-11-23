@@ -360,7 +360,7 @@ button { font-family: var(--font-inter); cursor: pointer; border: none; outline:
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 70px;
+    height: calc(70px + env(safe-area-inset-bottom));
     background: white;
     box-shadow: 0 -4px 15px rgba(0,0,0,0.06);
     border-top-left-radius: 24px;
@@ -368,7 +368,7 @@ button { font-family: var(--font-inter); cursor: pointer; border: none; outline:
     z-index: 100;
     justify-content: space-around;
     align-items: center;
-    padding: 0 16px;
+    padding: 0 16px env(safe-area-inset-bottom);
   }
 
   .mn-item {
@@ -382,6 +382,8 @@ button { font-family: var(--font-inter); cursor: pointer; border: none; outline:
     cursor: pointer;
   }
   .mn-item.active { color: var(--primary); }
+
+  .admin-mobile-nav .mn-item span { font-size: 10px; line-height: 1.15; max-width: 62px; text-align: center; }
   
   .mn-fab {
     width: 56px;

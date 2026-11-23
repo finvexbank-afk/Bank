@@ -913,5 +913,10 @@
   "admin.alert.passwordResetFailed": "Unable to send the password reset email.",
   "admin.alert.authDeletionNotice": "Firestore profile deleted. The Firebase login account still needs to be removed server-side.",
   "admin.alert.deleteUserComplete": "Account fully deleted (Firestore and Firebase login).",
-  "admin.alert.emailSyncFailed": "Profile updated, but login email sync failed. Check the server Firebase configuration."
+  "admin.alert.emailSyncFailed": "Profile updated, but login email sync failed. Check the server Firebase configuration.",
+  "admin.mobile.overview": "Overview",
+  "admin.mobile.users": "Users",
+  "admin.mobile.create": "Create",
+  "admin.mobile.kyc": "KYC",
+  "admin.mobile.ledger": "Ledger"
 }

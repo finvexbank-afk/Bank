@@ -67,7 +67,18 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [dataError, setDataError] = useState('');
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth > 1024);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth <= 1024;
+            setIsMobile(mobile);
+            if (!mobile) setIsSidebarOpen(true);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     if (!user || user.role !== 'admin') {
         return <Navigate to="/admin-login" />;
@@ -114,6 +125,13 @@ const AdminDashboard = () => {
         await updateDoc(doc(db, 'loans', loanId), { status: status });
     };
 
+    const switchAdminTab = (tab) => {
+        setActiveTab(tab);
+        setViewMode('list');
+        setSelectedUser(null);
+        setIsSidebarOpen(false);
+    };
+
     const totalDepositValue = users.reduce((acc, u) => acc + (Number(u.balance) || 0), 0);
     const pendingDeposits = transactions.filter(t => (t.type === 'Deposit' || t.type === 'credit') && t.status === 'Pending');
     const totalTransfersValue = transactions.filter(t => t.type === 'Transfer' || t.type === 'debit').reduce((acc, t) => acc + Math.abs(t.amount || 0), 0);
@@ -122,7 +140,7 @@ const AdminDashboard = () => {
     return (
         <div style={{ display: 'flex', height: '100vh', background: '#F8FAFC', overflow: 'hidden', position: 'relative' }}>
             
-            {window.innerWidth <= 1024 && isSidebarOpen && (
+            {isMobile && isSidebarOpen && (
                 <div 
                     onClick={() => setIsSidebarOpen(false)}
                     style={{ 
@@ -136,10 +154,10 @@ const AdminDashboard = () => {
                 width: '280px', background: 'white', borderRight: '1px solid #E2E8F0', 
                 display: 'flex', flexDirection: 'column', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
                 overflow: 'hidden', zIndex: 1000,
-                position: window.innerWidth <= 1024 ? 'fixed' : 'relative',
+                position: isMobile ? 'fixed' : 'relative',
                 height: '100%',
                 left: isSidebarOpen ? '0' : '-280px',
-                boxShadow: isSidebarOpen && window.innerWidth <= 1024 ? '20px 0 50px rgba(0,0,0,0.1)' : 'none'
+                boxShadow: isSidebarOpen && isMobile ? '20px 0 50px rgba(0,0,0,0.1)' : 'none'
             }}>
                 <div style={{ padding: '24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -156,22 +174,22 @@ const AdminDashboard = () => {
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '12px 0' }}>
-                    <NavItem active={activeTab === 'dashboard'} icon={<LayoutDashboard size={18} />} label={t('admin.nav.overview', language)} onClick={() => {setActiveTab('dashboard'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
-                    <NavItem active={activeTab === 'manage-users'} icon={<Users size={18} />} label={t('admin.nav.userDirectory', language)} onClick={() => {setActiveTab('manage-users'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
-                    <NavItem active={activeTab === 'create-user'} icon={<UserPlus size={18} />} label={t('admin.nav.deployUser', language)} onClick={() => {setActiveTab('create-user'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
-                    <NavItem active={activeTab === 'kyc'} icon={<ShieldCheck size={18} />} label={t('admin.nav.kyc', language)} onClick={() => {setActiveTab('kyc'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                    <NavItem active={activeTab === 'dashboard'} icon={<LayoutDashboard size={18} />} label={t('admin.nav.overview', language)} onClick={() => {setActiveTab('dashboard'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
+                    <NavItem active={activeTab === 'manage-users'} icon={<Users size={18} />} label={t('admin.nav.userDirectory', language)} onClick={() => {setActiveTab('manage-users'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
+                    <NavItem active={activeTab === 'create-user'} icon={<UserPlus size={18} />} label={t('admin.nav.deployUser', language)} onClick={() => {setActiveTab('create-user'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
+                    <NavItem active={activeTab === 'kyc'} icon={<ShieldCheck size={18} />} label={t('admin.nav.kyc', language)} onClick={() => {setActiveTab('kyc'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
                     
                     <CollapsibleItem icon={<ArrowUpRight size={18} />} label={t('admin.nav.ledger', language)} expanded={expandedMenus.includes('ledger')} onToggle={() => toggleMenu('ledger')}>
-                        <SubNavItem label={t('admin.nav.outboundWires', language)} active={activeTab === 'transfers'} onClick={() => {setActiveTab('transfers'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
-                        <SubNavItem label={t('admin.nav.inboundDeposits', language)} active={activeTab === 'deposits'} onClick={() => {setActiveTab('deposits'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                        <SubNavItem label={t('admin.nav.outboundWires', language)} active={activeTab === 'transfers'} onClick={() => {setActiveTab('transfers'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
+                        <SubNavItem label={t('admin.nav.inboundDeposits', language)} active={activeTab === 'deposits'} onClick={() => {setActiveTab('deposits'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
                     </CollapsibleItem>
 
                     <CollapsibleItem icon={<Landmark size={18} />} label={t('admin.nav.lending', language)} expanded={expandedMenus.includes('loans')} onToggle={() => toggleMenu('loans')}>
-                        <SubNavItem label={t('admin.nav.pendingRequests', language)} active={activeTab === 'loan-requests'} onClick={() => {setActiveTab('loan-requests'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                        <SubNavItem label={t('admin.nav.pendingRequests', language)} active={activeTab === 'loan-requests'} onClick={() => {setActiveTab('loan-requests'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
                     </CollapsibleItem>
 
                     <CollapsibleItem icon={<CardIcon size={18} />} label={t('admin.nav.cardInfra', language)} expanded={expandedMenus.includes('cards')} onToggle={() => toggleMenu('cards')}>
-                        <SubNavItem label={t('admin.nav.issuanceRequests', language)} active={activeTab === 'card-requests'} onClick={() => {setActiveTab('card-requests'); setViewMode('list'); if(window.innerWidth <= 1024) setIsSidebarOpen(false); }} />
+                        <SubNavItem label={t('admin.nav.issuanceRequests', language)} active={activeTab === 'card-requests'} onClick={() => {setActiveTab('card-requests'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
                     </CollapsibleItem>
                 </div>
 
@@ -192,7 +210,7 @@ const AdminDashboard = () => {
                     </div>
                 </header>
 
-                <div style={{ flex: 1, overflowY: 'auto', padding: 'clamp(16px, 4vw, 32px)' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: 'clamp(16px, 4vw, 32px)', paddingBottom: isMobile ? '100px' : undefined }}>
                     {activeTab === 'dashboard' && viewMode === 'list' && (
                         <>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }} className="flex-row-mobile">
@@ -266,6 +284,30 @@ const AdminDashboard = () => {
                     }} />}
                 </div>
             </main>
+
+            {isMobile && (
+                <div className="mobile-nav admin-mobile-nav">
+                    <div className={`mn-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => switchAdminTab('dashboard')}>
+                        <LayoutDashboard size={22} />
+                        <span>{t('admin.mobile.overview', language)}</span>
+                    </div>
+                    <div className={`mn-item ${activeTab === 'manage-users' ? 'active' : ''}`} onClick={() => switchAdminTab('manage-users')}>
+                        <Users size={22} />
+                        <span>{t('admin.mobile.users', language)}</span>
+                    </div>
+                    <div className="mn-fab" onClick={() => switchAdminTab('create-user')} title={t('admin.nav.deployUser', language)}>
+                        <UserPlus size={24} />
+                    </div>
+                    <div className={`mn-item ${activeTab === 'kyc' ? 'active' : ''}`} onClick={() => switchAdminTab('kyc')}>
+                        <ShieldCheck size={22} />
+                        <span>{t('admin.mobile.kyc', language)}</span>
+                    </div>
+                    <div className={`mn-item ${activeTab === 'transfers' || activeTab === 'deposits' ? 'active' : ''}`} onClick={() => switchAdminTab('transfers')}>
+                        <ArrowUpRight size={22} />
+                        <span>{t('admin.mobile.ledger', language)}</span>
+                    </div>
+                </div>
+            )}
 
             <style>{`
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
