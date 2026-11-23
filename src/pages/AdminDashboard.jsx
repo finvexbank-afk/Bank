@@ -210,7 +210,7 @@ const AdminDashboard = () => {
                     </div>
                 </header>
 
-                <div style={{ flex: 1, overflowY: 'auto', padding: 'clamp(16px, 4vw, 32px)', paddingBottom: isMobile ? '100px' : undefined }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: 'clamp(16px, 4vw, 32px)', paddingBottom: isMobile ? 'calc(110px + env(safe-area-inset-bottom))' : undefined }}>
                     {activeTab === 'dashboard' && viewMode === 'list' && (
                         <>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }} className="flex-row-mobile">
@@ -640,14 +640,14 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
     return (
         <div style={{ padding: '20px', background: '#F8FAFC', minHeight: '100%', borderRadius: '24px' }}>
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+            <div className="admin-detail-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#E0F2FE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0EA5E9', overflow: 'hidden' }}>
                         {user.photoURL ? <img src={user.photoURL} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <UserCircle size={40} />}
                     </div>
                     <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#1E293B' }}>{user.name}</h1>
                 </div>
-                <div style={{ display: 'flex', gap: '12px', position: 'relative' }}>
+                <div className="admin-detail-actions" style={{ display: 'flex', gap: '12px', position: 'relative' }}>
                     <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: '#2563EB', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 700 }}><ArrowLeft size={18} /> {t('admin.details.back', language)}</button>
                     <button onClick={() => setIsMenuOpen(!isMenuOpen)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: '#8B5CF6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 700 }}>{t('admin.details.actions', language)} <ChevronDown size={18} /></button>
                     
@@ -832,7 +832,7 @@ const DetailStatCard = ({ label, val, pill }) => (
 );
 
 const InfoRow = ({ label, val }) => (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(150px, 300px) 1fr', padding: '18px 24px', borderBottom: '1px solid #F1F5F9' }}>
+    <div className="info-row" style={{ display: 'grid', gridTemplateColumns: 'minmax(150px, 300px) 1fr', padding: '18px 24px', borderBottom: '1px solid #F1F5F9' }}>
         <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748B' }}>{label}</span>
         <span style={{ fontSize: '14px', fontWeight: 700, color: '#1E293B' }}>{val}</span>
     </div>

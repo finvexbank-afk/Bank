@@ -302,7 +302,7 @@ button { font-family: var(--font-inter); cursor: pointer; border: none; outline:
   
   .main-content {
     margin-left: 0;
-    padding-bottom: 90px; /* Space for bottom nav */
+    padding-bottom: calc(100px + env(safe-area-inset-bottom)); /* Space for bottom nav */
   }
 
   .mobile-only { display: block; }
@@ -384,6 +384,13 @@ button { font-family: var(--font-inter); cursor: pointer; border: none; outline:
   .mn-item.active { color: var(--primary); }
 
   .admin-mobile-nav .mn-item span { font-size: 10px; line-height: 1.15; max-width: 62px; text-align: center; }
+
+  .info-row { grid-template-columns: 1fr !important; gap: 6px; }
+  .info-row span:last-child { overflow-wrap: anywhere; }
+  .admin-detail-header { flex-direction: column; align-items: flex-start !important; gap: 16px !important; }
+  .admin-detail-header h1 { font-size: 22px !important; overflow-wrap: anywhere; }
+  .admin-detail-actions { flex-wrap: wrap; width: 100%; }
+  .admin-detail-actions > button { flex: 1; justify-content: center; padding: 10px 12px !important; font-size: 12px; white-space: nowrap; }
   
   .mn-fab {
     width: 56px;

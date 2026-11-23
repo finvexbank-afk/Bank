@@ -248,7 +248,7 @@ const LoanRequest = () => {
                     </div>
 
                     <SectionHeader icon={<TrendingUp size={24} color="#0EA5E9" />} title={t('loanRequest.loanTypesTitle', language)} />
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '24px', marginBottom: '40px' }}>
                         <LoanTypeCard icon={<Home size={32} />} title={t('loanRequest.facilityHome', language)} desc={t('loanRequest.typeHomeDesc', language)} />
                         <LoanTypeCard icon={<Car size={32} />} title={t('loanRequest.facilityAuto', language)} desc={t('loanRequest.typeAutoDesc', language)} />
                         <LoanTypeCard icon={<Building2 size={32} />} title={t('loanRequest.facilityBusiness', language)} desc={t('loanRequest.typeBusinessDesc', language)} />
