@@ -990,7 +990,12 @@ const CardPanel = ({ cards, onUpdate }) => {
             <h3 style={{fontSize:'20px', fontWeight:900, marginBottom:'24px'}}>{t('admin.card.title', language)}</h3>
             {cards.map(c => (
                 <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #F1F5F9', marginBottom:'12px' }}>
-                    <h4 style={{fontWeight:900}}>{c.type} {t('admin.card.infrastructure', language)}</h4>
+                    <h4 style={{ fontWeight: 800, fontSize: '15px' }}>
+                        {t('admin.card.requestLabel', language, {
+                            type: String(c.type || 'carte').toUpperCase(),
+                            name: c.userName || t('admin.card.unknownClient', language)
+                        })}
+                    </h4>
                     <button onClick={()=>onUpdate(c.id)} style={{ padding: '12px 24px', background: '#2563EB', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 900 }}>{t('admin.card.provision', language)}</button>
                 </div>
             ))}
