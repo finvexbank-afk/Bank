@@ -114,7 +114,10 @@
     "adminLogin.footer": "© 2025 Finvex Banking Group. Internal Systems. Authorized access only.",
     "adminLogin.securityPolicy": "Security Policy",
     "adminLogin.audits": "Audits",
-    "adminLogin.systemStatus": "System Status"
+    "adminLogin.systemStatus": "System Status",
+    "admin.users.loading": "Loading user directory...",
+    "admin.users.empty": "No users found.",
+    "admin.users.error": "Unable to load the user directory"
   },
   "fr": {
     "admin.nav.overview": "Vue d'ensemble globale",
@@ -231,7 +234,10 @@
     "adminLogin.footer": "© 2025 Finvex Banking Group. Systèmes internes. Accès autorisé uniquement.",
     "adminLogin.securityPolicy": "Politique de sécurité",
     "adminLogin.audits": "Audits",
-    "adminLogin.systemStatus": "État du système"
+    "adminLogin.systemStatus": "État du système",
+    "admin.users.loading": "Chargement du répertoire...",
+    "admin.users.empty": "Aucun utilisateur trouvé.",
+    "admin.users.error": "Impossible de charger le répertoire des utilisateurs"
   },
   "es": {
     "admin.nav.overview": "Resumen global",
@@ -348,7 +354,10 @@
     "adminLogin.footer": "© 2025 Finvex Banking Group. Sistemas internos. Solo acceso autorizado.",
     "adminLogin.securityPolicy": "Política de seguridad",
     "adminLogin.audits": "Auditorías",
-    "adminLogin.systemStatus": "Estado del sistema"
+    "adminLogin.systemStatus": "Estado del sistema",
+    "admin.users.loading": "Cargando directorio...",
+    "admin.users.empty": "No se encontraron usuarios.",
+    "admin.users.error": "No se pudo cargar el directorio de usuarios"
   },
   "de": {
     "admin.nav.overview": "Globale Übersicht",
@@ -465,6 +474,9 @@
     "adminLogin.footer": "© 2025 Finvex Banking Group. Interne Systeme. Nur autorisierter Zugriff.",
     "adminLogin.securityPolicy": "Sicherheitsrichtlinie",
     "adminLogin.audits": "Prüfungen",
-    "adminLogin.systemStatus": "Systemstatus"
+    "adminLogin.systemStatus": "Systemstatus",
+    "admin.users.loading": "Benutzerverzeichnis wird geladen...",
+    "admin.users.empty": "Keine Benutzer gefunden.",
+    "admin.users.error": "Benutzerverzeichnis konnte nicht geladen werden"
   }
 }

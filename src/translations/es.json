@@ -437,7 +437,6 @@
   "enrollment.field.postalCode": "Código postal",
   "enrollment.field.birthDate": "Fecha de nacimiento",
   "enrollment.field.nationalId": "Documento nacional / SSN / NIF",
-  "enrollment.field.accountScope": "Tipo de cuenta deseada",
   "enrollment.field.profession": "Profesión",
   "enrollment.field.annualIncome": "Liquidez bruta anual",
   "enrollment.field.otherProfession": "Especifique su profesión",
@@ -459,9 +458,6 @@
   "enrollment.gender.male": "Masculino",
   "enrollment.gender.female": "Femenino",
   "enrollment.gender.nonBinary": "No binario",
-  "enrollment.accountScope.tier1": "Cuenta corriente nivel 1",
-  "enrollment.accountScope.highYield": "Ahorro de alto rendimiento",
-  "enrollment.accountScope.institutional": "Cuenta empresarial institucional",
   "enrollment.document.passport": "Pasaporte",
   "enrollment.document.nationalId": "Documento nacional de identidad",
   "enrollment.document.license": "Permiso de conducción",
@@ -868,5 +864,8 @@
   "intlTransfer.codes.cotPlaceholder": "Código COT de 4 dígitos",
   "intlTransfer.codes.validate": "Validar códigos",
   "intlTransfer.codes.skip": "Omitir este paso",
-  "intlTransfer.codes.error": "Uno de los códigos introducidos no es válido. Revíselos u omita este paso."
+  "intlTransfer.codes.error": "Uno de los códigos introducidos no es válido. Revíselos u omita este paso.",
+  "admin.users.loading": "Cargando directorio...",
+  "admin.users.empty": "No se encontraron usuarios.",
+  "admin.users.error": "No se pudo cargar el directorio de usuarios"
 }

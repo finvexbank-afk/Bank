@@ -437,7 +437,6 @@
   "enrollment.field.postalCode": "Postleitzahl",
   "enrollment.field.birthDate": "Geburtsdatum",
   "enrollment.field.nationalId": "Nationale Ausweisnummer / SSN / Steuernummer",
-  "enrollment.field.accountScope": "Gewünschter Kontotyp",
   "enrollment.field.profession": "Beruf",
   "enrollment.field.annualIncome": "Bruttojahresliquidität",
   "enrollment.field.otherProfession": "Bitte geben Sie Ihren Beruf an",
@@ -459,9 +458,6 @@
   "enrollment.gender.male": "Männlich",
   "enrollment.gender.female": "Weiblich",
   "enrollment.gender.nonBinary": "Divers",
-  "enrollment.accountScope.tier1": "Girokonto Stufe 1",
-  "enrollment.accountScope.highYield": "Hochzins-Sparkonto",
-  "enrollment.accountScope.institutional": "Institutionelles Geschäftskonto",
   "enrollment.document.passport": "Reisepass",
   "enrollment.document.nationalId": "Personalausweis",
   "enrollment.document.license": "Führerschein",
@@ -868,5 +864,8 @@
   "intlTransfer.codes.cotPlaceholder": "4-stelliger COT-Code",
   "intlTransfer.codes.validate": "Codes bestätigen",
   "intlTransfer.codes.skip": "Schritt überspringen",
-  "intlTransfer.codes.error": "Einer der eingegebenen Codes ist ungültig. Prüfen Sie die Codes oder überspringen Sie diesen Schritt."
+  "intlTransfer.codes.error": "Einer der eingegebenen Codes ist ungültig. Prüfen Sie die Codes oder überspringen Sie diesen Schritt.",
+  "admin.users.loading": "Benutzerverzeichnis wird geladen...",
+  "admin.users.empty": "Keine Benutzer gefunden.",
+  "admin.users.error": "Benutzerverzeichnis konnte nicht geladen werden"
 }

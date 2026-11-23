@@ -437,7 +437,6 @@
   "enrollment.field.postalCode": "Postal Code",
   "enrollment.field.birthDate": "Birth Date",
   "enrollment.field.nationalId": "National ID / SSN / Tax ID",
-  "enrollment.field.accountScope": "Target Account Scope",
   "enrollment.field.profession": "Profession",
   "enrollment.field.annualIncome": "Annual Gross Liquidity",
   "enrollment.field.otherProfession": "Please specify your profession",
@@ -459,9 +458,6 @@
   "enrollment.gender.male": "Male",
   "enrollment.gender.female": "Female",
   "enrollment.gender.nonBinary": "Non-Binary",
-  "enrollment.accountScope.tier1": "Tier 1 Checking",
-  "enrollment.accountScope.highYield": "High-Yield Savings",
-  "enrollment.accountScope.institutional": "Institutional Business",
   "enrollment.document.passport": "Passport",
   "enrollment.document.nationalId": "National ID",
   "enrollment.document.license": "License",
@@ -868,5 +864,8 @@
   "intlTransfer.codes.cotPlaceholder": "4-digit COT code",
   "intlTransfer.codes.validate": "Validate codes",
   "intlTransfer.codes.skip": "Skip this step",
-  "intlTransfer.codes.error": "One of the entered codes is invalid. Check them or skip this step."
+  "intlTransfer.codes.error": "One of the entered codes is invalid. Check them or skip this step.",
+  "admin.users.loading": "Loading user directory...",
+  "admin.users.empty": "No users found.",
+  "admin.users.error": "Unable to load the user directory"
 }

@@ -20,6 +20,23 @@ import LanguageSelector from '../components/LanguageSelector';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 
+// Firestore dates can be Timestamps, ISO strings or plain {seconds} objects.
+const formatFirestoreDate = (value) => {
+    if (!value) return 'N/A';
+    try {
+        let date;
+        if (typeof value.toDate === 'function') date = value.toDate();
+        else if (value instanceof Date) date = value;
+        else if (typeof value === 'number') date = new Date(value);
+        else if (typeof value === 'string') date = new Date(value);
+        else if (typeof value.seconds === 'number') date = new Date(value.seconds * 1000);
+        else return 'N/A';
+        return Number.isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+    } catch {
+        return 'N/A';
+    }
+};
+
 const AdminDashboard = () => {
     const { user, logout } = useAppContext();
     const { language } = useLanguage();
@@ -34,6 +51,7 @@ const AdminDashboard = () => {
     const [cards, setCards] = useState([]);
     const [loans, setLoans] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [dataError, setDataError] = useState('');
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
 
@@ -42,8 +60,15 @@ const AdminDashboard = () => {
     }
 
     useEffect(() => {
+        setLoading(true);
+        setDataError('');
         const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
             setUsers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            setLoading(false);
+        }, (err) => {
+            console.error('Firestore users error:', err);
+            setDataError(err?.message || 'Firestore error');
+            setLoading(false);
         });
         const unsubTxs = onSnapshot(query(collection(db, 'transactions'), orderBy('createdAt', 'desc')), (snap) => {
             setTransactions(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -54,7 +79,6 @@ const AdminDashboard = () => {
         const unsubLoans = onSnapshot(collection(db, 'loans'), (snap) => {
             setLoans(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         });
-        setLoading(false);
         return () => { unsubUsers(); unsubTxs(); unsubCards(); unsubLoans(); };
     }, []);
 
@@ -173,6 +197,8 @@ const AdminDashboard = () => {
                     {activeTab === 'manage-users' && viewMode === 'list' && (
                         <UsersPanel 
                             users={users} 
+                            loading={loading}
+                            error={dataError}
                             onManage={(u) => { setSelectedUser(u); setViewMode('detail'); }} 
                         />
                     )}
@@ -255,7 +281,7 @@ const ComplexStat = ({ icon, label, value, color }) => (
     </div>
 );
 
-const UsersPanel = ({ users, onManage }) => {
+const UsersPanel = ({ users, loading, error, onManage }) => {
     const { language } = useLanguage();
     const [search, setSearch] = useState('');
 
@@ -268,7 +294,10 @@ const UsersPanel = ({ users, onManage }) => {
     return (
         <div style={{ background: 'white', borderRadius: '24px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
             <div style={{ padding: '24px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                <h3 style={{ fontWeight: 900, fontSize: '18px' }}>{t('admin.users.title', language)}</h3>
+                <h3 style={{ fontWeight: 900, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {t('admin.users.title', language)}
+                    <span style={{ background: '#EFF6FF', color: '#2563EB', borderRadius: '20px', padding: '2px 10px', fontSize: '12px' }}>{users.length}</span>
+                </h3>
                 <div style={{ position: 'relative', maxWidth: '300px', width: '100%' }}>
                     <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
                     <input 
@@ -280,6 +309,18 @@ const UsersPanel = ({ users, onManage }) => {
                 </div>
             </div>
 
+            {error && (
+                <div style={{ margin: '16px 24px 0', padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: '12px', color: '#991B1B', fontSize: '13px', fontWeight: 600 }}>
+                    {t('admin.users.error', language)} : {error}
+                </div>
+            )}
+
+            {loading ? (
+                <div style={{ padding: '48px 24px', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>{t('admin.users.loading', language)}</div>
+            ) : filtered.length === 0 ? (
+                <div style={{ padding: '48px 24px', textAlign: 'center', color: '#64748B', fontSize: '14px' }}>{t('admin.users.empty', language)}</div>
+            ) : (
+            <>
             <div className="desktop-only" style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead style={{ background: '#F8FAFC' }}>
@@ -310,7 +351,7 @@ const UsersPanel = ({ users, onManage }) => {
                                         {u.accountStatus?.toUpperCase() || 'ACTIVE'}
                                     </span>
                                 </td>
-                                <td style={{ padding: '18px 24px' }}>{u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
+                                <td style={{ padding: '18px 24px' }}>{formatFirestoreDate(u.createdAt)}</td>
                                 <td style={{ padding: '18px 24px' }}>
                                     <button onClick={() => onManage(u)} style={{ background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '8px', padding: '8px 16px', fontWeight: 800 }}>{t('admin.users.manage', language)}</button>
                                 </td>
@@ -319,6 +360,34 @@ const UsersPanel = ({ users, onManage }) => {
                     </tbody>
                 </table>
             </div>
+
+            <div className="mobile-only" style={{ padding: '12px' }}>
+                {filtered.map(u => (
+                    <div key={u.id} style={{ border: '1px solid #E2E8F0', borderRadius: '16px', padding: '16px', marginBottom: '12px', background: '#fff' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB', fontWeight: 900 }}>
+                                {(u.name || 'U')[0].toUpperCase()}
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                                <div style={{ fontWeight: 800, color: '#1E293B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name}</div>
+                                <div style={{ fontSize: '12px', color: '#64748B' }}>@{u.username || '—'}</div>
+                            </div>
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#475569', wordBreak: 'break-word', marginBottom: '8px' }}>{u.email}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                            <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, background: u.accountStatus === 'Active' ? '#D1FAE5' : '#FEE2E2', color: u.accountStatus === 'Active' ? '#065F46' : '#991B1B' }}>
+                                {u.accountStatus?.toUpperCase() || 'ACTIVE'}
+                            </span>
+                            <span style={{ fontSize: '12px', color: '#94A3B8' }}>{formatFirestoreDate(u.createdAt)}</span>
+                            <button onClick={() => onManage(u)} style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 14px', fontWeight: 800, fontSize: '12px' }}>
+                                {t('admin.users.manage', language)}
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            </>
+            )}
         </div>
     );
 };
@@ -639,7 +708,7 @@ const TransactionPanel = ({ transactions, onUpdate, title }) => {
                 <tbody>
                     {transactions.map(tx => (
                         <tr key={tx.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                            <td style={{ padding: '18px 24px' }}>{new Date(tx.createdAt?.seconds*1000).toLocaleDateString()}</td>
+                            <td style={{ padding: '18px 24px' }}>{formatFirestoreDate(tx.createdAt)}</td>
                             <td style={{ padding: '18px 24px', fontWeight: 900, color: tx.amount < 0 ? '#EF4444' : '#10B981' }}>€{Math.abs(tx.amount).toLocaleString()}</td>
                             <td style={{ padding: '18px 24px' }}>
                                 {tx.status === 'Pending' ? (

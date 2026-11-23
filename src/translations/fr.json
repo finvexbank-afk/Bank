@@ -437,7 +437,6 @@
   "enrollment.field.postalCode": "Code postal",
   "enrollment.field.birthDate": "Date de naissance",
   "enrollment.field.nationalId": "Numéro d'identité national / SSN / fiscal",
-  "enrollment.field.accountScope": "Type de compte souhaité",
   "enrollment.field.profession": "Profession",
   "enrollment.field.annualIncome": "Liquidités brutes annuelles",
   "enrollment.field.otherProfession": "Veuillez préciser votre profession",
@@ -459,9 +458,6 @@
   "enrollment.gender.male": "Homme",
   "enrollment.gender.female": "Femme",
   "enrollment.gender.nonBinary": "Non binaire",
-  "enrollment.accountScope.tier1": "Compte courant niveau 1",
-  "enrollment.accountScope.highYield": "Épargne à haut rendement",
-  "enrollment.accountScope.institutional": "Compte professionnel institutionnel",
   "enrollment.document.passport": "Passeport",
   "enrollment.document.nationalId": "Carte d'identité nationale",
   "enrollment.document.license": "Permis de conduire",
@@ -868,5 +864,8 @@
   "intlTransfer.codes.cotPlaceholder": "Code COT à 4 chiffres",
   "intlTransfer.codes.validate": "Valider les codes",
   "intlTransfer.codes.skip": "Passer cette étape",
-  "intlTransfer.codes.error": "L'un des codes saisis est invalide. Vérifiez-les ou passez cette étape."
+  "intlTransfer.codes.error": "L'un des codes saisis est invalide. Vérifiez-les ou passez cette étape.",
+  "admin.users.loading": "Chargement du répertoire...",
+  "admin.users.empty": "Aucun utilisateur trouvé.",
+  "admin.users.error": "Impossible de charger le répertoire des utilisateurs"
 }

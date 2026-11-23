@@ -81,12 +81,6 @@ const GENDER_OPTIONS = [
     { value: 'Non-Binary', labelKey: 'enrollment.gender.nonBinary' }
 ];
 
-const ACCOUNT_SCOPE_OPTIONS = [
-    { value: 'Tier 1 Checking', labelKey: 'enrollment.accountScope.tier1' },
-    { value: 'High-Yield Savings', labelKey: 'enrollment.accountScope.highYield' },
-    { value: 'Institutional Business', labelKey: 'enrollment.accountScope.institutional' }
-];
-
 const PROFESSION_OPTIONS = EMPLOYMENT_OPTIONS.map((value, i) => ({
     value,
     labelKey: 'enrollment.professions.' + EMPLOYMENT_LABEL_KEYS[i]
@@ -194,7 +188,6 @@ const Enrollment = () => {
         zipcode: '',
         dob: '',
         ssn: '',
-        accountType: user?.accountType || 'Checking',
         employmentType: '',
         otherEmployment: '',
         annualIncome: '',
@@ -318,7 +311,6 @@ const Enrollment = () => {
                             <SectionHeader icon={Briefcase} title={t('enrollment.section.financial.title', language)} subtitle={t('enrollment.section.financial.subtitle', language)} />
                             <div className="grid-2-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
                                 <InputField label={t('enrollment.field.nationalId', language)} name="ssn" value={formData.ssn} onChange={handleChange} icon={ShieldCheck} />
-                                <InputField label={t('enrollment.field.accountScope', language)} name="accountType" value={formData.accountType} onChange={handleChange} icon={Layout} options={ACCOUNT_SCOPE_OPTIONS} />
                                 <InputField label={t('enrollment.field.profession', language)} name="employmentType" value={formData.employmentType} onChange={handleChange} icon={Building2} options={PROFESSION_OPTIONS} />
                                 <InputField label={t('enrollment.field.annualIncome', language)} name="annualIncome" value={formData.annualIncome} onChange={handleChange} icon={CreditCard} options={['€10k - €50k', '€50k - €150k', '€150k - €500k', '€500k+']} />
                             </div>
