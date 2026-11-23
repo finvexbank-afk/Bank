@@ -1000,7 +1000,7 @@
   "txDetail.resumeTitle": "Verifizierung offen",
   "txDetail.resumeDesc": "Diese Überweisung wartet noch auf einen Bestätigungscode. Setzen Sie den Vorgang dort fort, wo Sie aufgehört haben.",
   "txDetail.pendingTitle": "Überweisung in Bearbeitung",
-  "txDetail.pendingDesc": "Ihre Überweisung wurde erfasst und wird im nächsten Verrechnungszyklus ausgeführt. Sie müssen nichts weiter tun.",
+  "txDetail.pendingDesc": "Ihre Überweisung wurde erfasst. Sie wartet auf die Bearbeitung durch unsere Verrechnungsstelle und wird in Kürze ausgeführt. Sie müssen nichts weiter tun.",
   "txDetail.cancel": "Überweisung stornieren",
   "txDetail.cancelError": "Diese Überweisung kann nicht storniert werden.",
   "txDetail.stepCreated": "Erfasst",

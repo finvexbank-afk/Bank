@@ -1000,7 +1000,7 @@
   "txDetail.resumeTitle": "Vérification à terminer",
   "txDetail.resumeDesc": "Ce virement attend encore un code de confirmation. Reprenez la procédure là où vous l'avez laissée.",
   "txDetail.pendingTitle": "Virement en cours de traitement",
-  "txDetail.pendingDesc": "Votre virement a bien été enregistré et sera exécuté lors du prochain cycle de compensation. Aucune action n'est requise de votre part.",
+  "txDetail.pendingDesc": "Votre virement a bien été enregistré. Il est en attente de traitement par notre service de compensation et sera exécuté sous peu. Aucune action n'est requise de votre part.",
   "txDetail.cancel": "Annuler le virement",
   "txDetail.cancelError": "Impossible d'annuler ce virement.",
   "txDetail.stepCreated": "Enregistré",

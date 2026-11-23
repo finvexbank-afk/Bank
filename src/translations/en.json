@@ -1000,7 +1000,7 @@
   "txDetail.resumeTitle": "Verification to complete",
   "txDetail.resumeDesc": "This transfer is still waiting for a confirmation code. Resume where you left off.",
   "txDetail.pendingTitle": "Transfer being processed",
-  "txDetail.pendingDesc": "Your transfer has been recorded and will be executed in the next settlement cycle. No action is required from you.",
+  "txDetail.pendingDesc": "Your transfer has been recorded. It is awaiting processing by our settlement desk and will be executed shortly. No action is required from you.",
   "txDetail.cancel": "Cancel transfer",
   "txDetail.cancelError": "Unable to cancel this transfer.",
   "txDetail.stepCreated": "Recorded",

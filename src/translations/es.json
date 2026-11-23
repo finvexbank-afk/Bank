@@ -1000,7 +1000,7 @@
   "txDetail.resumeTitle": "Verificación pendiente",
   "txDetail.resumeDesc": "Esta transferencia aún espera un código de confirmación. Retome el proceso donde lo dejó.",
   "txDetail.pendingTitle": "Transferencia en proceso",
-  "txDetail.pendingDesc": "Su transferencia ha sido registrada y se ejecutará en el próximo ciclo de compensación. No se requiere ninguna acción de su parte.",
+  "txDetail.pendingDesc": "Su transferencia ha sido registrada. Está pendiente de procesamiento por nuestro servicio de compensación y se ejecutará en breve. No se requiere ninguna acción de su parte.",
   "txDetail.cancel": "Cancelar la transferencia",
   "txDetail.cancelError": "No se puede cancelar esta transferencia.",
   "txDetail.stepCreated": "Registrada",
