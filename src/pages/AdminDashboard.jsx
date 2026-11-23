@@ -12,7 +12,8 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { db, auth } from '../firebase';
+import { db, auth, functions } from '../firebase';
+import { httpsCallable } from 'firebase/functions';
 import { collection, doc, updateDoc, onSnapshot, query, orderBy, addDoc, serverTimestamp, setDoc, deleteDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { countries } from '../data/countries';
@@ -36,6 +37,12 @@ const formatFirestoreDate = (value) => {
     } catch {
         return 'N/A';
     }
+};
+
+const callAdminFunction = async (name, data) => {
+    const callable = httpsCallable(functions, name);
+    const result = await callable(data);
+    return result.data;
 };
 
 const AdminDashboard = () => {
@@ -209,12 +216,30 @@ const AdminDashboard = () => {
                             user={selectedUser} 
                             onBack={() => setViewMode('list')} 
                             onUpdate={async (newData) => {
-                                await updateDoc(doc(db, 'users', selectedUser.id), newData);
+                                const uid = selectedUser.id;
+                                const previousEmail = selectedUser.email;
+                                await updateDoc(doc(db, 'users', uid), newData);
                                 setSelectedUser({...selectedUser, ...newData});
+                                if (newData.email && newData.email !== previousEmail) {
+                                    try {
+                                        await callAdminFunction('updateUserEmail', { uid, email: newData.email });
+                                    } catch (err) {
+                                        console.error('Email sync error:', err);
+                                        alert(t('admin.alert.emailSyncFailed', language));
+                                    }
+                                }
                             }}
                             onDelete={async () => {
-                                if(window.confirm(t('admin.alert.deleteUser', language, { name: selectedUser.name }))) {
-                                    await deleteDoc(doc(db, 'users', selectedUser.id));
+                                if(!window.confirm(t('admin.alert.deleteUser', language, { name: selectedUser.name }))) return;
+                                const uid = selectedUser.id;
+                                try {
+                                    await callAdminFunction('deleteUserAccount', { uid });
+                                    setViewMode('list');
+                                    setSelectedUser(null);
+                                    alert(t('admin.alert.deleteUserComplete', language));
+                                } catch (err) {
+                                    console.error('Full deletion error:', err);
+                                    await deleteDoc(doc(db, 'users', uid));
                                     setViewMode('list');
                                     setSelectedUser(null);
                                     alert(t('admin.alert.authDeletionNotice', language));

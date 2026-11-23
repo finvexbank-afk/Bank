@@ -146,7 +146,9 @@
     "admin.edit.save": "Save changes",
     "admin.alert.passwordReset": "Password reset email sent to the client.",
     "admin.alert.passwordResetFailed": "Unable to send the password reset email.",
-    "admin.alert.authDeletionNotice": "Firestore profile deleted. The Firebase login account still needs to be removed server-side."
+    "admin.alert.authDeletionNotice": "Firestore profile deleted. The Firebase login account still needs to be removed server-side.",
+    "admin.alert.deleteUserComplete": "Account fully deleted (Firestore and Firebase login).",
+    "admin.alert.emailSyncFailed": "Profile updated, but login email sync failed. Deploy the updateUserEmail Firebase function."
   },
   "fr": {
     "admin.nav.overview": "Vue d'ensemble globale",
@@ -295,7 +297,9 @@
     "admin.edit.save": "Enregistrer les modifications",
     "admin.alert.passwordReset": "E-mail de réinitialisation envoyé au client.",
     "admin.alert.passwordResetFailed": "Impossible d'envoyer l'e-mail de réinitialisation.",
-    "admin.alert.authDeletionNotice": "Profil Firestore supprimé. Le compte de connexion Firebase doit encore être supprimé côté serveur."
+    "admin.alert.authDeletionNotice": "Profil Firestore supprimé. Le compte de connexion Firebase doit encore être supprimé côté serveur.",
+    "admin.alert.deleteUserComplete": "Compte supprimé complètement (Firestore et connexion Firebase).",
+    "admin.alert.emailSyncFailed": "Profil mis à jour, mais la synchronisation de l'email de connexion a échoué. Déployez la fonction Firebase updateUserEmail."
   },
   "es": {
     "admin.nav.overview": "Resumen global",
@@ -444,7 +448,9 @@
     "admin.edit.save": "Guardar cambios",
     "admin.alert.passwordReset": "Correo de restablecimiento enviado al cliente.",
     "admin.alert.passwordResetFailed": "No se pudo enviar el correo de restablecimiento.",
-    "admin.alert.authDeletionNotice": "Perfil de Firestore eliminado. La cuenta de acceso de Firebase debe eliminarse en el servidor."
+    "admin.alert.authDeletionNotice": "Perfil de Firestore eliminado. La cuenta de acceso de Firebase debe eliminarse en el servidor.",
+    "admin.alert.deleteUserComplete": "Cuenta eliminada completamente (Firestore y acceso Firebase).",
+    "admin.alert.emailSyncFailed": "Perfil actualizado, pero falló la sincronización del correo de acceso. Despliega la función updateUserEmail."
   },
   "de": {
     "admin.nav.overview": "Globale Übersicht",
@@ -593,6 +599,8 @@
     "admin.edit.save": "Änderungen speichern",
     "admin.alert.passwordReset": "Link zum Zurücksetzen des Passworts an den Kunden gesendet.",
     "admin.alert.passwordResetFailed": "E-Mail zum Zurücksetzen konnte nicht gesendet werden.",
-    "admin.alert.authDeletionNotice": "Firestore-Profil gelöscht. Das Firebase-Anmeldekonto muss noch serverseitig entfernt werden."
+    "admin.alert.authDeletionNotice": "Firestore-Profil gelöscht. Das Firebase-Anmeldekonto muss noch serverseitig entfernt werden.",
+    "admin.alert.deleteUserComplete": "Konto vollständig gelöscht (Firestore und Firebase-Anmeldung).",
+    "admin.alert.emailSyncFailed": "Profil aktualisiert, aber die Synchronisierung der Anmelde-E-Mail fehlgeschlagen. Stelle die Funktion updateUserEmail bereit."
   }
 }

@@ -911,5 +911,7 @@
   "admin.edit.save": "Enregistrer les modifications",
   "admin.alert.passwordReset": "E-mail de réinitialisation envoyé au client.",
   "admin.alert.passwordResetFailed": "Impossible d'envoyer l'e-mail de réinitialisation.",
-  "admin.alert.authDeletionNotice": "Profil Firestore supprimé. Le compte de connexion Firebase doit encore être supprimé côté serveur."
+  "admin.alert.authDeletionNotice": "Profil Firestore supprimé. Le compte de connexion Firebase doit encore être supprimé côté serveur.",
+  "admin.alert.deleteUserComplete": "Compte supprimé complètement (Firestore et connexion Firebase).",
+  "admin.alert.emailSyncFailed": "Profil mis à jour, mais la synchronisation de l'email de connexion a échoué. Déployez la fonction Firebase updateUserEmail."
 }
