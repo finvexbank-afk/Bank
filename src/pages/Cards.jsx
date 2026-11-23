@@ -98,6 +98,12 @@ const Cards = () => {
                             </div>
                         </div>
 
+                        {!isCardActive && (
+                            <div style={{ marginBottom: '24px', padding: '16px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '14px', color: '#92400E', fontSize: '13px', lineHeight: 1.5 }}>
+                                {t('cards.pendingDetailsNotice', language)}
+                            </div>
+                        )}
+
                         {/* Card Preview Area */}
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
                             <div className="card-preview" style={{ 
@@ -140,8 +146,20 @@ const Cards = () => {
                                 )}
                             </div>
                             <div style={{ display: 'flex', gap: '12px' }}>
-                                <button onClick={() => setFlipped(!flipped)} style={{ padding: '10px 20px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', fontWeight: 700, fontSize: '14px', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}><RefreshCcw size={16} /> {t('cards.flip', language)}</button>
-                                <button onClick={() => setShowNumbers(!showNumbers)} style={{ padding: '10px 20px', background: '#F0F9FF', border: '1px solid #0EA5E9', borderRadius: '10px', fontWeight: 700, fontSize: '14px', color: '#0EA5E9', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                <button
+                                    onClick={() => setFlipped(!flipped)}
+                                    disabled={!isCardActive}
+                                    title={!isCardActive ? t('cards.pendingDetailsNotice', language) : undefined}
+                                    style={{ padding: '10px 20px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', fontWeight: 700, fontSize: '14px', color: isCardActive ? '#1E293B' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '8px', cursor: isCardActive ? 'pointer' : 'not-allowed', opacity: isCardActive ? 1 : 0.6 }}
+                                >
+                                    <RefreshCcw size={16} /> {t('cards.flip', language)}
+                                </button>
+                                <button
+                                    onClick={() => setShowNumbers(!showNumbers)}
+                                    disabled={!isCardActive}
+                                    title={!isCardActive ? t('cards.pendingDetailsNotice', language) : undefined}
+                                    style={{ padding: '10px 20px', background: isCardActive ? '#F0F9FF' : '#F8FAFC', border: `1px solid ${isCardActive ? '#0EA5E9' : '#E2E8F0'}`, borderRadius: '10px', fontWeight: 700, fontSize: '14px', color: isCardActive ? '#0EA5E9' : '#94A3B8', display: 'flex', alignItems: 'center', gap: '8px', cursor: isCardActive ? 'pointer' : 'not-allowed', opacity: isCardActive ? 1 : 0.6 }}
+                                >
                                     {showNumbers ? <><EyeOff size={16} /> {t('cards.hide', language)}</> : <><Eye size={16} /> {t('cards.show', language)}</>}
                                 </button>
                             </div>

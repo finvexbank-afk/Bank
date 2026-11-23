@@ -7,7 +7,10 @@ import {
 import MainLayout from '../components/MainLayout';
 import { useAppContext } from '../AppContext';
 import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import {
+    doc, getDoc, updateDoc, deleteDoc, collection, addDoc,
+    increment, serverTimestamp
+} from 'firebase/firestore';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
 import { callTransferApi } from '../utils/transferApi';
@@ -131,6 +134,69 @@ const TransactionDetail = () => {
         }
     };
 
+    const notifyUser = async (title, body) => {
+        if (!user?.id) return;
+        try {
+            await addDoc(collection(db, 'notifications'), {
+                userId: user.id,
+                title,
+                body,
+                read: false,
+                createdAt: serverTimestamp(),
+                reference: transaction?.ref || transaction?.reference || id
+            });
+        } catch (err) {
+            console.error('Notification error:', err);
+        }
+    };
+
+    const handleCancelTransaction = async () => {
+        if (!transaction || !pending || failed || !user?.id) return;
+        if (!window.confirm(t('txDetail.confirmCancel', language))) return;
+        setBusy(true);
+        try {
+            const txRef = doc(db, 'transactions', id);
+            const snap = await getDoc(txRef);
+            if (!snap.exists() || !isPendingStatus(snap.data().status)) {
+                throw new Error(t('txDetail.statusChanged', language));
+            }
+            const refund = Math.abs(Number(transaction.amount) || 0);
+            await updateDoc(txRef, {
+                status: 'Cancelled',
+                cancelledAt: serverTimestamp(),
+                cancelledBy: user.id
+            });
+            if (refund > 0) {
+                await updateDoc(doc(db, 'users', user.id), { balance: increment(refund) });
+            }
+            await notifyUser(
+                t('txDetail.cancelledTitle', language),
+                t('txDetail.cancelledNotice', language, { amount: formatMoney(refund) })
+            );
+            setTransaction((prev) => prev ? { ...prev, status: 'Cancelled', cancelledAt: new Date().toISOString() } : prev);
+            setResumable(null);
+            refreshPendingTransfer?.();
+        } catch (err) {
+            setError(err.message || t('txDetail.cancelError', language));
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const handleDeleteTransaction = async () => {
+        if (!transaction || !isFailedStatus(transaction.status)) return;
+        if (!window.confirm(t('txDetail.confirmDelete', language))) return;
+        setBusy(true);
+        try {
+            await deleteDoc(doc(db, 'transactions', id));
+            navigate('/transactions');
+        } catch (err) {
+            setError(err.message || t('txDetail.deleteError', language));
+        } finally {
+            setBusy(false);
+        }
+    };
+
     if (loading) {
         return (
             <MainLayout>
@@ -161,13 +227,16 @@ const TransactionDetail = () => {
     const isDebit = amount < 0;
     const pending = isPendingStatus(transaction.status);
     const failed = isFailedStatus(transaction.status);
+    const cancelled = transaction.status === 'Cancelled';
     const reference = transaction.ref || transaction.reference || `BANK/${String(transaction.id || '').slice(0, 8).toUpperCase()}`;
 
-    const statusMeta = failed
-        ? { bg: '#FEE2E2', color: '#B91C1C', icon: XCircle, label: t('status.failed', language) }
-        : pending
-            ? { bg: '#FEF3C7', color: '#B45309', icon: Clock, label: t('status.pending', language) }
-            : { bg: '#D1FAE5', color: '#047857', icon: CheckCircle2, label: t('status.completed', language) };
+    const statusMeta = cancelled
+        ? { bg: '#F1F5F9', color: '#475569', icon: XCircle, label: t('status.cancelled', language) }
+        : failed
+            ? { bg: '#FEE2E2', color: '#B91C1C', icon: XCircle, label: t('status.failed', language) }
+            : pending
+                ? { bg: '#FEF3C7', color: '#B45309', icon: Clock, label: t('status.pending', language) }
+                : { bg: '#D1FAE5', color: '#047857', icon: CheckCircle2, label: t('status.completed', language) };
     const StatusIcon = statusMeta.icon;
 
     const steps = [
@@ -208,7 +277,15 @@ const TransactionDetail = () => {
                                 {resumable ? t('txDetail.resumeTitle', language) : t('txDetail.pendingTitle', language)}
                             </p>
                             <p style={{ fontSize: '13px', color: resumable ? '#B45309' : '#64748B', margin: 0, lineHeight: 1.5 }}>
-                                {resumable ? t('txDetail.resumeDesc', language) : t('txDetail.pendingDesc', language)}
+                                {resumable ? t('txDetail.resumeDesc', language) : t('txDetail.pendingDescWithCancel', language)}
+                            </p>
+                        </div>
+                    )}
+                    {cancelled && (
+                        <div style={{ marginTop: '20px', padding: '16px', borderRadius: '14px', background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                            <p style={{ fontSize: '13px', fontWeight: 800, color: '#475569', margin: '0 0 4px' }}>{t('txDetail.cancelledTitle', language)}</p>
+                            <p style={{ fontSize: '13px', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
+                                {t('txDetail.cancelledNotice', language, { amount: formatMoney(Math.abs(amount)) })}
                             </p>
                         </div>
                     )}
@@ -263,9 +340,19 @@ const TransactionDetail = () => {
                                     <ShieldCheck size={15} /> {t('txDetail.resume', language)}
                                 </button>
                                 <button onClick={handleCancel} disabled={busy} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '11px 18px', background: 'white', color: '#B91C1C', border: '1px solid #FECACA', borderRadius: '12px', fontWeight: 700, fontSize: '13px', cursor: busy ? 'not-allowed' : 'pointer' }}>
-                                    {busy ? <Loader2 size={15} className="spin" /> : <XCircle size={15} />} {t('txDetail.cancel', language)}
+                                    {busy ? <Loader2 size={15} className="spin" /> : <XCircle size={15} />} {t('txDetail.cancelRequest', language)}
                                 </button>
                             </>
+                        )}
+                        {pending && !failed && !resumable && (
+                            <button onClick={handleCancelTransaction} disabled={busy} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '11px 18px', background: '#FFFBEB', color: '#B45309', border: '1px solid #FDE68A', borderRadius: '12px', fontWeight: 800, fontSize: '13px', cursor: busy ? 'not-allowed' : 'pointer' }}>
+                                {busy ? <Loader2 size={15} className="spin" /> : <XCircle size={15} />} {t('txDetail.cancelTransfer', language)}
+                            </button>
+                        )}
+                        {isFailedStatus(transaction.status) && (
+                            <button onClick={handleDeleteTransaction} disabled={busy} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '11px 18px', background: 'white', color: '#64748B', border: '1px solid #E2E8F0', borderRadius: '12px', fontWeight: 700, fontSize: '13px', cursor: busy ? 'not-allowed' : 'pointer' }}>
+                                {busy ? <Loader2 size={15} className="spin" /> : <XCircle size={15} />} {t('txDetail.delete', language)}
+                            </button>
                         )}
                     </div>
                     {error && <p style={{ color: '#B91C1C', fontSize: '13px', fontWeight: 700, marginTop: '12px' }}>{error}</p>}
