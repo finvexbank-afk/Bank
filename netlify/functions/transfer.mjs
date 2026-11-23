@@ -302,6 +302,45 @@ export const handler = async (event) => {
             return respond(400, { error: 'Impossible de reprendre ce virement.' });
         }
 
+        if (action === 'pending') {
+            const snap = await db.collection('transferRequests').where('userId', '==', uid).limit(25).get();
+            const active = snap.docs
+                .map((item) => ({ id: item.id, ...item.data() }))
+                .filter((item) => ['awaiting_code', 'awaiting_otp', 'ready_to_finalize'].includes(item.status))
+                .sort((a, b) => {
+                    const av = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+                    const bv = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+                    return bv - av;
+                });
+
+            const latest = active[0];
+            if (!latest) return respond(200, { request: null });
+
+            return respond(200, {
+                request: {
+                    requestId: latest.id,
+                    status: latest.status,
+                    transfer: latest.transfer || {},
+                    currentStep: latest.currentStep || 0,
+                    totalSteps: Array.isArray(latest.steps) ? latest.steps.length : 0
+                }
+            });
+        }
+
+        if (action === 'cancel') {
+            const { requestId } = payload;
+            const { ref, data } = await getRequest(db, uid, requestId);
+            if (['completed', 'failed', 'expired', 'cancelled'].includes(data.status)) {
+                return respond(400, { error: 'Ce virement n\'est plus en attente.' });
+            }
+            await ref.update({
+                status: 'cancelled',
+                cancelledAt: FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp()
+            });
+            return respond(200, { cancelled: true });
+        }
+
         if (action === 'resendOtp') {
             const { requestId } = payload;
             const { ref, data } = await getRequest(db, uid, requestId);
@@ -379,6 +418,7 @@ export const handler = async (event) => {
                     status: transfer.speed === 'Immediate' ? 'Completed' : 'Pending',
                     date: new Date().toLocaleString('fr-FR'),
                     createdAt: FieldValue.serverTimestamp(),
+                    requestId: ref.id,
                     ref: reference
                 });
                 tx.set(notificationRef, {

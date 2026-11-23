@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowUpRight, ArrowDownRight, Search, Filter, Download as DownloadIcon, Calendar, Hash, MoreHorizontal, ChevronRight } from 'lucide-react';
 import MainLayout from '../components/MainLayout';
 import { useAppContext } from '../AppContext';
@@ -8,6 +9,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 const Transactions = () => {
     const { user, transactions } = useAppContext();
     const { language } = useLanguage();
+    const navigate = useNavigate();
     if (!user) return null;
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -75,7 +77,7 @@ const Transactions = () => {
                             </thead>
                             <tbody>
                                 {filteredTransactions.length > 0 ? filteredTransactions.map((tx) => (
-                                    <tr key={tx.id} style={{ borderBottom: '1px solid #F1F5F9', background: 'white', transition: '0.2s' }} className="table-row-hover">
+                                    <tr key={tx.id} onClick={() => navigate(`/transaction/${tx.id}`)} style={{ borderBottom: '1px solid #F1F5F9', background: 'white', transition: '0.2s', cursor: 'pointer' }} className="table-row-hover">
                                         <td style={{ padding: '18px 24px', color: '#64748B', fontSize: '14px', fontWeight: 500 }}>{tx.date}</td>
                                         <td style={{ padding: '18px 24px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -113,7 +115,7 @@ const Transactions = () => {
                     {/* Mobile View (Card List) */}
                     <div className="mobile-only">
                         {filteredTransactions.length > 0 ? filteredTransactions.map((tx) => (
-                            <div key={tx.id} style={{ padding: '20px', borderBottom: '1px solid #F1F5F9', background: 'white', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                            <div key={tx.id} onClick={() => navigate(`/transaction/${tx.id}`)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/transaction/${tx.id}`); }} style={{ padding: '20px', borderBottom: '1px solid #F1F5F9', background: 'white', display: 'flex', gap: '16px', alignItems: 'center', cursor: 'pointer' }}>
                                 <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: tx.amount < 0 ? '#FEE2E2' : '#DCFCE7', color: tx.amount < 0 ? '#DC2626' : '#059669', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
                                     {tx.amount < 0 ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
                                 </div>

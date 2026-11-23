@@ -489,3 +489,5 @@ button { font-family: var(--font-inter); cursor: pointer; border: none; outline:
 .spin { animation: spin 1s linear infinite; }
 
 @keyframes slideDown { from { top: -100px; opacity: 0; } to { top: 100px; opacity: 1; } } @keyframes ping { 0% { transform: scale(1); opacity: 1; } 70%, 100% { transform: scale(2); opacity: 0; } }
+
+.table-row-hover:hover { background: #F8FAFC !important; }

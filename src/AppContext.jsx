@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, collection, query, where, orderBy, updateDoc } from 'firebase/firestore';
 import { getBankFieldsForFirestore } from './utils/bankDetails';
 import { createDefaultClientCodes } from './utils/transferCodes';
+import { callTransferApi } from './utils/transferApi';
 
 const AppContext = createContext();
 
@@ -101,8 +102,25 @@ export const AppProvider = ({ children }) => {
                 querySnapshot.forEach((doc) => {
                     txs.push({ id: doc.id, ...doc.data() });
                 });
-                // Sort locally to avoid Firebase Index requirement
-                txs.sort((a, b) => new Date(b.date) - new Date(a.date));
+                // Sort locally to avoid Firebase Index requirement.
+                // `date` is a localized string (dd/mm/yyyy), so Date.parse alone is unreliable.
+                const timeOf = (tx) => {
+                    const created = tx.createdAt?.toMillis
+                        ? tx.createdAt.toMillis()
+                        : (tx.createdAt ? Date.parse(tx.createdAt) : NaN);
+                    if (!Number.isNaN(created)) return created;
+                    const parsed = Date.parse(tx.date);
+                    if (!Number.isNaN(parsed)) return parsed;
+                    const match = String(tx.date || '').match(/(\d{2})\/(\d{2})\/(\d{4})(?:[ ,]+(\d{2}):(\d{2}))?/);
+                    if (match) {
+                        return new Date(
+                            Number(match[3]), Number(match[2]) - 1, Number(match[1]),
+                            Number(match[4] || 0), Number(match[5] || 0)
+                        ).getTime();
+                    }
+                    return 0;
+                };
+                txs.sort((a, b) => timeOf(b) - timeOf(a));
                 setTransactions(txs);
             }, (error) => {
                 console.error("Firestore error:", error);
@@ -167,6 +185,47 @@ export const AppProvider = ({ children }) => {
         }
     }, [userAuth]);
 
+    // Reconcile the locally stored pending transfer with the server.
+    // The localStorage copy can be lost (other device, cleared storage, private tab),
+    // in which case an in-flight transfer would become unreachable.
+    const [pendingProbeTick, setPendingProbeTick] = useState(0);
+
+    const refreshPendingTransfer = useCallback(() => {
+        setPendingProbeTick((value) => value + 1);
+    }, []);
+
+    useEffect(() => {
+        if (!user?.id) return undefined;
+        let cancelled = false;
+
+        (async () => {
+            try {
+                const result = await callTransferApi('pending', {});
+                if (cancelled) return;
+                const request = result?.request;
+                if (request && request.requestId) {
+                    const payload = {
+                        requestId: request.requestId,
+                        transfer: request.transfer || {},
+                        phase: request.status === 'awaiting_otp' ? 'otp' : 'code',
+                        serverStatus: request.status,
+                        updatedAt: Date.now()
+                    };
+                    try { localStorage.setItem('finvex_pending_transfer', JSON.stringify(payload)); } catch { /* ignore */ }
+                    setPendingTransfer(payload);
+                } else {
+                    try { localStorage.removeItem('finvex_pending_transfer'); } catch { /* ignore */ }
+                    setPendingTransfer(null);
+                    setIsPendingTransferOpen(false);
+                }
+            } catch {
+                /* offline or not authorised: keep whatever is cached locally */
+            }
+        })();
+
+        return () => { cancelled = true; };
+    }, [user?.id, pendingProbeTick]);
+
     const logout = async () => {
         try {
             try { localStorage.removeItem('finvex_pending_transfer'); } catch { /* ignore */ }
@@ -212,6 +271,7 @@ export const AppProvider = ({ children }) => {
             logout,
             isTransferModalOpen, setIsTransferModalOpen,
             pendingTransfer,
+            refreshPendingTransfer,
             isPendingTransferOpen, setIsPendingTransferOpen
         }}>
             {children}

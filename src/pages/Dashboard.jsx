@@ -36,7 +36,11 @@ const Dashboard = () => {
         const val = amount || 0;
         return '€' + val.toLocaleString('en-US', { minimumFractionDigits: 2 });
     };
-  
+
+    const pendingTotal = (transactions || [])
+        .filter((tx) => !tx.status || tx.status === 'Pending' || tx.status === 'On-hold' || tx.status === 'Processing')
+        .reduce((sum, tx) => sum + Math.abs(Number(tx.amount) || 0), 0);
+
     return (
         <MainLayout>
             <div className="dashboard-body">
@@ -178,7 +182,7 @@ const Dashboard = () => {
                                 </thead>
                                 <tbody>
                                     {(transactions || []).length > 0 ? transactions.slice(0, 5).map((tx, i) => (
-                                        <tr key={i} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                        <tr key={i} onClick={() => navigate(`/transaction/${tx.id}`)} style={{ borderBottom: '1px solid #F1F5F9', cursor: 'pointer' }} className="table-row-hover">
                                             <td style={{ padding: '20px 32px', fontWeight: 700, color: '#1E293B' }}>{formatMoney(Math.abs(tx.amount))} EUR</td>
                                             <td style={{ padding: '20px 16px' }}>
                                                 <span style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, background: tx.amount < 0 ? '#FEE2E2' : '#D1FAE5', color: tx.amount < 0 ? '#EF4444' : '#059669' }}>
@@ -186,8 +190,14 @@ const Dashboard = () => {
                                                 </span>
                                             </td>
                                             <td style={{ padding: '20px 16px' }}>
-                                                <span style={{ padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800, background: '#D1FAE5', color: '#059669' }}>
-                                                    {t('status.processed', language)}
+                                                <span style={{
+                                                    padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800,
+                                                    background: (tx.status === 'Completed' || tx.status === 'Paid' || tx.status === 'Processed') ? '#D1FAE5' : (tx.status === 'Failed' ? '#FEE2E2' : '#FEF3C7'),
+                                                    color: (tx.status === 'Completed' || tx.status === 'Paid' || tx.status === 'Processed') ? '#059669' : (tx.status === 'Failed' ? '#B91C1C' : '#B45309')
+                                                }}>
+                                                    {tx.status === 'Failed' ? t('status.failed', language)
+                                                        : (tx.status === 'Completed' || tx.status === 'Paid' || tx.status === 'Processed') ? t('status.processed', language)
+                                                        : t('status.pending', language)}
                                                 </span>
                                             </td>
                                             <td style={{ padding: '20px 16px', fontSize: '13px', color: '#64748B', fontFamily: 'monospace' }}>BANK/{tx.id?.substring(0,8).toUpperCase()}</td>
@@ -211,7 +221,7 @@ const Dashboard = () => {
                         <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginBottom: '32px' }}>{t('dashboard.accountStatistics', language)}</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <StatItem icon={<CreditCard size={18} />} color="#0EA5E9" label={t('dashboard.transactionLimit', language)} value={formatMoney(500000)} />
-                            <StatItem icon={<Clock size={18} />} color="#FACC15" label={t('dashboard.pendingTransactions', language)} value={formatMoney(0)} />
+                            <StatItem icon={<Clock size={18} />} color="#FACC15" label={t('dashboard.pendingTransactions', language)} value={formatMoney(pendingTotal)} />
                             <StatItem icon={<BarChart3 size={18} />} color="#10B981" label={t('dashboard.transactionVolume', language)} value={formatMoney(30000)} />
                             <StatItem icon={<Calendar size={18} />} color="var(--purple)" label={t('dashboard.accountAge', language)} value={t('dashboard.accountAgeValue', language)} />
                         </div>
