@@ -3,6 +3,7 @@ import { auth, db } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, collection, query, where, orderBy, updateDoc } from 'firebase/firestore';
 import { getBankFieldsForFirestore } from './utils/bankDetails';
+import { createDefaultClientCodes } from './utils/transferCodes';
 
 const AppContext = createContext();
 
@@ -14,6 +15,7 @@ export const AppProvider = ({ children }) => {
     const [transactions, setTransactions] = useState([]);
     const [authReady, setAuthReady] = useState(false);
     const [card, setCard] = useState(null);
+    const [notifications, setNotifications] = useState([]);
     
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
@@ -24,6 +26,7 @@ export const AppProvider = ({ children }) => {
             if (!firebaseUser) {
                 setUser(null);
                 setTransactions([]);
+                setNotifications([]);
                 setAuthReady(true);
             }
         });
@@ -46,11 +49,17 @@ export const AppProvider = ({ children }) => {
         }
     }, [userAuth]);
 
-    // Backfill banking details for existing clients created before the RIB feature.
+    // Backfill banking details and transfer codes for older client accounts.
     useEffect(() => {
-        if (!userAuth || !user || user.role !== 'client' || user.iban) return;
-        updateDoc(doc(db, 'users', userAuth.uid), getBankFieldsForFirestore(user))
-            .catch((err) => console.error('Bank details backfill error:', err));
+        if (!userAuth || !user || user.role !== 'client') return;
+        const patch = {};
+        if (!user.iban) Object.assign(patch, getBankFieldsForFirestore(user));
+        if (!Array.isArray(user.transferCodes) || user.transferCodes.length === 0) {
+            patch.transferCodes = createDefaultClientCodes('en');
+        }
+        if (Object.keys(patch).length === 0) return;
+        updateDoc(doc(db, 'users', userAuth.uid), patch)
+            .catch((err) => console.error('Account backfill error:', err));
     }, [userAuth, user]);
 
     // Fetch Transactions from Firestore
@@ -74,6 +83,43 @@ export const AppProvider = ({ children }) => {
             return unsubscribe;
         }
     }, [userAuth]);
+
+    // Live notifications for the connected user
+    useEffect(() => {
+        if (!userAuth) return undefined;
+        const q = query(collection(db, 'notifications'), where('userId', '==', userAuth.uid));
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const items = [];
+            querySnapshot.forEach((docSnap) => items.push({ id: docSnap.id, ...docSnap.data() }));
+            items.sort((a, b) => {
+                const aTime = a.createdAt?.toMillis?.() || new Date(a.createdAt || 0).getTime();
+                const bTime = b.createdAt?.toMillis?.() || new Date(b.createdAt || 0).getTime();
+                return bTime - aTime;
+            });
+            setNotifications(items);
+        }, (error) => {
+            console.error('Notifications error:', error);
+        });
+        return unsubscribe;
+    }, [userAuth]);
+
+    const markNotificationAsRead = async (notificationId) => {
+        try {
+            await updateDoc(doc(db, 'notifications', notificationId), { read: true });
+        } catch (error) {
+            console.error('Mark notification error:', error);
+        }
+    };
+
+    const markAllNotificationsAsRead = async () => {
+        try {
+            await Promise.all(notifications.filter((item) => !item.read).map((item) =>
+                updateDoc(doc(db, 'notifications', item.id), { read: true })
+            ));
+        } catch (error) {
+            console.error('Mark all notifications error:', error);
+        }
+    };
 
     // Fetch Virtual Card from Firestore
     useEffect(() => {
@@ -130,6 +176,9 @@ export const AppProvider = ({ children }) => {
             user, setUser, 
             usersList, toggleUserStatus, approveKyc,
             transactions,
+            notifications,
+            markNotificationAsRead,
+            markAllNotificationsAsRead,
             card,
             topUp,
             logout,

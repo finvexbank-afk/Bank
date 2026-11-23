@@ -3,6 +3,7 @@ import { X, Send, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
+import TransferVerificationFlow from './TransferVerificationFlow';
 
 const TransferModal = ({ isOpen, onClose }) => {
     const { user } = useAppContext();
@@ -15,6 +16,7 @@ const TransferModal = ({ isOpen, onClose }) => {
     const [amount, setAmount] = useState('');
     const [reference, setReference] = useState('');
     const [error, setError] = useState('');
+    const [verificationOpen, setVerificationOpen] = useState(false);
 
     if (!isOpen) return null;
 
@@ -42,50 +44,10 @@ const TransferModal = ({ isOpen, onClose }) => {
             setStep(1);
         } else if (step === 1) {
             if (total > balance) return setError(t('transfer.errors.insufficient', language));
-            await executeTransfer();
+            setError('');
+            setVerificationOpen(true);
         } else {
             resetAndClose();
-        }
-    };
-
-    const executeTransfer = async () => {
-        const newBalance = balance - total;
-        const now = new Date();
-        const dateStr = now.toLocaleDateString(locale, { month: 'long', day: 'numeric', year: 'numeric' });
-        const timeStr = now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
-        const txRef = `FINVEX/TX-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-        const description = note
-            ? `Transfer to ${beneficiaryName} - ${note}`
-            : `Transfer to ${beneficiaryName}`;
-
-        try {
-            const { db } = await import('../firebase');
-            const { doc, updateDoc, addDoc, collection, serverTimestamp } = await import('firebase/firestore');
-
-            await updateDoc(doc(db, 'users', user.id), { balance: newBalance });
-            await addDoc(collection(db, 'transactions'), {
-                userId: user.id,
-                userName: user.name,
-                amount: -total,
-                baseAmount: numericAmount,
-                fee: fee,
-                type: 'Debit',
-                scope: 'Local',
-                speed: transferSpeed,
-                description: description,
-                to: beneficiaryName,
-                iban: normalizedIban,
-                note: note,
-                status: transferSpeed === 'Immediate' ? 'Completed' : 'Pending',
-                date: `${dateStr} ${timeStr}`,
-                createdAt: serverTimestamp(),
-                ref: txRef
-            });
-
-            setReference(txRef);
-            setStep(2);
-        } catch (err) {
-            setError(t('transfer.errors.failed', language));
         }
     };
 
@@ -100,6 +62,7 @@ const TransferModal = ({ isOpen, onClose }) => {
             setReference('');
             setTransferSpeed('Standard');
             setError('');
+            setVerificationOpen(false);
         }, 500);
     };
 
@@ -244,6 +207,26 @@ const TransferModal = ({ isOpen, onClose }) => {
                     </div>
                 </div>
             </div>
+
+            <TransferVerificationFlow
+                open={verificationOpen}
+                transfer={{
+                    amount: numericAmount,
+                    fee,
+                    total,
+                    speed: transferSpeed,
+                    scope: 'Local',
+                    to: beneficiaryName,
+                    iban: normalizedIban,
+                    description: note ? `Transfer to ${beneficiaryName} - ${note}` : `Transfer to ${beneficiaryName}`
+                }}
+                onClose={() => setVerificationOpen(false)}
+                onCompleted={(result) => {
+                    setReference(result.reference);
+                    setVerificationOpen(false);
+                    setStep(2);
+                }}
+            />
         </div>
     );
 };

@@ -8,15 +8,14 @@ import {
   MessageCircle, Smartphone as Phone, Plus, LayoutGrid, EyeOff
 } from 'lucide-react';
 import MainLayout from '../components/MainLayout';
+import TransferVerificationFlow from '../components/TransferVerificationFlow';
 import { useAppContext } from '../AppContext';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../firebase';
-import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const InternationalTransfer = () => {
-    const { user, setUser } = useAppContext();
+    const { user } = useAppContext();
     const { language } = useLanguage();
     const navigate = useNavigate();
     const [view, setView] = useState('methods'); // 'methods', 'more', 'wire-form', 'confirm', 'codes', 'success'
@@ -24,8 +23,7 @@ const InternationalTransfer = () => {
     const [loading, setLoading] = useState(false);
     const [showPin, setShowPin] = useState(false);
     const [showDormantError, setShowDormantError] = useState(false);
-    const [codes, setCodes] = useState({ imf: '', swift: '', cot: '' });
-    const [codeError, setCodeError] = useState('');
+    const [verificationOpen, setVerificationOpen] = useState(false);
     
     const [formData, setFormData] = useState({
         amount: '', beneficiaryName: '', beneficiaryAccount: '', 
@@ -52,60 +50,7 @@ const InternationalTransfer = () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
-        setCodeError('');
-        setView('codes');
-    };
-
-    const handleCodes = (validate) => {
-        if (!validate) {
-            finalizeTransfer();
-            return;
-        }
-        const expected = { imf: '1234', swift: '5678', cot: '9999' };
-        const filled = Object.entries(codes).filter(([, value]) => value.trim() !== '');
-        const invalid = filled.some(([key, value]) => value.trim() !== expected[key]);
-        if (invalid) {
-            setCodeError(t('intlTransfer.codes.error', language));
-            return;
-        }
-        finalizeTransfer();
-    };
-
-    const finalizeTransfer = async () => {
-        setLoading(true);
-        const userId = user.id || user.uid;
-        const baseAmount = parseFloat(formData.amount);
-        const fee = formData.speed === 'Immediate' ? baseAmount * 0.01 : 0;
-        const total = baseAmount + fee;
-        const newBalance = user.balance - total;
-        
-        try {
-            await updateDoc(doc(db, 'users', userId), { balance: newBalance });
-            await addDoc(collection(db, 'transactions'), {
-                userId,
-                amount: -total,
-                baseAmount,
-                fee,
-                speed: formData.speed,
-                type: 'Debit',
-                scope: 'International',
-                method: 'Wire Transfer',
-                description: `Wire to ${formData.beneficiaryName}`,
-                to: formData.beneficiaryName,
-                iban: formData.iban,
-                swift: formData.swiftCode,
-                country: formData.country,
-                bank: formData.bankName,
-                status: formData.speed === 'Immediate' ? 'Completed' : 'Pending',
-                createdAt: serverTimestamp(),
-                ref: `FINVEX/TX-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
-            });
-            setUser({ ...user, balance: newBalance });
-            setView('success');
-        } catch (err) {
-            alert(t('intlTransfer.error.network', language));
-        }
-        setLoading(false);
+        setVerificationOpen(true);
     };
 
     const setQuickAmount = (val) => {
@@ -148,43 +93,6 @@ const InternationalTransfer = () => {
                             </div>
                             <div style={{ display: 'grid', gap: '16px', marginBottom: '32px' }}><ConfirmRow label={t('intlTransfer.confirm.methodLabel', language)} value="Wire Transfer" /><ConfirmRow label={t('intlTransfer.confirm.speedLabel', language)} value={speedLabel} /><ConfirmRow label={t('intlTransfer.common.amount', language)} value={`€${amountNum.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} /><ConfirmRow label={t('intlTransfer.confirm.recipient', language)} value={formData.beneficiaryName} /><ConfirmRow label={t('intlTransfer.confirm.accountNumber', language)} value={formData.beneficiaryAccount || formData.iban} /><ConfirmRow label={t('intlTransfer.confirm.bank', language)} value={formData.bankName} /><ConfirmRow label={t('intlTransfer.confirm.feeLabel', language)} value={formattedFee} /><div style={{ height: '1px', background: '#F1F5F9', margin: '8px 0' }}></div><ConfirmRow label={t('intlTransfer.confirm.totalAmount', language)} value={`€${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} isBold /><ConfirmRow label={t('intlTransfer.confirm.newBalance', language)} value={`€${(user.balance - totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} isBold /></div>
                             <div style={{ display: 'flex', gap: '16px' }}><button onClick={() => setView('wire-form')} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1.5px solid #F1F5F9', background: 'white', color: '#64748B', fontWeight: 700, cursor: 'pointer' }}>{t('intlTransfer.confirm.cancel', language)}</button><button onClick={handleConfirm} disabled={loading} style={{ flex: 2, padding: '14px', borderRadius: '12px', border: 'none', background: '#0EA5E9', color: 'white', fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>{t('intlTransfer.confirm.confirmTransfer', language)}</button></div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {view === 'codes' && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(8px)', zIndex: 10001, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-                    <div style={{ background: 'white', width: '100%', maxWidth: '480px', borderRadius: '28px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', animation: 'slideIn 0.3s ease-out' }}>
-                        <div style={{ padding: '40px' }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
-                                <div style={{ width: '48px', height: '48px', background: '#F0F9FF', color: '#0EA5E9', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}><ShieldCheck size={24} /></div>
-                                <div>
-                                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>{t('intlTransfer.codes.title', language)}</h3>
-                                    <p style={{ fontSize: '13px', color: '#64748B', lineHeight: 1.5, fontWeight: 500, margin: 0 }}>{t('intlTransfer.codes.desc', language)}</p>
-                                </div>
-                            </div>
-
-                            {codeError && (
-                                <div style={{ padding: '12px 16px', borderRadius: '12px', background: '#FEF2F2', color: '#EF4444', fontSize: '13px', fontWeight: 600, margin: '20px 0', border: '1px solid #FEE2E2' }}>{codeError}</div>
-                            )}
-
-                            <div style={{ display: 'grid', gap: '18px', margin: '28px 0 32px' }}>
-                                <FormGroup label={t('intlTransfer.codes.imfLabel', language)}>
-                                    <input type="text" maxLength={4} placeholder={t('intlTransfer.codes.imfPlaceholder', language)} value={codes.imf} onChange={e => { setCodes({ ...codes, imf: e.target.value }); setCodeError(''); }} style={inputStyle} />
-                                </FormGroup>
-                                <FormGroup label={t('intlTransfer.codes.swiftLabel', language)}>
-                                    <input type="text" maxLength={4} placeholder={t('intlTransfer.codes.swiftPlaceholder', language)} value={codes.swift} onChange={e => { setCodes({ ...codes, swift: e.target.value }); setCodeError(''); }} style={inputStyle} />
-                                </FormGroup>
-                                <FormGroup label={t('intlTransfer.codes.cotLabel', language)}>
-                                    <input type="text" maxLength={4} placeholder={t('intlTransfer.codes.cotPlaceholder', language)} value={codes.cot} onChange={e => { setCodes({ ...codes, cot: e.target.value }); setCodeError(''); }} style={inputStyle} />
-                                </FormGroup>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '16px' }}>
-                                <button onClick={() => handleCodes(false)} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1.5px solid #F1F5F9', background: 'white', color: '#64748B', fontWeight: 700, cursor: 'pointer' }}>{t('intlTransfer.codes.skip', language)}</button>
-                                <button onClick={() => handleCodes(true)} disabled={loading} style={{ flex: 1.5, padding: '14px', borderRadius: '12px', border: 'none', background: '#0EA5E9', color: 'white', fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>{t('intlTransfer.codes.validate', language)}</button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -288,6 +196,25 @@ const InternationalTransfer = () => {
                     .intl-amount-input { font-size: 28px !important; padding: 18px 50px 18px 44px !important; }
                 }
             `}</style>
+
+            <TransferVerificationFlow
+                open={verificationOpen}
+                transfer={{
+                    amount: amountNum,
+                    fee: feeAmount,
+                    total: totalAmount,
+                    speed: formData.speed,
+                    scope: 'International',
+                    to: formData.beneficiaryName,
+                    iban: formData.iban,
+                    description: `Wire to ${formData.beneficiaryName}`
+                }}
+                onClose={() => setVerificationOpen(false)}
+                onCompleted={() => {
+                    setVerificationOpen(false);
+                    setView('success');
+                }}
+            />
         </MainLayout>
     );
 };

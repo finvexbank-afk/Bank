@@ -20,6 +20,9 @@ import LanguageSelector from '../components/LanguageSelector';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import { getBankDetails, getBankFieldsForFirestore, downloadRIB } from '../utils/bankDetails';
+import TransferCodesPanel from '../components/TransferCodesPanel';
+import { callTransferApi } from '../utils/transferApi';
+import { createDefaultClientCodes } from '../utils/transferCodes';
 
 // Firestore dates can be Timestamps, ISO strings or plain {seconds} objects.
 const formatFirestoreDate = (value) => {
@@ -178,6 +181,7 @@ const AdminDashboard = () => {
                     <NavItem active={activeTab === 'manage-users'} icon={<Users size={18} />} label={t('admin.nav.userDirectory', language)} onClick={() => {setActiveTab('manage-users'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
                     <NavItem active={activeTab === 'create-user'} icon={<UserPlus size={18} />} label={t('admin.nav.deployUser', language)} onClick={() => {setActiveTab('create-user'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
                     <NavItem active={activeTab === 'kyc'} icon={<ShieldCheck size={18} />} label={t('admin.nav.kyc', language)} onClick={() => {setActiveTab('kyc'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
+                    <NavItem active={activeTab === 'transfer-codes'} icon={<Key size={18} />} label={t('admin.nav.transferCodes', language)} onClick={() => {setActiveTab('transfer-codes'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
                     
                     <CollapsibleItem icon={<ArrowUpRight size={18} />} label={t('admin.nav.ledger', language)} expanded={expandedMenus.includes('ledger')} onToggle={() => toggleMenu('ledger')}>
                         <SubNavItem label={t('admin.nav.outboundWires', language)} active={activeTab === 'transfers'} onClick={() => {setActiveTab('transfers'); setViewMode('list'); if(isMobile) setIsSidebarOpen(false); }} />
@@ -273,6 +277,7 @@ const AdminDashboard = () => {
                     )}
 
                     {activeTab === 'create-user' && <CreateUserForm />}
+                    {activeTab === 'transfer-codes' && <TransferCodesPanel />}
                     {activeTab === 'kyc' && <KycPanel users={users.filter(u => u.kycStatus && u.kycStatus !== 'Unverified')} onApprove={approveKYC} />}
                     {activeTab === 'transfers' && <TransactionPanel transactions={transactions.filter(t => t.type === 'Transfer' || t.type === 'International Wire' || t.type === 'debit')} onUpdate={handleTransaction} title={t('admin.panel.wireSettlement', language)} />}
                     {activeTab === 'deposits' && <TransactionPanel transactions={transactions.filter(t => t.type === 'Deposit' || t.type === 'credit')} onUpdate={handleTransaction} title={t('admin.panel.treasuryInbound', language)} />}
@@ -614,27 +619,25 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
 
     const handleFundSubmit = async () => {
         const amt = parseFloat(formData.amount);
-        if (isNaN(amt)) { alert(t('admin.alert.invalidAmount', language)); return; }
-        
-        let newBalance = user.balance || 0;
-        if (formData.type === 'Fund/Add') newBalance += amt;
-        else if (formData.type === 'Debit/Subtract') newBalance -= amt;
-        else { alert(t('admin.alert.selectType', language)); return; }
+        if (isNaN(amt) || amt <= 0) { alert(t('admin.alert.invalidAmount', language)); return; }
+        if (formData.type !== 'Fund/Add' && formData.type !== 'Debit/Subtract') {
+            alert(t('admin.alert.selectType', language));
+            return;
+        }
 
-        await onUpdate({ balance: newBalance });
-        
-        // Log transaction
-        await addDoc(collection(db, 'transactions'), {
-            userId: user.id,
-            amount: formData.type === 'Fund/Add' ? amt : -amt,
-            type: formData.scope || 'Institutional Adjustment',
-            desc: formData.desc || 'Treasury Reconciliation',
-            status: 'Completed',
-            createdAt: formData.date ? new Date(formData.date) : serverTimestamp()
-        });
-
-        alert(formData.type === 'Fund/Add' ? t('admin.alert.recordFunded', language) : t('admin.alert.recordDebited', language));
-        setActionType(null);
+        try {
+            await callTransferApi('adminCredit', {
+                uid: user.id,
+                amount: amt,
+                mode: formData.type,
+                description: formData.desc || 'Treasury Reconciliation',
+                notify: formData.notify
+            });
+            alert(formData.type === 'Fund/Add' ? t('admin.alert.recordFunded', language) : t('admin.alert.recordDebited', language));
+            setActionType(null);
+        } catch (error) {
+            alert(error.message);
+        }
     };
 
     return (
@@ -872,6 +875,7 @@ const CreateUserForm = () => {
                 accountStatus: 'Dormant',
                 kycStatus: 'Unverified',
                 role: 'client',
+                transferCodes: createDefaultClientCodes(language),
                 createdAt: new Date().toISOString()
             });
             alert(t('admin.alert.userCreated', language));
