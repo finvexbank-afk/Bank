@@ -26,6 +26,10 @@ dist-ssr
 # Local agent memory
 .workbuddy-ai/
 
+# Firebase service account keys (never commit)
+serviceAccount*.json
+firebase-service-account*.json
+
 # Env
 .env
 .env.local
