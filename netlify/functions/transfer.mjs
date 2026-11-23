@@ -119,14 +119,34 @@ async function getRequest(db, uid, requestId) {
     return { ref, data: snap.data() };
 }
 
-async function selectCode(db, profile) {
-    const clientCodes = Array.isArray(profile.transferCodes) ? profile.transferCodes : [];
-    const clientCode = clientCodes.find((code) => code.enabled !== false && code.value);
-    if (clientCode) return clientCode;
+const toStep = (code) => ({
+    id: code.id || null,
+    label: code.label || 'Code Finvex',
+    message: code.message || 'Saisissez votre code de confirmation.',
+    value: code.value,
+    requiresOtp: code.requiresOtp === true || code.requiresOtp === 'true' || code.requiresOtp === 'yes'
+});
 
-    const snap = await db.collection('transferCodes').where('enabled', '==', true).limit(1).get();
-    if (!snap.empty) return { id: snap.docs[0].id, ...snap.docs[0].data() };
-    return null;
+const publicStep = (step, index, total) => ({
+    id: step.id || null,
+    label: step.label || 'Code Finvex',
+    message: step.message || '',
+    requiresOtp: !!step.requiresOtp,
+    index: index + 1,
+    total
+});
+
+async function selectCodes(db, profile) {
+    const clientCodes = Array.isArray(profile.transferCodes) ? profile.transferCodes : [];
+    const activeClientCodes = clientCodes.filter((code) => code.enabled !== false && code.value);
+    if (activeClientCodes.length) return activeClientCodes.map(toStep);
+
+    const snap = await db.collection('transferCodes').where('enabled', '==', true).get();
+    const globalCodes = snap.docs
+        .map((item) => ({ id: item.id, ...item.data() }))
+        .filter((code) => code.value)
+        .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+    return globalCodes.map(toStep);
 }
 
 async function issueOtp(db, requestRef, requestData, profile) {
@@ -179,19 +199,15 @@ export const handler = async (event) => {
             const balance = round2(profile.balance || 0);
             if (total > balance) return respond(400, { error: 'Solde insuffisant.' });
 
-            const code = await selectCode(db, profile);
-            if (!code) return respond(400, { error: 'Aucun code de confirmation actif n\'est configuré.' });
+            const steps = await selectCodes(db, profile);
+            if (steps.length === 0) return respond(400, { error: 'Aucun code de confirmation actif n\'est configuré.' });
 
             const ref = db.collection('transferRequests').doc();
             await ref.set({
                 userId: uid,
                 status: 'awaiting_code',
-                code: {
-                    id: code.id || null,
-                    label: code.label || 'Code Finvex',
-                    message: code.message || 'Saisissez votre code de confirmation.',
-                    value: code.value
-                },
+                steps,
+                currentStep: 0,
                 transfer: {
                     amount,
                     fee,
@@ -209,7 +225,7 @@ export const handler = async (event) => {
 
             return respond(200, {
                 requestId: ref.id,
-                code: { label: code.label || 'Code Finvex', message: code.message || '' },
+                code: publicStep(steps[0], 0, steps.length),
                 amount,
                 fee,
                 total,
@@ -222,8 +238,13 @@ export const handler = async (event) => {
             const { ref, data } = await getRequest(db, uid, requestId);
             if (data.status !== 'awaiting_code') return respond(400, { error: 'Cette étape n\'est plus valable.' });
 
+            const steps = Array.isArray(data.steps) ? data.steps : [];
+            const index = data.currentStep || 0;
+            const step = steps[index];
+            if (!step) return respond(400, { error: 'Étape de vérification introuvable.' });
+
             const submitted = String(codeValue || '').trim().toUpperCase().replace(/[\s-]+/g, '');
-            const expected = String(data.code?.value || '').trim().toUpperCase().replace(/[\s-]+/g, '');
+            const expected = String(step.value || '').trim().toUpperCase().replace(/[\s-]+/g, '');
             const attempts = (data.codeAttempts || 0) + 1;
             if (!submitted || submitted !== expected) {
                 await ref.update({ codeAttempts: attempts, updatedAt: FieldValue.serverTimestamp() });
@@ -234,10 +255,51 @@ export const handler = async (event) => {
                 return respond(400, { error: 'Code incorrect.' });
             }
 
-            await ref.update({ codeAttempts: attempts, codeVerifiedAt: FieldValue.serverTimestamp() });
-            const result = await issueOtp(db, ref, data, profile);
-            if (!result.sent) return respond(502, { error: 'Le service e-mail est momentanément indisponible.' });
-            return respond(200, { maskedEmail: result.maskedEmail });
+            await ref.update({ codeAttempts: 0, codeVerifiedAt: FieldValue.serverTimestamp() });
+
+            if (step.requiresOtp) {
+                const result = await issueOtp(db, ref, data, profile);
+                if (!result.sent) return respond(502, { error: 'Le service e-mail est momentanément indisponible.' });
+                return respond(200, { maskedEmail: result.maskedEmail });
+            }
+
+            const nextIndex = index + 1;
+            if (nextIndex < steps.length) {
+                await ref.update({
+                    currentStep: nextIndex,
+                    status: 'awaiting_code',
+                    otpHash: null,
+                    otpExpiresAt: 0,
+                    updatedAt: FieldValue.serverTimestamp()
+                });
+                return respond(200, { nextCode: publicStep(steps[nextIndex], nextIndex, steps.length) });
+            }
+
+            await ref.update({ status: 'ready_to_finalize', updatedAt: FieldValue.serverTimestamp() });
+            return respond(200, { ready: true });
+        }
+
+        if (action === 'resume') {
+            const { requestId } = payload;
+            const { data } = await getRequest(db, uid, requestId);
+            if (['completed', 'failed', 'expired'].includes(data.status)) {
+                return respond(400, { error: 'Ce virement n\'est plus en attente.' });
+            }
+
+            const steps = Array.isArray(data.steps) ? data.steps : [];
+            const index = data.currentStep || 0;
+            const step = steps[index];
+
+            if (data.status === 'awaiting_otp') {
+                return respond(200, { otp: true, maskedEmail: maskEmail(profile.email) });
+            }
+            if (data.status === 'ready_to_finalize') {
+                return respond(200, { ready: true });
+            }
+            if (data.status === 'awaiting_code' && step) {
+                return respond(200, { nextCode: publicStep(step, index, steps.length) });
+            }
+            return respond(400, { error: 'Impossible de reprendre ce virement.' });
         }
 
         if (action === 'resendOtp') {
@@ -252,21 +314,41 @@ export const handler = async (event) => {
         if (action === 'finalize') {
             const { requestId, otp } = payload;
             const { ref, data } = await getRequest(db, uid, requestId);
-            if (data.status !== 'awaiting_otp') return respond(400, { error: 'Cette étape n\'est plus valable.' });
-            if (Date.now() > (data.otpExpiresAt || 0)) {
-                await ref.update({ status: 'expired', updatedAt: FieldValue.serverTimestamp() });
-                return respond(400, { error: 'Code expiré. Veuillez le demander à nouveau.' });
+            const canFinalizeDirectly = data.status === 'ready_to_finalize';
+            if (!canFinalizeDirectly && data.status !== 'awaiting_otp') {
+                return respond(400, { error: 'Cette étape n\'est plus valable.' });
             }
 
-            const submittedHash = hashOtp(String(otp || '').trim(), requestId);
-            if (submittedHash !== data.otpHash) {
-                const attempts = (data.otpAttempts || 0) + 1;
-                await ref.update({ otpAttempts: attempts, updatedAt: FieldValue.serverTimestamp() });
-                if (attempts >= 5) {
-                    await ref.update({ status: 'failed', failedReason: 'too_many_otp_attempts' });
-                    return respond(429, { error: 'Trop de tentatives. Veuillez recommencer.' });
+            if (!canFinalizeDirectly) {
+                if (Date.now() > (data.otpExpiresAt || 0)) {
+                    await ref.update({ status: 'expired', updatedAt: FieldValue.serverTimestamp() });
+                    return respond(400, { error: 'Code expiré. Veuillez le demander à nouveau.' });
                 }
-                return respond(400, { error: 'Code OTP incorrect.' });
+
+                const submittedHash = hashOtp(String(otp || '').trim(), requestId);
+                if (submittedHash !== data.otpHash) {
+                    const attempts = (data.otpAttempts || 0) + 1;
+                    await ref.update({ otpAttempts: attempts, updatedAt: FieldValue.serverTimestamp() });
+                    if (attempts >= 5) {
+                        await ref.update({ status: 'failed', failedReason: 'too_many_otp_attempts' });
+                        return respond(429, { error: 'Trop de tentatives. Veuillez recommencer.' });
+                    }
+                    return respond(400, { error: 'Code OTP incorrect.' });
+                }
+
+                const steps = Array.isArray(data.steps) ? data.steps : [];
+                const nextIndex = (data.currentStep || 0) + 1;
+                if (nextIndex < steps.length) {
+                    await ref.update({
+                        currentStep: nextIndex,
+                        status: 'awaiting_code',
+                        otpHash: null,
+                        otpExpiresAt: 0,
+                        otpAttempts: 0,
+                        updatedAt: FieldValue.serverTimestamp()
+                    });
+                    return respond(200, { nextCode: publicStep(steps[nextIndex], nextIndex, steps.length) });
+                }
             }
 
             const transfer = data.transfer || {};
@@ -412,8 +494,10 @@ export const handler = async (event) => {
                     label: payload.label || 'Code Finvex',
                     value: makeClientCodeValue(),
                     message: payload.message || 'Voici votre code de confirmation Finvex pour finaliser votre opération.',
+                    requiresOtp: payload.requiresOtp === true || payload.requiresOtp === 'true',
                     enabled: true,
                     scope: 'client',
+                    order: existingCodes.length,
                     createdAt: new Date().toISOString()
                 };
                 await targetRef.update({ transferCodes: [...existingCodes, code] });

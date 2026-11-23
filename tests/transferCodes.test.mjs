@@ -6,6 +6,8 @@ test('default client codes contain three active references', () => {
   const codes = createDefaultClientCodes('fr');
   assert.equal(codes.length, 3);
   assert.ok(codes.every((code) => code.enabled === true));
+  assert.ok(codes.every((code) => code.requiresOtp === false));
+  assert.deepEqual(codes.map((code) => code.order), [0, 1, 2]);
   assert.ok(codes.every((code) => /^[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(code.value)));
 });
 

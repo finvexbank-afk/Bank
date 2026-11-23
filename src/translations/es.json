@@ -966,5 +966,10 @@
   "admin.codes.sendEmail": "Enviar por correo",
   "admin.codes.generateSend": "Generar y enviar",
   "admin.codes.newLabel": "Nueva etiqueta",
-  "admin.codes.newMessage": "Mensaje personalizado"
+  "admin.codes.newMessage": "Mensaje personalizado",
+  "verify.code.step": "Código {{current}} de {{total}}",
+  "transfer.resume.title": "Transferencia en curso",
+  "transfer.resume.desc": "Tiene una transferencia pendiente de verificación.",
+  "transfer.resume.button": "Continuar",
+  "admin.codes.requiresOtp": "Requerir OTP después de este código"
 }

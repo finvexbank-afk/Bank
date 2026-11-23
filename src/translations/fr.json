@@ -966,5 +966,10 @@
   "admin.codes.sendEmail": "Envoyer par e-mail",
   "admin.codes.generateSend": "Générer et envoyer",
   "admin.codes.newLabel": "Nouveau libellé",
-  "admin.codes.newMessage": "Message personnalisé"
+  "admin.codes.newMessage": "Message personnalisé",
+  "verify.code.step": "Code {{current}} sur {{total}}",
+  "transfer.resume.title": "Virement en cours",
+  "transfer.resume.desc": "Vous avez un virement en attente de vérification.",
+  "transfer.resume.button": "Reprendre",
+  "admin.codes.requiresOtp": "Exiger OTP après ce code"
 }

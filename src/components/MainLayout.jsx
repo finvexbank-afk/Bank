@@ -11,11 +11,15 @@ import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
 import LanguageSelector from './LanguageSelector';
 import NotificationBell from './NotificationBell';
+import TransferVerificationFlow from './TransferVerificationFlow';
 
 const MainLayout = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, isTransferModalOpen, setIsTransferModalOpen, logout } = useAppContext();
+    const {
+        user, isTransferModalOpen, setIsTransferModalOpen, logout,
+        pendingTransfer, isPendingTransferOpen, setIsPendingTransferOpen
+    } = useAppContext();
     const { language } = useLanguage();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -176,7 +180,24 @@ const MainLayout = ({ children }) => {
                 </div>
             </div>
 
+            {pendingTransfer?.requestId && (
+                <div className="pending-transfer-banner">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <strong>{t('transfer.resume.title', language)}</strong>
+                        <span>{t('transfer.resume.desc', language)}</span>
+                    </div>
+                    <button onClick={() => setIsPendingTransferOpen(true)}>{t('transfer.resume.button', language)}</button>
+                </div>
+            )}
+
             <TransferModal isOpen={isTransferModalOpen} onClose={() => setIsTransferModalOpen(false)} />
+
+            <TransferVerificationFlow
+                open={isPendingTransferOpen}
+                resumeRequestId={pendingTransfer?.requestId}
+                transfer={pendingTransfer?.transfer}
+                onClose={() => setIsPendingTransferOpen(false)}
+            />
         </div>
     );
 };

@@ -20,6 +20,7 @@ const TransferCodesPanel = () => {
     const [testEmail, setTestEmail] = useState('');
     const [newClientLabel, setNewClientLabel] = useState('Code Finvex');
     const [newClientMessage, setNewClientMessage] = useState('');
+    const [newClientRequiresOtp, setNewClientRequiresOtp] = useState(false);
     const [notice, setNotice] = useState('');
 
     useEffect(() => {
@@ -39,7 +40,9 @@ const TransferCodesPanel = () => {
             label: generated.label,
             value: generated.value,
             message: generated.message,
+            requiresOtp: false,
             enabled: true,
+            order: codes.length,
             scope: 'global',
             createdAt: serverTimestamp()
         });
@@ -78,7 +81,8 @@ const TransferCodesPanel = () => {
             const result = await callTransferApi('sendClientCodeEmail', {
                 uid: selectedUserId,
                 label: newClientLabel || 'Code Finvex',
-                message: newClientMessage
+                message: newClientMessage,
+                requiresOtp: newClientRequiresOtp
             });
             setNotice(`Code ${result.code.value} envoyé par e-mail au client.`);
         } catch (error) {
@@ -151,6 +155,10 @@ const TransferCodesPanel = () => {
                                     <input type="checkbox" checked={code.enabled !== false} onChange={(e) => updateCode(code.id, 'enabled', e.target.checked)} />
                                     {t('admin.codes.enabled', language)}
                                 </label>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: '#475569', cursor: 'pointer' }}>
+                                    <input type="checkbox" checked={code.requiresOtp === true} onChange={(e) => updateCode(code.id, 'requiresOtp', e.target.checked)} />
+                                    {t('admin.codes.requiresOtp', language)}
+                                </label>
                                 <button onClick={() => deleteCode(code.id)} style={{ ...buttonStyle, background: '#FEE2E2', color: '#DC2626' }}><Trash2 size={16} /> {t('admin.codes.delete', language)}</button>
                             </div>
                         </div>
@@ -176,6 +184,10 @@ const TransferCodesPanel = () => {
                         <label style={labelStyle}>{t('admin.codes.newMessage', language)}</label>
                         <textarea style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} value={newClientMessage} onChange={(e) => setNewClientMessage(e.target.value)} placeholder="Écrivez ici le message qui accompagnera le code envoyé au client." />
                     </div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: '#475569', cursor: 'pointer', gridColumn: '1 / -1' }}>
+                        <input type="checkbox" checked={newClientRequiresOtp} onChange={(e) => setNewClientRequiresOtp(e.target.checked)} />
+                        {t('admin.codes.requiresOtp', language)}
+                    </label>
                     <button onClick={generateAndSend} disabled={!selectedUserId} style={{ ...buttonStyle, opacity: selectedUserId ? 1 : 0.5 }}><RefreshCw size={16} /> {t('admin.codes.generateSend', language)}</button>
                 </div>
 
@@ -201,6 +213,10 @@ const TransferCodesPanel = () => {
                                         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: '#475569', cursor: 'pointer' }}>
                                             <input type="checkbox" checked={code.enabled !== false} onChange={(e) => updateClientCode(code.id, 'enabled', e.target.checked)} />
                                             {t('admin.codes.enabled', language)}
+                                        </label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: '#475569', cursor: 'pointer' }}>
+                                            <input type="checkbox" checked={code.requiresOtp === true} onChange={(e) => updateClientCode(code.id, 'requiresOtp', e.target.checked)} />
+                                            {t('admin.codes.requiresOtp', language)}
                                         </label>
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <button onClick={() => sendCodeEmail(code.id)} style={buttonStyle}><Mail size={16} /> {t('admin.codes.sendEmail', language)}</button>

@@ -29,6 +29,16 @@ const Cards = () => {
     const [cardLevel, setCardLevel] = useState('Standard');
     const [cardType, setCardType] = useState('visa');
 
+    const rawNumber = String(card?.number || '').replace(/\D/g, '').slice(-16);
+    const last4 = rawNumber.slice(-4) || '****';
+    const maskedNumber = `•••• •••• •••• ${last4}`;
+    const revealedNumber = rawNumber.replace(/(.{4})/g, '$1 ').trim() || maskedNumber;
+    const cardNumberDisplay = isCardActive && showNumbers ? revealedNumber : maskedNumber;
+    const expiryDisplay = isCardActive && showNumbers ? (card?.expiry || '--/--') : '--/--';
+    const cvvDisplay = isCardActive && showNumbers ? (card?.cvv || '•••') : '•••';
+    const cardBrand = String(card?.type || cardType || 'visa').toUpperCase();
+    const cardTier = card?.level || cardLevel;
+
     const handleApply = async () => {
         if (!user) return;
         setIsSubmitting(true);
@@ -107,15 +117,15 @@ const Cards = () => {
                                     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                             <p style={{ fontWeight: 700, fontSize: 'clamp(12px, 3vw, 15px)' }}>FINVEX BANK</p>
-                                            <span style={{ fontWeight: 900, fontSize: 'clamp(14px, 4vw, 20px)' }}>VISA</span>
+                                            <span style={{ fontWeight: 900, fontSize: 'clamp(14px, 4vw, 20px)' }}>{cardBrand}</span>
                                         </div>
                                         <div style={{ width: '45px', height: '35px', background: '#F59E0B', borderRadius: '6px', marginTop: '20px', opacity: 0.8 }}></div>
                                         <p style={{ fontSize: 'clamp(16px, 5vw, 22px)', fontWeight: 700, marginTop: 'auto', letterSpacing: '4px', marginBottom: '20px' }}>
-                                            {isCardActive && showNumbers ? '4924 4128 9933 3921' : '•••• •••• •••• ' + (isCardActive ? '3921' : '****')}
+                                            {cardNumberDisplay}
                                         </p>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' }}>
                                             <div><p style={{ fontSize: '9px', opacity: 0.7 }}>{t('cards.cardHolder', language)}</p><p style={{ fontWeight: 700, fontSize: '14px' }}>{user?.name?.toUpperCase()}</p></div>
-                                            <div><p style={{ fontSize: '9px', opacity: 0.7 }}>{t('cards.validThru', language)}</p><p style={{ fontWeight: 700, fontSize: '14px' }}>{isCardActive ? '05/28' : '--/--'}</p></div>
+                                            <div><p style={{ fontSize: '9px', opacity: 0.7 }}>{t('cards.validThru', language)}</p><p style={{ fontWeight: 700, fontSize: '14px' }}>{expiryDisplay}</p></div>
                                         </div>
                                     </div>
                                 ) : (
@@ -123,7 +133,7 @@ const Cards = () => {
                                         <div style={{ height: '18%', background: 'black', width: '120%', margin: '0 -10%', position: 'absolute', top: '15%' }}></div>
                                         <div style={{ marginTop: '25%', display: 'flex', justifyContent: 'center' }}>
                                             <div style={{ width: '80%', height: '40px', background: 'white', borderRadius: '4px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', paddingRight: '15px', color: '#1E293B', fontWeight: 800, fontSize: '18px' }}>
-                                                {isCardActive && showNumbers ? '885' : '•••'}
+                                                {cvvDisplay}
                                             </div>
                                         </div>
                                     </div>
@@ -140,11 +150,11 @@ const Cards = () => {
 
                     {/* Info Grid (Responsive) */}
                     <div className="grid-details-mobile" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '32px' }}>
-                        <DetailInfo label={t('cards.cardNumber', language)} value={isCardActive && showNumbers ? '4924 4128 9933 3921' : '•••• •••• •••• ' + (isCardActive ? '3921' : '****')} hasEye />
-                        <DetailInfo label={t('cards.expirationDate', language)} value={isCardActive ? '05/2028' : '-- / ----'} hasEye />
-                        <DetailInfo label="CVV" value={isCardActive && showNumbers ? '885' : '•••'} hasEye />
-                        <DetailInfo label={t('cards.cardTypeLabel', language)} value="Visa" />
-                        <DetailInfo label={t('cards.cardLevelLabel', language)} value={cardLevel} />
+                        <DetailInfo label={t('cards.cardNumber', language)} value={cardNumberDisplay} hasEye />
+                        <DetailInfo label={t('cards.expirationDate', language)} value={expiryDisplay} hasEye />
+                        <DetailInfo label="CVV" value={cvvDisplay} hasEye />
+                        <DetailInfo label={t('cards.cardTypeLabel', language)} value={cardBrand} />
+                        <DetailInfo label={t('cards.cardLevelLabel', language)} value={cardTier} />
                         <DetailInfo label={t('cards.currentBalance', language)} value="€0.00" />
                     </div>
 
@@ -236,11 +246,11 @@ const Cards = () => {
                             <div style={{ border: '1px solid #F1F5F9', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '360px', background: '#F8FAFC', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
                                     <span style={{ background: isCardActive ? '#D1FAE5' : '#FEF3C7', color: isCardActive ? '#059669' : '#D97706', padding: '4px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: 800 }}>{isCardActive ? t('cards.statusActiveUpper', language) : t('cards.statusReviewUpper', language)}</span>
-                                    <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 700 }}>{card?.level?.toUpperCase() || cardLevel.toUpperCase()}</span>
+                                    <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 700 }}>{String(cardTier).toUpperCase()}</span>
                                 </div>
                                 <div style={{ width: '100%', aspectRatio: '1.58/1', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', borderRadius: '12px', padding: '24px', color: 'white', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
                                     <p style={{ fontWeight: 700, fontSize: '13px' }}>FINVEX BANK</p>
-                                    <p style={{ fontSize: '18px', fontWeight: 700, marginTop: 'auto', letterSpacing: '3px' }}>{isCardActive ? '4924 4128 9933 3921' : '•••• •••• •••• ****'}</p>
+                                    <p style={{ fontSize: '18px', fontWeight: 700, marginTop: 'auto', letterSpacing: '3px' }}>{maskedNumber}</p>
                                 </div>
                                 <button onClick={() => setView('details')} style={{ width: '100%', padding: '14px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', color: '#1E293B', fontWeight: 700, cursor: 'pointer', transition: '0.2s' }}>{t('cards.manageCard', language)}</button>
                             </div>

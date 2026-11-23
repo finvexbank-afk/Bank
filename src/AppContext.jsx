@@ -18,6 +18,30 @@ export const AppProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+    const [pendingTransfer, setPendingTransfer] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('finvex_pending_transfer') || 'null');
+        } catch {
+            return null;
+        }
+    });
+    const [isPendingTransferOpen, setIsPendingTransferOpen] = useState(false);
+
+    useEffect(() => {
+        const refresh = () => {
+            try {
+                setPendingTransfer(JSON.parse(localStorage.getItem('finvex_pending_transfer') || 'null'));
+            } catch {
+                setPendingTransfer(null);
+            }
+        };
+        window.addEventListener('finvex:pending-change', refresh);
+        window.addEventListener('storage', refresh);
+        return () => {
+            window.removeEventListener('finvex:pending-change', refresh);
+            window.removeEventListener('storage', refresh);
+        };
+    }, []);
 
     // Initial Auth Listener
     useEffect(() => {
@@ -182,7 +206,9 @@ export const AppProvider = ({ children }) => {
             card,
             topUp,
             logout,
-            isTransferModalOpen, setIsTransferModalOpen
+            isTransferModalOpen, setIsTransferModalOpen,
+            pendingTransfer,
+            isPendingTransferOpen, setIsPendingTransferOpen
         }}>
             {children}
         </AppContext.Provider>

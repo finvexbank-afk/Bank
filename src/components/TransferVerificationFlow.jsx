@@ -5,8 +5,27 @@ import { t } from '../translations';
 import { callTransferApi } from '../utils/transferApi';
 
 const RESEND_DELAY = 30;
+const PENDING_KEY = 'finvex_pending_transfer';
 
-const TransferVerificationFlow = ({ open, transfer, onClose, onCompleted }) => {
+const savePending = (requestId, transfer, phase) => {
+    try {
+        localStorage.setItem(PENDING_KEY, JSON.stringify({ requestId, transfer, phase, updatedAt: Date.now() }));
+        window.dispatchEvent(new CustomEvent('finvex:pending-change'));
+    } catch {
+        // Storage can be unavailable in private mode; verification still works.
+    }
+};
+
+const clearPending = () => {
+    try {
+        localStorage.removeItem(PENDING_KEY);
+        window.dispatchEvent(new CustomEvent('finvex:pending-change'));
+    } catch {
+        // Ignore storage errors.
+    }
+};
+
+const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, onCompleted }) => {
     const { language } = useLanguage();
     const [phase, setPhase] = useState('preparing');
     const [requestId, setRequestId] = useState(null);
@@ -46,6 +65,58 @@ const TransferVerificationFlow = ({ open, transfer, onClose, onCompleted }) => {
         return t(key, language) === key ? speed : t(key, language);
     })();
 
+    const finish = (result, currentRequestId) => {
+        setReference(result.reference);
+        setPhase('success');
+        clearPending();
+        if (onCompleted) onCompleted(result, currentRequestId);
+    };
+
+    const finalizeDirect = async (currentRequestId) => {
+        setPhase('finalizing');
+        try {
+            const result = await callTransferApi('finalize', { requestId: currentRequestId });
+            finish(result, currentRequestId);
+        } catch (err) {
+            setError(err.message);
+            setPhase('error');
+        }
+    };
+
+    const applyStepResult = (result, currentRequestId, currentTransfer) => {
+        if (result.code || result.nextCode) {
+            const next = result.code || result.nextCode;
+            savePending(currentRequestId, currentTransfer, 'code');
+            if (result.nextCode) {
+                setPhase('advancing');
+                setTimeout(() => {
+                    setCodeInfo(next);
+                    setCodeValue('');
+                    setPhase('code');
+                }, 1200);
+            } else {
+                setCodeInfo(next);
+                setCodeValue('');
+                setPhase('code');
+            }
+            return;
+        }
+        if (result.otp || result.maskedEmail) {
+            setMaskedEmail(result.maskedEmail || '');
+            setSeconds(RESEND_DELAY);
+            savePending(currentRequestId, currentTransfer, 'otp');
+            setPhase('otp');
+            return;
+        }
+        if (result.ready) {
+            savePending(currentRequestId, currentTransfer, 'finalizing');
+            setPhase('advancing');
+            setTimeout(() => finalizeDirect(currentRequestId), 1200);
+            return;
+        }
+        if (result.reference) finish(result, currentRequestId);
+    };
+
     const start = async () => {
         setPhase('preparing');
         setError('');
@@ -57,10 +128,12 @@ const TransferVerificationFlow = ({ open, transfer, onClose, onCompleted }) => {
         setReference('');
         setSeconds(RESEND_DELAY);
         try {
-            const result = await callTransferApi('initiate', { transfer });
-            setRequestId(result.requestId);
-            setCodeInfo(result.code);
-            setPhase('code');
+            const result = resumeRequestId
+                ? await callTransferApi('resume', { requestId: resumeRequestId })
+                : await callTransferApi('initiate', { transfer });
+            const currentRequestId = result.requestId || resumeRequestId;
+            setRequestId(currentRequestId);
+            applyStepResult(result, currentRequestId, transfer);
         } catch (err) {
             setError(err.message);
             setPhase('error');
@@ -72,9 +145,7 @@ const TransferVerificationFlow = ({ open, transfer, onClose, onCompleted }) => {
         setPhase('verifying');
         try {
             const result = await callTransferApi('verifyCode', { requestId, codeValue });
-            setMaskedEmail(result.maskedEmail);
-            setSeconds(RESEND_DELAY);
-            setPhase('otp');
+            applyStepResult(result, requestId, transfer);
         } catch (err) {
             setError(err.message);
             setPhase('code');
@@ -98,9 +169,11 @@ const TransferVerificationFlow = ({ open, transfer, onClose, onCompleted }) => {
         setPhase('finalizing');
         try {
             const result = await callTransferApi('finalize', { requestId, otp });
-            setReference(result.reference);
-            setPhase('success');
-            if (onCompleted) onCompleted(result);
+            if (result.code || result.nextCode || result.ready) {
+                applyStepResult(result, requestId, transfer);
+                return;
+            }
+            finish(result, requestId);
         } catch (err) {
             setError(err.message);
             setPhase('otp');
@@ -109,7 +182,7 @@ const TransferVerificationFlow = ({ open, transfer, onClose, onCompleted }) => {
 
     if (!open) return null;
 
-    const busy = ['preparing', 'verifying', 'finalizing'].includes(phase);
+    const busy = ['preparing', 'verifying', 'finalizing', 'advancing'].includes(phase);
 
     return (
         <div style={overlayStyle}>
@@ -147,6 +220,11 @@ const TransferVerificationFlow = ({ open, transfer, onClose, onCompleted }) => {
                             </div>
                             <h3 style={{ fontSize: '21px', fontWeight: 900, marginBottom: '4px' }}>{t('verify.code.title', language)}</h3>
                             <p style={{ fontSize: '13px', opacity: 0.9 }}>{t('verify.code.subtitle', language)}</p>
+                            {codeInfo?.total > 1 && (
+                                <p style={{ fontSize: '11px', opacity: 0.8, marginTop: '6px', fontWeight: 700 }}>
+                                    {t('verify.code.step', language, { current: codeInfo.index || 1, total: codeInfo.total })}
+                                </p>
+                            )}
                         </div>
                         <div style={{ padding: '28px 32px 32px' }}>
                             <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#FEE2E2', color: '#DC2626', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '-56px auto 20px', border: '5px solid white', boxShadow: '0 4px 12px rgba(220,38,38,0.15)' }}>

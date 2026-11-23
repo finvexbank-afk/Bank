@@ -439,6 +439,37 @@ button { font-family: var(--font-inter); cursor: pointer; border: none; outline:
   }
 }
 
+/* Pending transfer resume banner */
+.pending-transfer-banner {
+  position: fixed;
+  left: 50%;
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(520px, calc(100vw - 32px));
+  background: white;
+  border: 1px solid #BAE6FD;
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 90;
+}
+.pending-transfer-banner strong { display: block; font-size: 13px; color: #0F172A; }
+.pending-transfer-banner span { display: block; font-size: 11px; color: #64748B; margin-top: 2px; }
+.pending-transfer-banner button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 /* Notification center */
 .notification-backdrop { position: fixed; inset: 0; z-index: 1100; }
 .notification-panel {

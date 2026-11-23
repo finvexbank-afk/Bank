@@ -966,5 +966,10 @@
   "admin.codes.sendEmail": "Send by email",
   "admin.codes.generateSend": "Generate and send",
   "admin.codes.newLabel": "New label",
-  "admin.codes.newMessage": "Custom message"
+  "admin.codes.newMessage": "Custom message",
+  "verify.code.step": "Code {{current}} of {{total}}",
+  "transfer.resume.title": "Transfer in progress",
+  "transfer.resume.desc": "You have a transfer waiting for verification.",
+  "transfer.resume.button": "Resume",
+  "admin.codes.requiresOtp": "Require OTP after this code"
 }

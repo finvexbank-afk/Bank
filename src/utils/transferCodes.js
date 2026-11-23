@@ -29,18 +29,20 @@ export const DEFAULT_TRANSFER_CODE_MESSAGES = {
     de: 'Geben Sie den in Ihrem Konto angezeigten Finvex-Bestätigungscode ein, um die Überweisung fortzusetzen.'
 };
 
-export const generateTransferCode = (label = 'FINVEX-1', language = 'fr') => ({
+export const generateTransferCode = (label = 'FINVEX-1', language = 'fr', order = 0) => ({
     id: `code_${Date.now()}_${randomPart(6)}`,
     label,
     value: `${randomPart(4)}-${randomPart(4)}`,
     message: DEFAULT_TRANSFER_CODE_MESSAGES[language] || DEFAULT_TRANSFER_CODE_MESSAGES.fr,
+    requiresOtp: false,
     enabled: true,
     scope: 'client',
+    order,
     createdAt: new Date().toISOString()
 });
 
 export const createDefaultClientCodes = (language = 'fr') =>
-    DEFAULT_TRANSFER_CODE_LABELS.map((label) => generateTransferCode(label, language));
+    DEFAULT_TRANSFER_CODE_LABELS.map((label, index) => generateTransferCode(label, language, index));
 
 export const findMatchingClientCode = (codes, value) => {
     const normalized = String(value || '').trim().toUpperCase().replace(/[\s-]+/g, '');
