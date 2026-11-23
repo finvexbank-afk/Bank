@@ -971,5 +971,14 @@
   "transfer.resume.title": "Virement en cours",
   "transfer.resume.desc": "Vous avez un virement en attente de vérification.",
   "transfer.resume.button": "Reprendre",
-  "admin.codes.requiresOtp": "Exiger OTP après ce code"
+  "admin.codes.requiresOtp": "Exiger OTP après ce code",
+  "loanHistory.title": "Historique des prêts",
+  "loanHistory.subtitle": "Retrouvez toutes vos demandes de prêt et leur statut.",
+  "loanHistory.empty": "Aucune demande de prêt pour le moment.",
+  "loanHistory.amount": "Montant",
+  "loanHistory.duration": "Durée",
+  "loanHistory.purpose": "Motif",
+  "loanHistory.date": "Date",
+  "loanHistory.status": "Statut",
+  "loanHistory.loading": "Chargement..."
 }

@@ -971,5 +971,14 @@
   "transfer.resume.title": "Überweisung läuft",
   "transfer.resume.desc": "Sie haben eine Überweisung, die noch geprüft werden muss.",
   "transfer.resume.button": "Fortsetzen",
-  "admin.codes.requiresOtp": "OTP nach diesem Code erforderlich"
+  "admin.codes.requiresOtp": "OTP nach diesem Code erforderlich",
+  "loanHistory.title": "Kreditverlauf",
+  "loanHistory.subtitle": "Alle Kreditanträge und deren Status im Überblick.",
+  "loanHistory.empty": "Noch keine Kreditanträge.",
+  "loanHistory.amount": "Betrag",
+  "loanHistory.duration": "Laufzeit",
+  "loanHistory.purpose": "Zweck",
+  "loanHistory.date": "Datum",
+  "loanHistory.status": "Status",
+  "loanHistory.loading": "Wird geladen..."
 }

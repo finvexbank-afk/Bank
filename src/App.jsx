@@ -7,6 +7,7 @@ import Deposit from './pages/Deposit';
 import Transactions from './pages/Transactions';
 import Support from './pages/Support';
 import Loans from './pages/Loans';
+import LoanHistory from './pages/LoanHistory';
 import IRS from './pages/IRS';
 import Settings from './pages/Settings';
 import Enrollment from './pages/Enrollment';
@@ -34,6 +35,7 @@ function App() {
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/support" element={<Support />} />
             <Route path="/loans" element={<Loans />} />
+            <Route path="/loan-history" element={<LoanHistory />} />
             <Route path="/irs" element={<IRS />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/admin" element={<AdminDashboard />} />

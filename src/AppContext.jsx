@@ -51,6 +51,9 @@ export const AppProvider = ({ children }) => {
                 setUser(null);
                 setTransactions([]);
                 setNotifications([]);
+                setPendingTransfer(null);
+                setIsPendingTransferOpen(false);
+                try { localStorage.removeItem('finvex_pending_transfer'); } catch { /* ignore */ }
                 setAuthReady(true);
             }
         });
@@ -166,6 +169,7 @@ export const AppProvider = ({ children }) => {
 
     const logout = async () => {
         try {
+            try { localStorage.removeItem('finvex_pending_transfer'); } catch { /* ignore */ }
             const { signOut } = await import('firebase/auth');
             await signOut(auth);
             window.location.href = '/auth';

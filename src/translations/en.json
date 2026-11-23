@@ -971,5 +971,14 @@
   "transfer.resume.title": "Transfer in progress",
   "transfer.resume.desc": "You have a transfer waiting for verification.",
   "transfer.resume.button": "Resume",
-  "admin.codes.requiresOtp": "Require OTP after this code"
+  "admin.codes.requiresOtp": "Require OTP after this code",
+  "loanHistory.title": "Loan history",
+  "loanHistory.subtitle": "Track all your loan applications and their status.",
+  "loanHistory.empty": "No loan applications yet.",
+  "loanHistory.amount": "Amount",
+  "loanHistory.duration": "Duration",
+  "loanHistory.purpose": "Purpose",
+  "loanHistory.date": "Date",
+  "loanHistory.status": "Status",
+  "loanHistory.loading": "Loading..."
 }

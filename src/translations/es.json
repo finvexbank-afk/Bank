@@ -971,5 +971,14 @@
   "transfer.resume.title": "Transferencia en curso",
   "transfer.resume.desc": "Tiene una transferencia pendiente de verificación.",
   "transfer.resume.button": "Continuar",
-  "admin.codes.requiresOtp": "Requerir OTP después de este código"
+  "admin.codes.requiresOtp": "Requerir OTP después de este código",
+  "loanHistory.title": "Historial de préstamos",
+  "loanHistory.subtitle": "Consulte todas sus solicitudes de préstamo y su estado.",
+  "loanHistory.empty": "Aún no hay solicitudes de préstamo.",
+  "loanHistory.amount": "Importe",
+  "loanHistory.duration": "Duración",
+  "loanHistory.purpose": "Motivo",
+  "loanHistory.date": "Fecha",
+  "loanHistory.status": "Estado",
+  "loanHistory.loading": "Cargando..."
 }
