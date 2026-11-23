@@ -1,4 +1,6 @@
-import admin from 'firebase-admin';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 
 const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -7,18 +9,16 @@ const headers = {
     'Content-Type': 'application/json'
 };
 
-if (!admin.apps.length) {
-    const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (!raw) {
-        console.error('FIREBASE_SERVICE_ACCOUNT is not configured');
-    } else {
-        try {
-            const serviceAccount = JSON.parse(raw);
-            admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-        } catch (error) {
-            console.error('Invalid FIREBASE_SERVICE_ACCOUNT:', error.message);
-        }
+let app = null;
+const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+if (raw) {
+    try {
+        app = getApps().length ? getApps()[0] : initializeApp({ credential: cert(JSON.parse(raw)) });
+    } catch (error) {
+        console.error('Invalid FIREBASE_SERVICE_ACCOUNT:', error.message);
     }
+} else {
+    console.error('FIREBASE_SERVICE_ACCOUNT is not configured');
 }
 
 const respond = (statusCode, body) => ({
@@ -32,15 +32,17 @@ export const handler = async (event) => {
     if (event.httpMethod !== 'POST') return respond(405, { error: 'Method not allowed' });
 
     try {
-        if (!admin.apps.length) {
+        if (!app) {
             return respond(500, { error: 'Firebase Admin is not configured on the server.' });
         }
+        const auth = getAuth(app);
+        const firestore = getFirestore(app);
 
         const { action, uid, email, idToken } = JSON.parse(event.body || '{}');
         if (!idToken) return respond(401, { error: 'Missing authentication token.' });
 
-        const decoded = await admin.auth().verifyIdToken(idToken);
-        const caller = await admin.firestore().doc(`users/${decoded.uid}`).get();
+        const decoded = await auth.verifyIdToken(idToken);
+        const caller = await firestore.doc(`users/${decoded.uid}`).get();
         if (!caller.exists || caller.data().role !== 'admin') {
             return respond(403, { error: 'Administrator privileges required.' });
         }
@@ -50,11 +52,11 @@ export const handler = async (event) => {
 
         if (action === 'deleteUser') {
             try {
-                await admin.auth().deleteUser(uid);
+                await auth.deleteUser(uid);
             } catch (error) {
                 if (error.code !== 'auth/user-not-found') throw error;
             }
-            await admin.firestore().doc(`users/${uid}`).delete();
+            await firestore.doc(`users/${uid}`).delete();
             return respond(200, { success: true });
         }
 
@@ -62,8 +64,8 @@ export const handler = async (event) => {
             if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 return respond(400, { error: 'A valid email is required.' });
             }
-            await admin.auth().updateUser(uid, { email, emailVerified: false });
-            await admin.firestore().doc(`users/${uid}`).update({ email });
+            await auth.updateUser(uid, { email, emailVerified: false });
+            await firestore.doc(`users/${uid}`).update({ email });
             return respond(200, { success: true });
         }
 
