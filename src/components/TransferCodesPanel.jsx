@@ -5,7 +5,7 @@ import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimest
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import { callTransferApi } from '../utils/transferApi';
-import { generateTransferCode, createDefaultClientCodes } from '../utils/transferCodes';
+import { generateTransferCode } from '../utils/transferCodes';
 
 const cardStyle = { background: 'white', borderRadius: '24px', border: '1px solid #E2E8F0', padding: '28px', marginBottom: '28px' };
 const inputStyle = { width: '100%', padding: '12px 14px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', background: '#F8FAFC', fontSize: '14px', color: '#0F172A' };
@@ -18,6 +18,8 @@ const TransferCodesPanel = () => {
     const [users, setUsers] = useState([]);
     const [selectedUserId, setSelectedUserId] = useState('');
     const [testEmail, setTestEmail] = useState('');
+    const [newClientLabel, setNewClientLabel] = useState('Code Finvex');
+    const [newClientMessage, setNewClientMessage] = useState('');
     const [notice, setNotice] = useState('');
 
     useEffect(() => {
@@ -52,13 +54,46 @@ const TransferCodesPanel = () => {
         await deleteDoc(doc(db, 'transferCodes', id));
     };
 
-    const generateForClient = async () => {
-        if (!selectedUserId) return;
+    const saveClientCodes = async (nextCodes) => {
+        await updateDoc(doc(db, 'users', selectedUserId), { transferCodes: nextCodes });
+        setUsers((prev) => prev.map((item) => item.id === selectedUserId ? { ...item, transferCodes: nextCodes } : item));
+    };
+
+    const updateClientCode = async (codeId, field, value) => {
         const selected = users.find((item) => item.id === selectedUserId);
-        const existing = Array.isArray(selected?.transferCodes) ? selected.transferCodes : [];
-        const fresh = createDefaultClientCodes(language);
-        await updateDoc(doc(db, 'users', selectedUserId), { transferCodes: [...existing, ...fresh] });
-        setNotice(`${fresh.length} codes générés pour ${selected.name || selected.email}.`);
+        const nextCodes = (selected?.transferCodes || []).map((item) => item.id === codeId ? { ...item, [field]: value } : item);
+        await saveClientCodes(nextCodes);
+    };
+
+    const deleteClientCode = async (codeId) => {
+        const selected = users.find((item) => item.id === selectedUserId);
+        const nextCodes = (selected?.transferCodes || []).filter((item) => item.id !== codeId);
+        await saveClientCodes(nextCodes);
+    };
+
+    const generateAndSend = async () => {
+        if (!selectedUserId) return;
+        setNotice('Génération et envoi en cours...');
+        try {
+            const result = await callTransferApi('sendClientCodeEmail', {
+                uid: selectedUserId,
+                label: newClientLabel || 'Code Finvex',
+                message: newClientMessage
+            });
+            setNotice(`Code ${result.code.value} envoyé par e-mail au client.`);
+        } catch (error) {
+            setNotice(`Échec : ${error.message}`);
+        }
+    };
+
+    const sendCodeEmail = async (codeId) => {
+        setNotice('Envoi en cours...');
+        try {
+            const result = await callTransferApi('sendClientCodeEmail', { uid: selectedUserId, codeId });
+            setNotice(`Code ${result.code.value} envoyé par e-mail au client.`);
+        } catch (error) {
+            setNotice(`Échec : ${error.message}`);
+        }
     };
 
     const sendTest = async () => {
@@ -133,17 +168,45 @@ const TransferCodesPanel = () => {
                             {users.map((item) => <option key={item.id} value={item.id}>{item.name || item.email} — {item.email}</option>)}
                         </select>
                     </div>
-                    <button onClick={generateForClient} disabled={!selectedUserId} style={{ ...buttonStyle, opacity: selectedUserId ? 1 : 0.5 }}><RefreshCw size={16} /> {t('admin.codes.generate', language)}</button>
+                    <div>
+                        <label style={labelStyle}>{t('admin.codes.newLabel', language)}</label>
+                        <input style={inputStyle} value={newClientLabel} onChange={(e) => setNewClientLabel(e.target.value)} />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                        <label style={labelStyle}>{t('admin.codes.newMessage', language)}</label>
+                        <textarea style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} value={newClientMessage} onChange={(e) => setNewClientMessage(e.target.value)} placeholder="Écrivez ici le message qui accompagnera le code envoyé au client." />
+                    </div>
+                    <button onClick={generateAndSend} disabled={!selectedUserId} style={{ ...buttonStyle, opacity: selectedUserId ? 1 : 0.5 }}><RefreshCw size={16} /> {t('admin.codes.generateSend', language)}</button>
                 </div>
+
                 {selected && (
-                    <div style={{ marginTop: '20px' }}>
+                    <div style={{ marginTop: '28px' }}>
                         <h3 style={{ fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '12px' }}>{selected.name || selected.email}</h3>
-                        <div style={{ display: 'grid', gap: '8px' }}>
+                        <div style={{ display: 'grid', gap: '16px' }}>
                             {(selected.transferCodes || []).map((code) => (
-                                <div key={code.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC', borderRadius: '10px', padding: '10px 14px', fontSize: '13px' }}>
-                                    <span style={{ fontWeight: 700, color: '#475569' }}>{code.label}</span>
-                                    <span style={{ fontFamily: 'monospace', fontWeight: 800, color: '#0284C7' }}>{code.value}</span>
-                                    <span style={{ color: code.enabled === false ? '#EF4444' : '#16A34A', fontWeight: 700 }}>{code.enabled === false ? 'Off' : 'On'}</span>
+                                <div key={code.id} style={{ border: '1px solid #E2E8F0', borderRadius: '14px', padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', alignItems: 'end' }}>
+                                    <div>
+                                        <label style={labelStyle}>{t('admin.codes.label', language)}</label>
+                                        <input style={inputStyle} value={code.label || ''} onChange={(e) => updateClientCode(code.id, 'label', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <label style={labelStyle}>{t('admin.codes.value', language)}</label>
+                                        <input style={inputStyle} value={code.value || ''} onChange={(e) => updateClientCode(code.id, 'value', e.target.value)} />
+                                    </div>
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label style={labelStyle}>{t('admin.codes.message', language)}</label>
+                                        <textarea style={{ ...inputStyle, minHeight: '72px', resize: 'vertical' }} value={code.message || ''} onChange={(e) => updateClientCode(code.id, 'message', e.target.value)} />
+                                    </div>
+                                    <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: '#475569', cursor: 'pointer' }}>
+                                            <input type="checkbox" checked={code.enabled !== false} onChange={(e) => updateClientCode(code.id, 'enabled', e.target.checked)} />
+                                            {t('admin.codes.enabled', language)}
+                                        </label>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button onClick={() => sendCodeEmail(code.id)} style={buttonStyle}><Mail size={16} /> {t('admin.codes.sendEmail', language)}</button>
+                                            <button onClick={() => deleteClientCode(code.id)} style={{ ...buttonStyle, background: '#FEE2E2', color: '#DC2626' }}><Trash2 size={16} /> {t('admin.codes.delete', language)}</button>
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
                             {(!selected.transferCodes || selected.transferCodes.length === 0) && (

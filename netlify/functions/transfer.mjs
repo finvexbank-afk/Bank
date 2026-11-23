@@ -32,6 +32,14 @@ const hashOtp = (otp, requestId) => createHash('sha256').update(`${otp}:${reques
 const makeOtp = () => String(randomInt(0, 1000000)).padStart(6, '0');
 const makeRef = () => `FINVEX/TX-${Date.now().toString(36).toUpperCase()}${randomInt(100, 999)}`;
 
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const randomCodePart = (length) => {
+    let out = '';
+    for (let i = 0; i < length; i += 1) out += CODE_ALPHABET[randomInt(0, CODE_ALPHABET.length)];
+    return out;
+};
+const makeClientCodeValue = () => `${randomCodePart(4)}-${randomCodePart(4)}`;
+
 const escapeHtml = (value) => String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -379,6 +387,63 @@ export const handler = async (event) => {
             }
 
             return respond(200, { success: true, balance: newBalance, reference });
+        }
+
+        if (action === 'sendClientCodeEmail') {
+            if (profile.role !== 'admin') return respond(403, { error: 'Administrator privileges required.' });
+            const targetUid = payload.uid;
+            if (!targetUid || typeof targetUid !== 'string') return respond(400, { error: 'Client invalide.' });
+
+            const targetRef = db.collection('users').doc(targetUid);
+            const targetSnap = await targetRef.get();
+            if (!targetSnap.exists) return respond(404, { error: 'Client introuvable.' });
+            const target = targetSnap.data();
+            if (!target.email) return respond(400, { error: 'Ce client n\'a pas d\'adresse e-mail.' });
+
+            const existingCodes = Array.isArray(target.transferCodes) ? target.transferCodes : [];
+            let code;
+
+            if (payload.codeId) {
+                code = existingCodes.find((item) => item.id === payload.codeId);
+                if (!code) return respond(404, { error: 'Code client introuvable.' });
+            } else {
+                code = {
+                    id: `code_${Date.now()}_${randomCodePart(6)}`,
+                    label: payload.label || 'Code Finvex',
+                    value: makeClientCodeValue(),
+                    message: payload.message || 'Voici votre code de confirmation Finvex pour finaliser votre opération.',
+                    enabled: true,
+                    scope: 'client',
+                    createdAt: new Date().toISOString()
+                };
+                await targetRef.update({ transferCodes: [...existingCodes, code] });
+            }
+
+            const sent = await sendEmail({
+                to: target.email,
+                subject: 'Votre code de confirmation Finvex',
+                html: emailShell(
+                    'Code de confirmation',
+                    `<p>Bonjour ${escapeHtml(target.name || 'client')},</p>
+                     <p>${escapeHtml(code.message || 'Voici votre code de confirmation Finvex.')}</p>
+                     <div style="margin:24px 0;padding:20px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:12px;text-align:center;font-size:28px;font-weight:bold;letter-spacing:6px;color:#0369A1">${escapeHtml(code.value)}</div>
+                     <p>Si vous n'avez pas demandé ce code, contactez immédiatement votre conseiller Finvex.</p>`
+                )
+            });
+
+            await db.collection('notifications').doc().set({
+                userId: targetUid,
+                type: 'code',
+                title: 'Code de confirmation envoyé',
+                body: `Un code de confirmation (${code.label}) a été envoyé à ${target.email}.`,
+                reference: code.value,
+                read: false,
+                createdAt: FieldValue.serverTimestamp()
+            });
+
+            return sent
+                ? respond(200, { success: true, code })
+                : respond(502, { error: 'E-mail non envoyé. Vérifiez la configuration Resend.' });
         }
 
         if (action === 'sendTestEmail') {

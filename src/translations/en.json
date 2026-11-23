@@ -962,5 +962,9 @@
   "admin.codes.generate": "Generate",
   "admin.codes.client": "Client code",
   "admin.codes.selectClient": "Select a client",
-  "admin.codes.testEmail": "Test email"
+  "admin.codes.testEmail": "Test email",
+  "admin.codes.sendEmail": "Send by email",
+  "admin.codes.generateSend": "Generate and send",
+  "admin.codes.newLabel": "New label",
+  "admin.codes.newMessage": "Custom message"
 }
