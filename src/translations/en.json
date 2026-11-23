@@ -1019,5 +1019,15 @@
   "txDetail.stepVerified": "Verified",
   "txDetail.stepSettled": "Executed",
   "admin.card.requestLabel": "{{type}} card — {{name}}",
-  "admin.card.unknownClient": "Unknown customer"
+  "admin.card.unknownClient": "Unknown customer",
+  "toast.success": "Success",
+  "toast.error": "Error",
+  "toast.warning": "Warning",
+  "toast.info": "Information",
+  "common.close": "Close",
+  "common.cancel": "Cancel",
+  "common.confirm": "Confirm",
+  "admin.alert.deleteUserTitle": "Confirm deletion",
+  "admin.alert.deleteConfirm": "Delete permanently",
+  "txDetail.deleted": "Record deleted."
 }

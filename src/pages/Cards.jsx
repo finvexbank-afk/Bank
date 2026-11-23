@@ -12,6 +12,7 @@ import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
+import { notify } from '../components/Toast';
 
 const Cards = () => {
     const { user, card } = useAppContext();
@@ -58,7 +59,7 @@ const Cards = () => {
             setView('list');
         } catch (error) {
             console.error("Error applying for card:", error);
-            alert(t('cards.submitFailed', language));
+            notify.error(t('cards.submitFailed', language));
         } finally {
             setIsSubmitting(false);
         }

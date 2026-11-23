@@ -9,6 +9,7 @@ import { useAppContext } from '../AppContext';
 import { getBankDetails, downloadRIB } from '../utils/bankDetails';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
+import { notify } from '../components/Toast';
 
 const Settings = () => {
     const { user, setUser } = useAppContext();
@@ -35,7 +36,7 @@ const Settings = () => {
 
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
-        alert(t('settings.alert.accountCopied', language));
+        notify.success(t('settings.alert.accountCopied', language));
     };
 
     return (

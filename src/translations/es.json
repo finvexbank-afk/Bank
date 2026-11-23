@@ -1019,5 +1019,15 @@
   "txDetail.stepVerified": "Verificada",
   "txDetail.stepSettled": "Ejecutada",
   "admin.card.requestLabel": "Tarjeta {{type}} — {{name}}",
-  "admin.card.unknownClient": "Cliente desconocido"
+  "admin.card.unknownClient": "Cliente desconocido",
+  "toast.success": "Éxito",
+  "toast.error": "Error",
+  "toast.warning": "Atención",
+  "toast.info": "Información",
+  "common.close": "Cerrar",
+  "common.cancel": "Cancelar",
+  "common.confirm": "Confirmar",
+  "admin.alert.deleteUserTitle": "Confirmar eliminación",
+  "admin.alert.deleteConfirm": "Eliminar definitivamente",
+  "txDetail.deleted": "Registro eliminado."
 }

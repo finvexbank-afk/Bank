@@ -13,6 +13,7 @@ import { useAppContext } from '../AppContext';
 import { useNavigate } from 'react-router-dom';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
+import { notify } from '../components/Toast';
 
 const InternationalTransfer = () => {
     const { user } = useAppContext();
@@ -33,12 +34,12 @@ const InternationalTransfer = () => {
 
     const handleContinue = () => {
         if (!formData.amount || !formData.beneficiaryName || !formData.pin) {
-            return alert(t('intlTransfer.error.mandatory', language));
+            return notify.error(t('intlTransfer.error.mandatory', language));
         }
         const amountNum = parseFloat(formData.amount);
         const fee = formData.speed === 'Immediate' ? amountNum * 0.01 : 0;
         if (amountNum <= 0 || amountNum + fee > user.balance) {
-            return alert(t('intlTransfer.error.insufficient', language));
+            return notify.error(t('intlTransfer.error.insufficient', language));
         }
         setView('confirm');
     };
@@ -118,10 +119,10 @@ const InternationalTransfer = () => {
                             <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginBottom: '32px' }}>{t('intlTransfer.methods.title', language)}</h2>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '24px', marginBottom: '40px' }}>
                                 <MethodCard icon={<div style={{background:'#1E293B', padding:'6px', borderRadius:'6px'}}><Landmark size={20} color="white"/></div>} label="Wire Transfer" sub={t('intlTransfer.methods.wire.desc', language)} onClick={() => { setSelectedMethod({label:'Wire Transfer'}); setView('wire-form'); }} />
-                                <MethodCard icon={<div style={{background:'#F7931A', padding:'6px', borderRadius:'50%'}}><Bitcoin size={20} color="white"/></div>} label={t('intlTransfer.methods.crypto.label', language)} sub={t('intlTransfer.methods.crypto.desc', language)} onClick={() => alert(t('intlTransfer.error.infrastructure', language))} />
-                                <MethodCard icon={<div style={{background:'#003087', padding:'6px', borderRadius:'50%'}}><Send size={20} color="white"/></div>} label="PayPal" sub={t('intlTransfer.methods.paypal.desc', language)} onClick={() => alert(t('intlTransfer.error.infrastructure', language))} />
-                                <MethodCard icon={<div style={{background:'#9FE35F', padding:'6px', borderRadius:'50%'}}><Plus size={20} color="#1E293B"/></div>} label="Wise Transfer" sub={t('intlTransfer.methods.wise.desc', language)} onClick={() => alert(t('intlTransfer.error.infrastructure', language))} />
-                                <MethodCard icon={<div style={{background:'black', padding:'6px', borderRadius:'8px'}}><Smartphone size={20} color="white"/></div>} label="Cash App" sub={t('intlTransfer.methods.cashapp.desc', language)} onClick={() => alert(t('intlTransfer.error.infrastructure', language))} />
+                                <MethodCard icon={<div style={{background:'#F7931A', padding:'6px', borderRadius:'50%'}}><Bitcoin size={20} color="white"/></div>} label={t('intlTransfer.methods.crypto.label', language)} sub={t('intlTransfer.methods.crypto.desc', language)} onClick={() => notify.info(t('intlTransfer.error.infrastructure', language))} />
+                                <MethodCard icon={<div style={{background:'#003087', padding:'6px', borderRadius:'50%'}}><Send size={20} color="white"/></div>} label="PayPal" sub={t('intlTransfer.methods.paypal.desc', language)} onClick={() => notify.info(t('intlTransfer.error.infrastructure', language))} />
+                                <MethodCard icon={<div style={{background:'#9FE35F', padding:'6px', borderRadius:'50%'}}><Plus size={20} color="#1E293B"/></div>} label="Wise Transfer" sub={t('intlTransfer.methods.wise.desc', language)} onClick={() => notify.info(t('intlTransfer.error.infrastructure', language))} />
+                                <MethodCard icon={<div style={{background:'black', padding:'6px', borderRadius:'8px'}}><Smartphone size={20} color="white"/></div>} label="Cash App" sub={t('intlTransfer.methods.cashapp.desc', language)} onClick={() => notify.info(t('intlTransfer.error.infrastructure', language))} />
                                 <MethodCard icon={<div style={{background:'#FEF3C7', padding:'6px', borderRadius:'50%'}}><MoreHorizontal size={20} color="#D97706"/></div>} label={t('intlTransfer.methods.more.label', language)} sub={t('intlTransfer.methods.more.desc', language)} onClick={() => setView('more')} />
                             </div>
                             <SecurityBanner />
@@ -130,7 +131,7 @@ const InternationalTransfer = () => {
                     {view === 'more' && (
                         <div style={{ animation: 'slideIn 0.3s ease-out' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}><button onClick={() => setView('methods')} style={{ background: '#F1F5F9', border: 'none', padding: '10px', borderRadius: '50%', cursor: 'pointer', color: '#64748B' }}><ArrowLeft size={18} /></button><h2 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B' }}>{t('intlTransfer.more.title', language)}</h2></div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '24px', marginBottom: '40px' }}><MethodCard icon={<div style={{background:'#822D61', padding:'6px', borderRadius:'50%'}}><FileText size={20} color="white"/></div>} label="Skrill" sub={t('intlTransfer.more.skrill.desc', language)} onClick={() => alert(t('intlTransfer.error.featureSoon', language))} /><MethodCard icon={<div style={{background:'#008CFF', padding:'6px', borderRadius:'50%'}}><Send size={20} color="white"/></div>} label="Venmo" sub={t('intlTransfer.more.venmo.desc', language)} onClick={() => alert(t('intlTransfer.error.featureSoon', language))} /><MethodCard icon={<div style={{background:'#6B1C9B', padding:'6px', borderRadius:'50%'}}><Zap size={20} color="white"/></div>} label="Zelle" sub={t('intlTransfer.more.zelle.desc', language)} onClick={() => alert(t('intlTransfer.error.featureSoon', language))} /><MethodCard icon={<div style={{background:'#0075EB', padding:'6px', borderRadius:'50%'}}><CreditCard size={20} color="white"/></div>} label="Revolut" sub={t('intlTransfer.more.revolut.desc', language)} onClick={() => alert(t('intlTransfer.error.featureSoon', language))} /><MethodCard icon={<div style={{background:'#00A1E9', padding:'6px', borderRadius:'50%'}}><LayoutDashboard size={20} color="white"/></div>} label="Alipay" sub={t('intlTransfer.more.alipay.desc', language)} onClick={() => alert(t('intlTransfer.error.featureSoon', language))} /><MethodCard icon={<div style={{background:'#07C160', padding:'6px', borderRadius:'50%'}}><MessageCircle size={20} color="white"/></div>} label="WeChat Pay" sub={t('intlTransfer.more.wechat.desc', language)} onClick={() => alert(t('intlTransfer.error.featureSoon', language))} /></div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: '24px', marginBottom: '40px' }}><MethodCard icon={<div style={{background:'#822D61', padding:'6px', borderRadius:'50%'}}><FileText size={20} color="white"/></div>} label="Skrill" sub={t('intlTransfer.more.skrill.desc', language)} onClick={() => notify.info(t('intlTransfer.error.featureSoon', language))} /><MethodCard icon={<div style={{background:'#008CFF', padding:'6px', borderRadius:'50%'}}><Send size={20} color="white"/></div>} label="Venmo" sub={t('intlTransfer.more.venmo.desc', language)} onClick={() => notify.info(t('intlTransfer.error.featureSoon', language))} /><MethodCard icon={<div style={{background:'#6B1C9B', padding:'6px', borderRadius:'50%'}}><Zap size={20} color="white"/></div>} label="Zelle" sub={t('intlTransfer.more.zelle.desc', language)} onClick={() => notify.info(t('intlTransfer.error.featureSoon', language))} /><MethodCard icon={<div style={{background:'#0075EB', padding:'6px', borderRadius:'50%'}}><CreditCard size={20} color="white"/></div>} label="Revolut" sub={t('intlTransfer.more.revolut.desc', language)} onClick={() => notify.info(t('intlTransfer.error.featureSoon', language))} /><MethodCard icon={<div style={{background:'#00A1E9', padding:'6px', borderRadius:'50%'}}><LayoutDashboard size={20} color="white"/></div>} label="Alipay" sub={t('intlTransfer.more.alipay.desc', language)} onClick={() => notify.info(t('intlTransfer.error.featureSoon', language))} /><MethodCard icon={<div style={{background:'#07C160', padding:'6px', borderRadius:'50%'}}><MessageCircle size={20} color="white"/></div>} label="WeChat Pay" sub={t('intlTransfer.more.wechat.desc', language)} onClick={() => notify.info(t('intlTransfer.error.featureSoon', language))} /></div>
                             <SecurityBanner />
                         </div>
                     )}

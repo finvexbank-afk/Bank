@@ -12,6 +12,7 @@ import MainLayout from '../components/MainLayout';
 import { sendAdminKYCAlert } from '../utils/emailService';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
+import { notify } from '../components/Toast';
 
 const EMPLOYMENT_OPTIONS = [
     'Corporate Staff',
@@ -213,7 +214,7 @@ const Enrollment = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (formData.employmentType === 'Other' && !formData.otherEmployment.trim()) {
-            alert(t('enrollment.error.specifyProfession', language));
+            notify.error(t('enrollment.error.specifyProfession', language));
             return;
         }
         setLoading(true);
@@ -237,7 +238,7 @@ const Enrollment = () => {
             }, 5000);
         } catch (error) {
             console.error("KYC Submission Error:", error);
-            alert(t('enrollment.error.submitFailed', language));
+            notify.error(t('enrollment.error.submitFailed', language));
         } finally {
             setLoading(false);
         }

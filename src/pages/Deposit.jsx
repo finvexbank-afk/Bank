@@ -13,6 +13,7 @@ import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
+import { notify } from '../components/Toast';
 
 const Deposit = () => {
     const { user } = useAppContext();
@@ -35,7 +36,7 @@ const Deposit = () => {
 
     const handleContinue = () => {
         if (!selectedMethod || parseFloat(amount) <= 0) {
-            alert(t('deposit.validationError', language));
+            notify.error(t('deposit.validationError', language));
             return;
         }
         setView('payment');
@@ -70,7 +71,7 @@ const Deposit = () => {
             }, 5000);
         } catch (error) {
             console.error("Error submitting deposit:", error);
-            alert(t('deposit.submitFailed', language));
+            notify.error(t('deposit.submitFailed', language));
             setIsSubmitting(false);
         }
     };
@@ -129,7 +130,7 @@ const Deposit = () => {
                                     <p style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', marginBottom: '10px' }}>{t('deposit.recipientAddress', language)}</p>
                                     <div style={{ display: 'flex', gap: '12px' }}>
                                         <input readOnly value="TPCRRGUkpsnFM3r5cu9JfdeXBvhZoygPR" style={{ flex: 1, padding: '14px', borderRadius: '10px', border: '1px solid #E2E8F0', background: 'white', fontSize: '13px', fontFamily: 'monospace', fontWeight: 700, minWidth: 0 }} />
-                                        <button onClick={() => alert(t('deposit.copied', language))} style={{ padding: '12px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', flexShrink: 0 }}><Copy size={18} color="#64748B" /></button>
+                                        <button onClick={() => notify.success(t('deposit.copied', language))} style={{ padding: '12px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', flexShrink: 0 }}><Copy size={18} color="#64748B" /></button>
                                     </div>
                                 </div>
                                 <div style={{ marginBottom: '48px' }}>

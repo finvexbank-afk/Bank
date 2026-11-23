@@ -1019,5 +1019,15 @@
   "txDetail.stepVerified": "Vérifié",
   "txDetail.stepSettled": "Exécuté",
   "admin.card.requestLabel": "Carte {{type}} — {{name}}",
-  "admin.card.unknownClient": "Client inconnu"
+  "admin.card.unknownClient": "Client inconnu",
+  "toast.success": "Succès",
+  "toast.error": "Erreur",
+  "toast.warning": "Attention",
+  "toast.info": "Information",
+  "common.close": "Fermer",
+  "common.cancel": "Annuler",
+  "common.confirm": "Confirmer",
+  "admin.alert.deleteUserTitle": "Confirmer la suppression",
+  "admin.alert.deleteConfirm": "Supprimer définitivement",
+  "txDetail.deleted": "Enregistrement supprimé."
 }

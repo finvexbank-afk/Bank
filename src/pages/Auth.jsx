@@ -15,6 +15,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import LanguageSelector from '../components/LanguageSelector';
 import { countries } from '../data/countries';
+import { notify } from '../components/Toast';
 import { validateSignupStep, validateSignupForm } from '../utils/authValidation';
 import { getFirebaseErrorKey, isProfileWriteError } from '../utils/firebaseErrors';
 
@@ -209,11 +210,11 @@ const Auth = () => {
             if (!auth.currentUser) throw new Error('No authenticated user');
             await sendEmailVerification(auth.currentUser);
             setEmailSendFailed(false);
-            alert(t('auth.verification.resend', language) + '!');
+            notify.success(t('auth.verification.resend', language) + '!');
         } catch (err) {
             console.error('Resend error:', err);
             setResendError(true);
-            alert(t('auth.errors.tooManyRequests', language));
+            notify.warning(t('auth.errors.tooManyRequests', language));
         }
     };
 

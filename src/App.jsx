@@ -19,12 +19,14 @@ import InternationalTransfer from './pages/InternationalTransfer';
 import AdminLogin from './pages/AdminLogin';
 import { AppProvider } from './AppContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { ToastProvider } from './components/Toast';
 import './index.css';
 
 function App() {
   return (
     <LanguageProvider>
       <AppProvider>
+        <ToastProvider>
         <Router>
           <Routes>
             <Route path="/" element={<Navigate to="/auth" />} />
@@ -48,6 +50,7 @@ function App() {
             <Route path="/international-transfer" element={<InternationalTransfer />} />
           </Routes>
         </Router>
+        </ToastProvider>
       </AppProvider>
     </LanguageProvider>
   );

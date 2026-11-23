@@ -20,6 +20,7 @@ import LanguageSelector from '../components/LanguageSelector';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import { getBankDetails, getBankFieldsForFirestore, downloadRIB } from '../utils/bankDetails';
+import { notify, ask } from '../components/Toast';
 import TransferCodesPanel from '../components/TransferCodesPanel';
 import { callTransferApi } from '../utils/transferApi';
 import { createDefaultClientCodes } from '../utils/transferCodes';
@@ -116,7 +117,7 @@ const AdminDashboard = () => {
 
     const approveKYC = async (uid) => {
         await updateDoc(doc(db, 'users', uid), { kycStatus: 'Verified', accountStatus: 'Active' });
-        alert(t('admin.alert.accountVerified', language));
+        notify.success(t('admin.alert.accountVerified', language));
     };
 
     const handleTransaction = async (txId, status) => {
@@ -253,24 +254,30 @@ const AdminDashboard = () => {
                                         await callAdminApi('updateEmail', { uid, email: newData.email });
                                     } catch (err) {
                                         console.error('Email sync error:', err);
-                                        alert(t('admin.alert.emailSyncFailed', language));
+                                        notify.error(t('admin.alert.emailSyncFailed', language));
                                     }
                                 }
                             }}
                             onDelete={async () => {
-                                if(!window.confirm(t('admin.alert.deleteUser', language, { name: selectedUser.name }))) return;
+                                const confirmedDelete = await ask({
+                                    title: t('admin.alert.deleteUserTitle', language),
+                                    message: t('admin.alert.deleteUser', language, { name: selectedUser.name }),
+                                    confirmLabel: t('admin.alert.deleteConfirm', language),
+                                    tone: 'danger'
+                                });
+                                if (!confirmedDelete) return;
                                 const uid = selectedUser.id;
                                 try {
                                     await callAdminApi('deleteUser', { uid });
                                     setViewMode('list');
                                     setSelectedUser(null);
-                                    alert(t('admin.alert.deleteUserComplete', language));
+                                    notify.success(t('admin.alert.deleteUserComplete', language));
                                 } catch (err) {
                                     console.error('Full deletion error:', err);
                                     await deleteDoc(doc(db, 'users', uid));
                                     setViewMode('list');
                                     setSelectedUser(null);
-                                    alert(t('admin.alert.authDeletionNotice', language));
+                                    notify.warning(t('admin.alert.authDeletionNotice', language));
                                 }
                             }}
                         />
@@ -285,7 +292,7 @@ const AdminDashboard = () => {
                     {activeTab === 'card-requests' && <CardPanel cards={cards.filter(c => c.status === 'Pending')} onUpdate={async (id) => {
                         const ref = doc(db, 'cards', id);
                         await updateDoc(ref, { status: 'Active', number: '5172 '+Math.floor(1000+Math.random()*9000)+' '+Math.floor(1000+Math.random()*9000)+' '+Math.floor(1000+Math.random()*9000), expiry: '08/30', cvv: Math.floor(100+Math.random()*900).toString() });
-                        alert(t('admin.alert.cardActivated', language));
+                        notify.success(t('admin.alert.cardActivated', language));
                     }} />}
                 </div>
             </main>
@@ -526,7 +533,7 @@ const EditUserModal = ({ user, language, onClose, onSave }) => {
     const handlePhoto = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 600000) { alert(t('admin.edit.photoTooLarge', language)); return; }
+        if (file.size > 600000) { notify.error(t('admin.edit.photoTooLarge', language)); return; }
         const reader = new FileReader();
         reader.onload = () => set('photoURL', reader.result);
         reader.readAsDataURL(file);
@@ -619,9 +626,9 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
 
     const handleFundSubmit = async () => {
         const amt = parseFloat(formData.amount);
-        if (isNaN(amt) || amt <= 0) { alert(t('admin.alert.invalidAmount', language)); return; }
+        if (isNaN(amt) || amt <= 0) { notify.error(t('admin.alert.invalidAmount', language)); return; }
         if (formData.type !== 'Fund/Add' && formData.type !== 'Debit/Subtract') {
-            alert(t('admin.alert.selectType', language));
+            notify.error(t('admin.alert.selectType', language));
             return;
         }
 
@@ -633,10 +640,10 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
                 description: formData.desc || 'Treasury Reconciliation',
                 notify: formData.notify
             });
-            alert(formData.type === 'Fund/Add' ? t('admin.alert.recordFunded', language) : t('admin.alert.recordDebited', language));
+            notify.success(formData.type === 'Fund/Add' ? t('admin.alert.recordFunded', language) : t('admin.alert.recordDebited', language));
             setActionType(null);
         } catch (error) {
-            alert(error.message);
+            notify.error(error.message);
         }
     };
 
@@ -663,9 +670,9 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
                                 try {
                                     if (!user.email) throw new Error('No email');
                                     await sendPasswordResetEmail(auth, user.email);
-                                    alert(t('admin.alert.passwordReset', language));
+                                    notify.success(t('admin.alert.passwordReset', language));
                                 } catch (err) {
-                                    alert(t('admin.alert.passwordResetFailed', language));
+                                    notify.error(t('admin.alert.passwordResetFailed', language));
                                 }
                             }} />
                             {user.accountStatus === 'Dormant' ? (
@@ -878,8 +885,8 @@ const CreateUserForm = () => {
                 transferCodes: createDefaultClientCodes(language),
                 createdAt: new Date().toISOString()
             });
-            alert(t('admin.alert.userCreated', language));
-        } catch (err) { alert(err.message); }
+            notify.success(t('admin.alert.userCreated', language));
+        } catch (err) { notify.error(err.message); }
         setLoading(false);
     };
 

@@ -12,6 +12,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAppContext } from '../AppContext';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
+import { notify } from '../components/Toast';
 
 const LoanRequest = () => {
     const { user } = useAppContext();
@@ -32,7 +33,7 @@ const LoanRequest = () => {
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
         if (!formData.purpose || !formData.amount || !formData.termsAccepted || formData.loanType.includes('Select')) {
-            return alert(t('loanRequest.validationFailed', language));
+            return notify.error(t('loanRequest.validationFailed', language));
         }
         
         setLoading(true);
@@ -56,7 +57,7 @@ const LoanRequest = () => {
                 setFormData({ purpose: '', loanType: 'Select Loan/Credit Facility', amount: '', duration: '12 Months', monthlyIncome: '€2,000 - €5,000', termsAccepted: false });
             }, 3000);
         } catch (error) {
-            alert(t('loanRequest.transmissionFailed', language));
+            notify.error(t('loanRequest.transmissionFailed', language));
         }
         setLoading(false);
     };

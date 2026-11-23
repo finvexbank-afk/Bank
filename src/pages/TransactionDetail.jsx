@@ -15,6 +15,7 @@ import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
 import { callTransferApi } from '../utils/transferApi';
 import TransferVerificationFlow from '../components/TransferVerificationFlow';
+import { notify, ask } from '../components/Toast';
 
 const ACTIVE_REQUEST_STATES = ['awaiting_code', 'awaiting_otp', 'ready_to_finalize'];
 
@@ -152,7 +153,13 @@ const TransactionDetail = () => {
 
     const handleCancelTransaction = async () => {
         if (!transaction || !pending || failed || !user?.id) return;
-        if (!window.confirm(t('txDetail.confirmCancel', language))) return;
+        const confirmedCancel = await ask({
+            title: t('txDetail.cancelTransfer', language),
+            message: t('txDetail.confirmCancel', language),
+            confirmLabel: t('txDetail.cancelTransfer', language),
+            tone: 'danger'
+        });
+        if (!confirmedCancel) return;
         setBusy(true);
         try {
             const txRef = doc(db, 'transactions', id);
@@ -176,6 +183,10 @@ const TransactionDetail = () => {
             setTransaction((prev) => prev ? { ...prev, status: 'Cancelled', cancelledAt: new Date().toISOString() } : prev);
             setResumable(null);
             refreshPendingTransfer?.();
+            notify.success(
+                t('txDetail.cancelledNotice', language, { amount: formatMoney(refund) }),
+                t('txDetail.cancelledTitle', language)
+            );
         } catch (err) {
             setError(err.message || t('txDetail.cancelError', language));
         } finally {
@@ -185,10 +196,17 @@ const TransactionDetail = () => {
 
     const handleDeleteTransaction = async () => {
         if (!transaction || !isFailedStatus(transaction.status)) return;
-        if (!window.confirm(t('txDetail.confirmDelete', language))) return;
+        const confirmedDelete = await ask({
+            title: t('txDetail.delete', language),
+            message: t('txDetail.confirmDelete', language),
+            confirmLabel: t('txDetail.delete', language),
+            tone: 'danger'
+        });
+        if (!confirmedDelete) return;
         setBusy(true);
         try {
             await deleteDoc(doc(db, 'transactions', id));
+            notify.success(t('txDetail.deleted', language));
             navigate('/transactions');
         } catch (err) {
             setError(err.message || t('txDetail.deleteError', language));
