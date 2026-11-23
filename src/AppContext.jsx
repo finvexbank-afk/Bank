@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, onSnapshot, collection, query, where, orderBy } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, orderBy, updateDoc } from 'firebase/firestore';
+import { getBankFieldsForFirestore } from './utils/bankDetails';
 
 const AppContext = createContext();
 
@@ -44,6 +45,13 @@ export const AppProvider = ({ children }) => {
             return unsubscribe;
         }
     }, [userAuth]);
+
+    // Backfill banking details for existing clients created before the RIB feature.
+    useEffect(() => {
+        if (!userAuth || !user || user.role !== 'client' || user.iban) return;
+        updateDoc(doc(db, 'users', userAuth.uid), getBankFieldsForFirestore(user))
+            .catch((err) => console.error('Bank details backfill error:', err));
+    }, [userAuth, user]);
 
     // Fetch Transactions from Firestore
     useEffect(() => {

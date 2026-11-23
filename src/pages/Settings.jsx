@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { 
     User, Lock, Bell, Globe, Shield, Save, CheckCircle2, 
     Camera, ChevronRight, Copy, Mail, Calendar, Phone, 
-    Smartphone, HelpCircle, MessageSquare, ExternalLink
+    Smartphone, HelpCircle, MessageSquare, ExternalLink, Landmark, Download
 } from 'lucide-react';
 import MainLayout from '../components/MainLayout';
 import { useAppContext } from '../AppContext';
+import { getBankDetails, downloadRIB } from '../utils/bankDetails';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -23,6 +24,7 @@ const Settings = () => {
     const [email, setEmail] = useState(user.email || '');
     const [phone, setPhone] = useState(user.phone || '+3246001020304');
     const [dob, setDob] = useState(user.dob || '01/01/1990');
+    const bankDetails = getBankDetails(user);
 
     const handleSave = (e) => {
         e.preventDefault();
@@ -78,6 +80,12 @@ const Settings = () => {
                                     icon={<User size={18} />} 
                                     label={t('settings.nav.profile', language)} 
                                     onClick={() => setActiveTab('profile')} 
+                                />
+                                <NavTab 
+                                    active={activeTab === 'bank'} 
+                                    icon={<Landmark size={18} />} 
+                                    label={t('settings.nav.bank', language)} 
+                                    onClick={() => setActiveTab('bank')} 
                                 />
                                 <NavTab 
                                     active={activeTab === 'security'} 
@@ -158,6 +166,49 @@ const Settings = () => {
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                        )}
+
+                        {activeTab === 'bank' && (
+                            <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                                    <Landmark size={20} color="#0EA5E9" />
+                                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B' }}>{t('settings.bank.title', language)}</h3>
+                                </div>
+                                <p style={{ color: '#64748B', fontSize: '14px', marginBottom: '24px' }}>{t('settings.bank.subtitle', language)}</p>
+
+                                <div style={{ background: 'linear-gradient(135deg, #0284C7, #0EA5E9)', borderRadius: '18px', padding: '24px', color: 'white', marginBottom: '24px' }}>
+                                    <p style={{ fontSize: '11px', opacity: 0.85, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{t('settings.bank.iban', language)}</p>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                        <h2 style={{ fontSize: '20px', fontWeight: 700, wordBreak: 'break-all', flex: 1, minWidth: '200px' }}>{bankDetails.iban}</h2>
+                                        <button type="button" onClick={() => copyToClipboard(bankDetails.ibanRaw)} style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', borderRadius: '10px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, cursor: 'pointer' }}>
+                                            <Copy size={16} /> {t('settings.bank.copy', language)}
+                                        </button>
+                                    </div>
+                                    <p style={{ marginTop: '16px', fontSize: '13px', opacity: 0.9 }}>{t('settings.bank.bic', language)} : <strong>{bankDetails.bic}</strong></p>
+                                </div>
+
+                                <div style={{ border: '1px solid #E2E8F0', borderRadius: '16px', overflow: 'hidden', marginBottom: '24px' }}>
+                                    {[
+                                        [t('settings.bank.holder', language), bankDetails.accountHolder],
+                                        [t('settings.bank.bank', language), bankDetails.bankName],
+                                        [t('settings.bank.address', language), bankDetails.bankAddress],
+                                        [t('settings.bank.branch', language), `${bankDetails.bankCode} / ${bankDetails.branchCode}`],
+                                        [t('settings.form.accountNumber', language), bankDetails.accountNumber],
+                                        [t('settings.bank.key', language), bankDetails.ribKey],
+                                        [t('settings.bank.type', language), bankDetails.accountType],
+                                        [t('settings.bank.currency', language), bankDetails.currency]
+                                    ].map(([label, value]) => (
+                                        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', padding: '14px 18px', borderBottom: '1px solid #F1F5F9', flexWrap: 'wrap' }}>
+                                            <span style={{ fontSize: '13px', color: '#64748B' }}>{label}</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#1E293B', wordBreak: 'break-all', textAlign: 'right' }}>{value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <button type="button" onClick={() => downloadRIB(user, language)} style={{ width: '100%', maxWidth: '320px', padding: '15px 24px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)' }}>
+                                    <Download size={18} /> {t('settings.bank.download', language)}
+                                </button>
                             </div>
                         )}
 

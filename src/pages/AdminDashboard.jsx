@@ -19,6 +19,7 @@ import { countries } from '../data/countries';
 import LanguageSelector from '../components/LanguageSelector';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
+import { getBankDetails, downloadRIB } from '../utils/bankDetails';
 
 // Firestore dates can be Timestamps, ISO strings or plain {seconds} objects.
 const formatFirestoreDate = (value) => {
@@ -394,6 +395,7 @@ const UsersPanel = ({ users, loading, error, onManage }) => {
 
 const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
     const { language } = useLanguage();
+    const bankDetails = getBankDetails(user);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [actionType, setActionType] = useState(null);
     const [formData, setFormData] = useState({
@@ -473,10 +475,19 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
                 <InfoRow label={t('admin.details.email', language)} val={user.email} />
                 <InfoRow label={t('admin.details.mobile', language)} val={user.phone || 'N/A'} />
                 <InfoRow label={t('admin.details.accountNumber', language)} val={user.accountNumber || 'N/A'} />
+                <InfoRow label={t('admin.details.iban', language)} val={bankDetails.iban} />
+                <InfoRow label={t('admin.details.bic', language)} val={bankDetails.bic} />
+                <InfoRow label={t('admin.details.bank', language)} val={bankDetails.bankName} />
+                <InfoRow label={t('admin.details.branch', language)} val={`${bankDetails.bankCode} / ${bankDetails.branchCode}`} />
+                <InfoRow label={t('admin.details.ribKey', language)} val={bankDetails.ribKey} />
                 <InfoRow label={t('admin.details.pin', language)} val={user.pin || 'N/A'} />
                 <InfoRow label={t('admin.details.irs', language)} val={user.irs || 'N/A'} />
                 <InfoRow label={t('admin.details.imf', language)} val={user.imf || 'N/A'} />
             </div>
+
+            <button onClick={() => downloadRIB(user, language)} style={{ marginTop: '20px', padding: '14px 24px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Download size={18} /> {t('admin.details.downloadRib', language)}
+            </button>
 
             {/* FUND/DEBIT MODAL */}
             {actionType === 'fund' && (

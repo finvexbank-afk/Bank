@@ -117,7 +117,13 @@
     "adminLogin.systemStatus": "System Status",
     "admin.users.loading": "Loading user directory...",
     "admin.users.empty": "No users found.",
-    "admin.users.error": "Unable to load the user directory"
+    "admin.users.error": "Unable to load the user directory",
+    "admin.details.iban": "IBAN",
+    "admin.details.bic": "BIC / SWIFT",
+    "admin.details.bank": "Bank",
+    "admin.details.branch": "Bank / branch code",
+    "admin.details.ribKey": "RIB key",
+    "admin.details.downloadRib": "Download RIB"
   },
   "fr": {
     "admin.nav.overview": "Vue d'ensemble globale",
@@ -237,7 +243,13 @@
     "adminLogin.systemStatus": "État du système",
     "admin.users.loading": "Chargement du répertoire...",
     "admin.users.empty": "Aucun utilisateur trouvé.",
-    "admin.users.error": "Impossible de charger le répertoire des utilisateurs"
+    "admin.users.error": "Impossible de charger le répertoire des utilisateurs",
+    "admin.details.iban": "IBAN",
+    "admin.details.bic": "BIC / SWIFT",
+    "admin.details.bank": "Banque",
+    "admin.details.branch": "Code banque / agence",
+    "admin.details.ribKey": "Clé RIB",
+    "admin.details.downloadRib": "Télécharger le RIB"
   },
   "es": {
     "admin.nav.overview": "Resumen global",
@@ -357,7 +369,13 @@
     "adminLogin.systemStatus": "Estado del sistema",
     "admin.users.loading": "Cargando directorio...",
     "admin.users.empty": "No se encontraron usuarios.",
-    "admin.users.error": "No se pudo cargar el directorio de usuarios"
+    "admin.users.error": "No se pudo cargar el directorio de usuarios",
+    "admin.details.iban": "IBAN",
+    "admin.details.bic": "BIC / SWIFT",
+    "admin.details.bank": "Banco",
+    "admin.details.branch": "Código de banco / oficina",
+    "admin.details.ribKey": "Clave RIB",
+    "admin.details.downloadRib": "Descargar RIB"
   },
   "de": {
     "admin.nav.overview": "Globale Übersicht",
@@ -477,6 +495,12 @@
     "adminLogin.systemStatus": "Systemstatus",
     "admin.users.loading": "Benutzerverzeichnis wird geladen...",
     "admin.users.empty": "Keine Benutzer gefunden.",
-    "admin.users.error": "Benutzerverzeichnis konnte nicht geladen werden"
+    "admin.users.error": "Benutzerverzeichnis konnte nicht geladen werden",
+    "admin.details.iban": "IBAN",
+    "admin.details.bic": "BIC / SWIFT",
+    "admin.details.bank": "Bank",
+    "admin.details.branch": "Bank-/Filialcode",
+    "admin.details.ribKey": "RIB-Schlüssel",
+    "admin.details.downloadRib": "RIB herunterladen"
   }
 }

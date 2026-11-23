@@ -10,6 +10,7 @@ import { useAppContext } from '../AppContext';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
 import MainLayout from '../components/MainLayout';
+import { getBankDetails } from '../utils/bankDetails';
 import '../index.css';
 
 const Dashboard = () => {
@@ -107,6 +108,9 @@ const Dashboard = () => {
                                         </span>
                                     </p>
                                     <h4 style={{ fontSize: '14px', fontWeight: 700, wordBreak: 'break-all', opacity: 0.95 }}>{user.accountNumber || '85979175073'}</h4>
+                                    <p style={{ fontSize: '11px', opacity: 0.85, marginTop: '6px', wordBreak: 'break-all' }}>
+                                        {t('dashboard.iban', language)} : {getBankDetails(user).iban}
+                                    </p>
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '10px' }}>

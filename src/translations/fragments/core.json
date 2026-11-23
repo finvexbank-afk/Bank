@@ -91,7 +91,8 @@
     "transactions.status": "Status",
     "transactions.timeline": "Timeline",
     "transactions.transactionFallback": "Transaction",
-    "transactions.transactionId": "Transaction ID"
+    "transactions.transactionId": "Transaction ID",
+    "dashboard.iban": "IBAN"
   },
   "fr": {
     "common.credit": "Crédit",
@@ -185,7 +186,8 @@
     "transactions.status": "Statut",
     "transactions.timeline": "Chronologie",
     "transactions.transactionFallback": "Transaction",
-    "transactions.transactionId": "ID de transaction"
+    "transactions.transactionId": "ID de transaction",
+    "dashboard.iban": "IBAN"
   },
   "es": {
     "common.credit": "Abono",
@@ -279,7 +281,8 @@
     "transactions.status": "Estado",
     "transactions.timeline": "Cronología",
     "transactions.transactionFallback": "Transacción",
-    "transactions.transactionId": "ID de transacción"
+    "transactions.transactionId": "ID de transacción",
+    "dashboard.iban": "IBAN"
   },
   "de": {
     "common.credit": "Gutschrift",
@@ -373,6 +376,7 @@
     "transactions.status": "Status",
     "transactions.timeline": "Zeitverlauf",
     "transactions.transactionFallback": "Transaktion",
-    "transactions.transactionId": "Transaktions-ID"
+    "transactions.transactionId": "Transaktions-ID",
+    "dashboard.iban": "IBAN"
   }
 }

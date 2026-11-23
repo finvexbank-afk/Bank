@@ -9,6 +9,7 @@ import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAppContext } from '../AppContext';
+import { getBankFieldsForFirestore } from '../utils/bankDetails';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import LanguageSelector from '../components/LanguageSelector';
@@ -81,6 +82,13 @@ const Auth = () => {
 
     const saveProfile = async (firebaseUser, data) => {
         const accountNumber = `${Date.now()}`.slice(-11);
+        const bankFields = getBankFieldsForFirestore({
+            uid: firebaseUser.uid,
+            accountNumber,
+            name: `${data.firstName.trim()} ${data.lastName.trim()}`,
+            accountType: data.accountType,
+            currency: 'USD'
+        });
         await setDoc(doc(db, 'users', firebaseUser.uid), {
             uid: firebaseUser.uid,
             name: `${data.firstName.trim()} ${data.lastName.trim()}`,
@@ -93,6 +101,7 @@ const Auth = () => {
             country: data.country,
             accountType: data.accountType,
             accountNumber,
+            ...bankFields,
             pin: data.transactionPin,
             balance: 0.00,
             currency: 'USD',
