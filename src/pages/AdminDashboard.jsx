@@ -12,8 +12,7 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../AppContext';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { db, auth, functions } from '../firebase';
-import { httpsCallable } from 'firebase/functions';
+import { db, auth } from '../firebase';
 import { collection, doc, updateDoc, onSnapshot, query, orderBy, addDoc, serverTimestamp, setDoc, deleteDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { countries } from '../data/countries';
@@ -39,10 +38,17 @@ const formatFirestoreDate = (value) => {
     }
 };
 
-const callAdminFunction = async (name, data) => {
-    const callable = httpsCallable(functions, name);
-    const result = await callable(data);
-    return result.data;
+const callAdminApi = async (action, payload) => {
+    const idToken = await auth.currentUser?.getIdToken();
+    if (!idToken) throw new Error('No authentication token');
+    const response = await fetch('/.netlify/functions/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, idToken, ...payload })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Admin request failed');
+    return data;
 };
 
 const AdminDashboard = () => {
@@ -222,7 +228,7 @@ const AdminDashboard = () => {
                                 setSelectedUser({...selectedUser, ...newData});
                                 if (newData.email && newData.email !== previousEmail) {
                                     try {
-                                        await callAdminFunction('updateUserEmail', { uid, email: newData.email });
+                                        await callAdminApi('updateEmail', { uid, email: newData.email });
                                     } catch (err) {
                                         console.error('Email sync error:', err);
                                         alert(t('admin.alert.emailSyncFailed', language));
@@ -233,7 +239,7 @@ const AdminDashboard = () => {
                                 if(!window.confirm(t('admin.alert.deleteUser', language, { name: selectedUser.name }))) return;
                                 const uid = selectedUser.id;
                                 try {
-                                    await callAdminFunction('deleteUserAccount', { uid });
+                                    await callAdminApi('deleteUser', { uid });
                                     setViewMode('list');
                                     setSelectedUser(null);
                                     alert(t('admin.alert.deleteUserComplete', language));

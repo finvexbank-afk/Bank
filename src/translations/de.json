@@ -913,5 +913,5 @@
   "admin.alert.passwordResetFailed": "E-Mail zum Zurücksetzen konnte nicht gesendet werden.",
   "admin.alert.authDeletionNotice": "Firestore-Profil gelöscht. Das Firebase-Anmeldekonto muss noch serverseitig entfernt werden.",
   "admin.alert.deleteUserComplete": "Konto vollständig gelöscht (Firestore und Firebase-Anmeldung).",
-  "admin.alert.emailSyncFailed": "Profil aktualisiert, aber die Synchronisierung der Anmelde-E-Mail fehlgeschlagen. Stelle die Funktion updateUserEmail bereit."
+  "admin.alert.emailSyncFailed": "Profil aktualisiert, aber die Synchronisierung der Anmelde-E-Mail fehlgeschlagen. Prüfe die Firebase-Konfiguration des Servers."
 }
