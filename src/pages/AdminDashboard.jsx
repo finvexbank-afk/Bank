@@ -14,12 +14,12 @@ import { useAppContext } from '../AppContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { collection, doc, updateDoc, onSnapshot, query, orderBy, addDoc, serverTimestamp, setDoc, deleteDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { countries } from '../data/countries';
 import LanguageSelector from '../components/LanguageSelector';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
-import { getBankDetails, downloadRIB } from '../utils/bankDetails';
+import { getBankDetails, getBankFieldsForFirestore, downloadRIB } from '../utils/bankDetails';
 
 // Firestore dates can be Timestamps, ISO strings or plain {seconds} objects.
 const formatFirestoreDate = (value) => {
@@ -217,6 +217,7 @@ const AdminDashboard = () => {
                                     await deleteDoc(doc(db, 'users', selectedUser.id));
                                     setViewMode('list');
                                     setSelectedUser(null);
+                                    alert(t('admin.alert.authDeletionNotice', language));
                                 }
                             }}
                         />
@@ -393,6 +394,136 @@ const UsersPanel = ({ users, loading, error, onManage }) => {
     );
 };
 
+const EditField = ({ label, value, onChange, type = 'text', options }) => (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>{label}</span>
+        {options ? (
+            <select value={value} onChange={(e) => onChange(e.target.value)} style={formInputLarge}>
+                {options.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+        ) : type === 'textarea' ? (
+            <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={2} style={formInputLarge} />
+        ) : (
+            <input type={type} value={value} onChange={(e) => onChange(e.target.value)} style={formInputLarge} />
+        )}
+    </label>
+);
+
+const EditUserModal = ({ user, language, onClose, onSave }) => {
+    const bank = getBankDetails(user);
+    const [form, setForm] = useState({
+        name: user.name || '',
+        firstName: user.firstName || '',
+        middleName: user.middleName || '',
+        lastName: user.lastName || '',
+        username: user.username || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        dob: user.dob || '',
+        country: user.country || '',
+        photoURL: user.photoURL || '',
+        accountNumber: bank.accountNumber,
+        accountType: user.accountType || 'Checking',
+        currency: user.currency || 'EUR',
+        balance: user.balance ?? 0,
+        limit: user.limit ?? 50000,
+        accountStatus: user.accountStatus || 'Dormant',
+        kycStatus: user.kycStatus || 'Unverified',
+        role: user.role || 'client',
+        pin: user.pin || '',
+        irs: user.irs || '',
+        imf: user.imf || '',
+        swift: user.swift || '',
+        cot: user.cot || '',
+        iban: bank.ibanRaw,
+        bic: bank.bic,
+        bankName: bank.bankName,
+        bankAddress: bank.bankAddress,
+        bankCode: bank.bankCode,
+        branchCode: bank.branchCode,
+        ribKey: bank.ribKey
+    });
+    const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+    const handlePhoto = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 600000) { alert(t('admin.edit.photoTooLarge', language)); return; }
+        const reader = new FileReader();
+        reader.onload = () => set('photoURL', reader.result);
+        reader.readAsDataURL(file);
+    };
+
+    const submit = (e) => {
+        e.preventDefault();
+        onSave({ ...form, balance: Number(form.balance) || 0, limit: Number(form.limit) || 0 });
+        onClose();
+    };
+
+    const section = (title, fields) => (
+        <div key={title} style={{ borderBottom: '1px solid #F1F5F9', paddingBottom: '20px' }}>
+            <h4 style={{ fontSize: '12px', fontWeight: 900, color: '#2563EB', textTransform: 'uppercase', marginBottom: '14px' }}>{title}</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '14px' }}>{fields}</div>
+        </div>
+    );
+
+    return (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.7)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' }}>
+            <div style={{ background: 'white', borderRadius: '24px', width: '100%', maxWidth: '760px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <h3 style={{ fontWeight: 900, fontSize: '18px', color: '#1E293B' }}>{t('admin.edit.title', language)} : {user.name}</h3>
+                    <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#94A3B8' }}><X size={20} /></button>
+                </div>
+                <form onSubmit={submit} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {section(t('admin.edit.identity', language), [
+                        <EditField key="name" label={t('admin.details.fullname', language)} value={form.name} onChange={(v) => set('name', v)} />,
+                        <EditField key="firstName" label={t('admin.create.firstName', language)} value={form.firstName} onChange={(v) => set('firstName', v)} />,
+                        <EditField key="middleName" label={t('admin.edit.middleName', language)} value={form.middleName} onChange={(v) => set('middleName', v)} />,
+                        <EditField key="lastName" label={t('admin.create.lastName', language)} value={form.lastName} onChange={(v) => set('lastName', v)} />,
+                        <EditField key="username" label={t('admin.edit.username', language)} value={form.username} onChange={(v) => set('username', v)} />,
+                        <EditField key="email" label={t('admin.details.email', language)} value={form.email} onChange={(v) => set('email', v)} type="email" />,
+                        <EditField key="phone" label={t('admin.details.mobile', language)} value={form.phone} onChange={(v) => set('phone', v)} />,
+                        <EditField key="dob" label={t('admin.edit.dob', language)} value={form.dob} onChange={(v) => set('dob', v)} />,
+                        <EditField key="country" label={t('admin.create.country', language)} value={form.country} onChange={(v) => set('country', v)} />
+                    ])}
+                    {section(t('admin.edit.account', language), [
+                        <EditField key="accountNumber" label={t('admin.details.accountNumber', language)} value={form.accountNumber} onChange={(v) => set('accountNumber', v)} />,
+                        <EditField key="accountType" label={t('admin.edit.accountType', language)} value={form.accountType} onChange={(v) => set('accountType', v)} options={['Checking', 'Savings']} />,
+                        <EditField key="currency" label={t('admin.edit.currency', language)} value={form.currency} onChange={(v) => set('currency', v)} />,
+                        <EditField key="balance" label={t('admin.details.balance', language)} value={form.balance} onChange={(v) => set('balance', v)} type="number" />,
+                        <EditField key="limit" label={t('admin.details.limit', language)} value={form.limit} onChange={(v) => set('limit', v)} type="number" />,
+                        <EditField key="accountStatus" label={t('admin.edit.status', language)} value={form.accountStatus} onChange={(v) => set('accountStatus', v)} options={['Dormant', 'Active', 'Restricted', 'Closed']} />,
+                        <EditField key="kycStatus" label={t('admin.edit.kyc', language)} value={form.kycStatus} onChange={(v) => set('kycStatus', v)} options={['Unverified', 'Pending', 'Verified']} />,
+                        <EditField key="role" label={t('admin.edit.role', language)} value={form.role} onChange={(v) => set('role', v)} options={['client', 'user', 'admin']} />,
+                        <EditField key="pin" label={t('admin.details.pin', language)} value={form.pin} onChange={(v) => set('pin', v)} />
+                    ])}
+                    {section(t('admin.edit.bank', language), [
+                        <EditField key="iban" label={t('admin.details.iban', language)} value={form.iban} onChange={(v) => set('iban', v)} />,
+                        <EditField key="bic" label={t('admin.details.bic', language)} value={form.bic} onChange={(v) => set('bic', v)} />,
+                        <EditField key="bankName" label={t('admin.details.bank', language)} value={form.bankName} onChange={(v) => set('bankName', v)} />,
+                        <EditField key="bankAddress" label={t('settings.bank.address', language)} value={form.bankAddress} onChange={(v) => set('bankAddress', v)} />,
+                        <EditField key="bankCode" label={t('admin.edit.bankCode', language)} value={form.bankCode} onChange={(v) => set('bankCode', v)} />,
+                        <EditField key="branchCode" label={t('admin.edit.branchCode', language)} value={form.branchCode} onChange={(v) => set('branchCode', v)} />,
+                        <EditField key="ribKey" label={t('admin.details.ribKey', language)} value={form.ribKey} onChange={(v) => set('ribKey', v)} />
+                    ])}
+                    {section(t('admin.edit.documents', language), [
+                        <EditField key="irs" label={t('admin.details.irs', language)} value={form.irs} onChange={(v) => set('irs', v)} />,
+                        <EditField key="imf" label={t('admin.details.imf', language)} value={form.imf} onChange={(v) => set('imf', v)} />,
+                        <EditField key="swift" label={t('admin.edit.swift', language)} value={form.swift} onChange={(v) => set('swift', v)} />,
+                        <EditField key="cot" label={t('admin.edit.cot', language)} value={form.cot} onChange={(v) => set('cot', v)} />
+                    ])}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>{t('admin.edit.photo', language)}</span>
+                        <input type="file" accept="image/*" onChange={handlePhoto} />
+                        {form.photoURL && <img src={form.photoURL} alt="preview" style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', marginTop: '8px' }} />}
+                    </div>
+                    <button type="submit" style={{ padding: '15px 24px', background: '#2563EB', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>{t('admin.edit.save', language)}</button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
     const { language } = useLanguage();
     const bankDetails = getBankDetails(user);
@@ -438,7 +569,9 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#E0F2FE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0EA5E9' }}><UserCircle size={40} /></div>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#E0F2FE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0EA5E9', overflow: 'hidden' }}>
+                        {user.photoURL ? <img src={user.photoURL} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <UserCircle size={40} />}
+                    </div>
                     <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#1E293B' }}>{user.name}</h1>
                 </div>
                 <div style={{ display: 'flex', gap: '12px', position: 'relative' }}>
@@ -448,14 +581,23 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
                     {isMenuOpen && (
                         <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #E2E8F0', zIndex: 100, width: '240px', padding: '8px 0' }}>
                             <ActionMenuItem icon={<DollarSign size={16}/>} label={t('admin.details.action.fundDebit', language)} onClick={() => { setActionType('fund'); setIsMenuOpen(false); }} />
-                            <ActionMenuItem icon={<ImageIcon size={16}/>} label={t('admin.details.action.changePhoto', language)} onClick={() => setIsMenuOpen(false)} />
-                            <ActionMenuItem icon={<Key size={16}/>} label={t('admin.details.action.resetPassword', language)} onClick={() => setIsMenuOpen(false)} />
+                            <ActionMenuItem icon={<ImageIcon size={16}/>} label={t('admin.details.action.changePhoto', language)} onClick={() => { setActionType('edit'); setIsMenuOpen(false); }} />
+                            <ActionMenuItem icon={<Key size={16}/>} label={t('admin.details.action.resetPassword', language)} onClick={async () => {
+                                setIsMenuOpen(false);
+                                try {
+                                    if (!user.email) throw new Error('No email');
+                                    await sendPasswordResetEmail(auth, user.email);
+                                    alert(t('admin.alert.passwordReset', language));
+                                } catch (err) {
+                                    alert(t('admin.alert.passwordResetFailed', language));
+                                }
+                            }} />
                             {user.accountStatus === 'Dormant' ? (
                                 <ActionMenuItem icon={<Power size={16}/>} label={t('admin.details.action.setActive', language)} onClick={() => { onUpdate({ accountStatus: 'Active' }); setIsMenuOpen(false); }} color="#10B981" />
                             ) : (
                                 <ActionMenuItem icon={<ShieldAlert size={16}/>} label={t('admin.details.action.setDormant', language)} onClick={() => { onUpdate({ accountStatus: 'Dormant' }); setIsMenuOpen(false); }} color="#F59E0B" />
                             )}
-                            <ActionMenuItem icon={<Edit3 size={16}/>} label={t('admin.details.action.editProfile', language)} onClick={() => setIsMenuOpen(false)} />
+                            <ActionMenuItem icon={<Edit3 size={16}/>} label={t('admin.details.action.editProfile', language)} onClick={() => { setActionType('edit'); setIsMenuOpen(false); }} />
                             <ActionMenuItem icon={<Trash2 size={16}/>} label={t('admin.details.action.delete', language, { name: user.name.split(' ')[0] })} onClick={() => { onDelete(); setIsMenuOpen(false); }} color="#EF4444" />
                         </div>
                     )}
@@ -488,6 +630,15 @@ const UserDetailsView = ({ user, onBack, onUpdate, onDelete }) => {
             <button onClick={() => downloadRIB(user, language)} style={{ marginTop: '20px', padding: '14px 24px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Download size={18} /> {t('admin.details.downloadRib', language)}
             </button>
+
+            {actionType === 'edit' && (
+                <EditUserModal
+                    user={user}
+                    language={language}
+                    onClose={() => setActionType(null)}
+                    onSave={(newData) => onUpdate(newData)}
+                />
+            )}
 
             {/* FUND/DEBIT MODAL */}
             {actionType === 'fund' && (
@@ -640,10 +791,15 @@ const CreateUserForm = () => {
                 dob: data.dob,
                 accountType: data.accountType,
                 accountNumber: data.accountNumber,
-                balance: parseFloat(data.balance),
+                ...getBankFieldsForFirestore({ uid: res.user.uid, accountNumber: data.accountNumber, name: `${data.firstName} ${data.lastName}`, accountType: data.accountType, currency: 'USD' }),
+                pin: data.pin,
+                balance: parseFloat(data.balance) || 0,
+                limit: 50000,
+                currency: 'USD',
                 accountStatus: 'Dormant',
-                role: 'user',
-                createdAt: serverTimestamp()
+                kycStatus: 'Unverified',
+                role: 'client',
+                createdAt: new Date().toISOString()
             });
             alert(t('admin.alert.userCreated', language));
         } catch (err) { alert(err.message); }
