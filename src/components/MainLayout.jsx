@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Building2, Home, Activity, CreditCard, Send, Globe, Download, 
   Landmark, FileText, History, Settings, LifeBuoy, Calendar,
-  Menu, PieChart, LayoutGrid, User, Bell, AlertCircle, ChevronDown, LogOut, X
+  Menu, PieChart, LayoutGrid, User, AlertCircle, ChevronDown, LogOut, X
 } from 'lucide-react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import TransferModal from './TransferModal';
@@ -10,6 +10,7 @@ import { useAppContext } from '../AppContext';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
 import LanguageSelector from './LanguageSelector';
+import NotificationBell from './NotificationBell';
 
 const MainLayout = ({ children }) => {
     const navigate = useNavigate();
@@ -135,7 +136,7 @@ const MainLayout = ({ children }) => {
                         <div className="mini-balance" style={{ fontSize: '13px', padding: '6px 12px' }}>
                             <CreditCard size={16} /> {formatMoney(user.balance)}
                         </div>
-                        <button className="icon-btn" style={{ width: '36px', height: '36px' }}><Bell size={18} /></button>
+                        <NotificationBell />
                         <button className="icon-btn" style={{ width: '36px', height: '36px' }} onClick={() => navigate('/admin')} title={t('layout.adminPanelTooltip', language)}><Settings size={18} /></button>
                     </div>
                 </header>

@@ -439,4 +439,22 @@ button { font-family: var(--font-inter); cursor: pointer; border: none; outline:
   }
 }
 
+/* Notification center */
+.notification-backdrop { position: fixed; inset: 0; z-index: 1100; }
+.notification-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: min(380px, calc(100vw - 32px));
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1101;
+  overflow: hidden;
+}
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
+
 @keyframes slideDown { from { top: -100px; opacity: 0; } to { top: 100px; opacity: 1; } } @keyframes ping { 0% { transform: scale(1); opacity: 1; } 70%, 100% { transform: scale(2); opacity: 0; } }

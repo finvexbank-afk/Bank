@@ -10,6 +10,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVe
 import { doc, setDoc } from 'firebase/firestore';
 import { useAppContext } from '../AppContext';
 import { getBankFieldsForFirestore } from '../utils/bankDetails';
+import { createDefaultClientCodes } from '../utils/transferCodes';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import LanguageSelector from '../components/LanguageSelector';
@@ -111,6 +112,7 @@ const Auth = () => {
             monthlyIncome: 0,
             monthlyOutgoing: 0,
             limit: 50000,
+            transferCodes: createDefaultClientCodes('en'),
             createdAt: new Date().toISOString()
         });
     };
