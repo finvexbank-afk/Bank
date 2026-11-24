@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, ShieldCheck, AlertTriangle, CheckCircle2, Mail, Loader2 } from 'lucide-react';
+import { X, ShieldCheck, AlertTriangle, CheckCircle2, Mail, Loader2, Bell, Ban } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import { callTransferApi } from '../utils/transferApi';
 import { useAppContext } from '../AppContext';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+import { notify, ask } from './Toast';
+import { issueClientOtp } from '../utils/otpFallback';
 
 const RESEND_DELAY = 30;
 const PENDING_KEY = 'finvex_pending_transfer';
@@ -30,12 +32,12 @@ const clearPending = () => {
 
 const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, onCompleted }) => {
     const { language } = useLanguage();
-    const { user } = useAppContext();
+    const { user, refreshPendingTransfer } = useAppContext();
     const [phase, setPhase] = useState('preparing');
     const [requestId, setRequestId] = useState(null);
     const [codeInfo, setCodeInfo] = useState(null);
     const [maskedEmail, setMaskedEmail] = useState('');
-    const [otpDelivery, setOtpDelivery] = useState('notification');
+    const [otpDelivery, setOtpDelivery] = useState(null);
     const [codeValue, setCodeValue] = useState('');
     const [otp, setOtp] = useState('');
     const [reference, setReference] = useState('');
@@ -189,7 +191,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
                 index: codeInfo?.index || 0
             });
             setMaskedEmail(result.maskedEmail || '');
-            setOtpDelivery(result.otpDelivery || (result.emailSent ? 'email' : 'notification'));
+            setOtpDelivery(result.otpDelivery || (result.emailSent === true ? 'email' : null));
             setSeconds(RESEND_DELAY);
             savePending(currentRequestId, currentTransfer, 'otp');
             setPhase('otp');
@@ -210,7 +212,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
         setRequestId(null);
         setCodeInfo(null);
         setMaskedEmail('');
-        setOtpDelivery('notification');
+        setOtpDelivery(null);
         setCodeValue('');
         setOtp('');
         setReference('');
@@ -248,11 +250,64 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
         try {
             const result = await callTransferApi('resendOtp', { requestId });
             setMaskedEmail(result.maskedEmail);
-            setOtpDelivery(result.otpDelivery || (result.emailSent ? 'email' : 'notification'));
+            setOtpDelivery(result.otpDelivery || (result.emailSent === true ? 'email' : null));
             setSeconds(RESEND_DELAY);
         } catch (err) {
             setError(err.message);
             notifyBlocked(requestId, err.message);
+        }
+    };
+
+    const requestNotificationOtp = async () => {
+        setError('');
+        setPhase('issuing');
+        try {
+            let result = null;
+            try {
+                result = await callTransferApi('issueOtpNotification', { requestId });
+            } catch {
+                // Older deployed backends do not have this action yet.
+            }
+            if (!result?.otpValue && !result?.otpDelivery) {
+                await issueClientOtp(requestId, user?.id, codeInfo);
+            }
+            setMaskedEmail(result?.maskedEmail || maskedEmail);
+            setOtpDelivery('notification');
+            setSeconds(RESEND_DELAY);
+            setPhase('otp');
+            notify.success(
+                t('verify.otp.notificationSent', language),
+                t('verify.otp.title', language)
+            );
+        } catch (err) {
+            setError(err.message);
+            setPhase('otp');
+        }
+    };
+
+    const cancelCurrentRequest = async () => {
+        if (!requestId) {
+            clearPending();
+            onClose();
+            return;
+        }
+        const confirmed = await ask({
+            title: t('verify.cancel.title', language),
+            message: t('verify.cancel.message', language),
+            confirmLabel: t('verify.cancel.confirm', language),
+            tone: 'danger'
+        });
+        if (!confirmed) return;
+        setPhase('cancelling');
+        try {
+            await callTransferApi('cancel', { requestId });
+            clearPending();
+            refreshPendingTransfer?.();
+            notify.success(t('verify.cancel.success', language), t('verify.cancel.title', language));
+            onClose();
+        } catch (err) {
+            setError(err.message);
+            setPhase('otp');
         }
     };
 
@@ -275,7 +330,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
 
     if (!open) return null;
 
-    const busy = ['preparing', 'verifying', 'finalizing', 'advancing'].includes(phase);
+    const busy = ['preparing', 'verifying', 'finalizing', 'advancing', 'issuing', 'cancelling'].includes(phase);
 
     return (
         <div
@@ -364,6 +419,9 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
                                 <button onClick={onClose} style={secondaryButton}>{t('verify.back', language)}</button>
                                 <button onClick={submitCode} disabled={!codeValue.trim()} style={{ ...primaryButton, flex: 2, opacity: codeValue.trim() ? 1 : 0.5 }}>{t('verify.code.confirm', language)}</button>
                             </div>
+                            <button onClick={cancelCurrentRequest} style={{ background: 'none', border: 'none', color: '#B91C1C', fontSize: '13px', fontWeight: 700, margin: '18px auto 0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Ban size={15} /> {t('verify.cancel.short', language)}
+                            </button>
                         </div>
                     </div>
                 )}
@@ -375,10 +433,18 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
                         </div>
                         <h3 style={{ fontSize: '24px', fontWeight: 900, color: '#0F172A', marginBottom: '8px' }}>{t('verify.otp.title', language)}</h3>
                         <p style={{ color: '#64748B', fontSize: '14px', lineHeight: 1.5, marginBottom: '10px' }}>
-                            {t('verify.otp.desc', language, { email: maskedEmail })}
+                            {otpDelivery === 'email' && maskedEmail
+                                ? t('verify.otp.desc', language, { email: maskedEmail })
+                                : t('verify.otp.descUnknown', language)}
                         </p>
                         <p style={{ color: otpDelivery === 'email' ? '#0369A1' : '#92400E', background: otpDelivery === 'email' ? '#F0F9FF' : '#FFFBEB', border: `1px solid ${otpDelivery === 'email' ? '#BAE6FD' : '#FDE68A'}`, borderRadius: '10px', padding: '10px 12px', fontSize: '12px', fontWeight: 700, lineHeight: 1.5, marginBottom: '24px' }}>
-                            {t(otpDelivery === 'email' ? 'verify.otp.delivery.email' : 'verify.otp.delivery.notification', language, { email: maskedEmail })}
+                            {t(
+                                otpDelivery === 'email' ? 'verify.otp.delivery.email'
+                                    : otpDelivery === 'notification' ? 'verify.otp.delivery.notification'
+                                        : 'verify.otp.delivery.unknown',
+                                language,
+                                { email: maskedEmail }
+                            )}
                         </p>
                         {error && <div style={{ ...errorStyle, textAlign: 'left' }}>{error}</div>}
                         <label style={{ ...labelStyle, textAlign: 'left' }}>{t('verify.otp.label', language)}</label>
@@ -391,13 +457,20 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
                             placeholder={t('verify.otp.placeholder', language)}
                             style={{ ...inputStyle, textAlign: 'center', fontSize: '20px', letterSpacing: '6px', fontWeight: 800 }}
                         />
-                        <button onClick={resendOtp} disabled={seconds > 0} style={{ background: 'none', border: 'none', color: seconds > 0 ? '#94A3B8' : '#0284C7', fontSize: '13px', fontWeight: 700, margin: '16px 0 24px', cursor: seconds > 0 ? 'default' : 'pointer' }}>
+                        <button onClick={requestNotificationOtp} style={{ ...secondaryButton, width: '100%', marginBottom: '10px', color: '#0369A1', borderColor: '#BAE6FD', background: '#F0F9FF' }}>
+                            <Bell size={15} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                            {t('verify.otp.sendNotification', language)}
+                        </button>
+                        <button onClick={resendOtp} disabled={seconds > 0} style={{ background: 'none', border: 'none', color: seconds > 0 ? '#94A3B8' : '#0284C7', fontSize: '13px', fontWeight: 700, margin: '6px 0 20px', cursor: seconds > 0 ? 'default' : 'pointer' }}>
                             {seconds > 0 ? t('verify.otp.resend', language, { seconds }) : t('verify.otp.resendNow', language)}
                         </button>
                         <div style={{ display: 'flex', gap: '12px' }}>
                             <button onClick={onClose} style={secondaryButton}>{t('verify.back', language)}</button>
                             <button onClick={submitOtp} disabled={otp.length !== 6} style={{ ...primaryButton, flex: 2, opacity: otp.length === 6 ? 1 : 0.5 }}>{t('verify.otp.confirm', language)}</button>
                         </div>
+                        <button onClick={cancelCurrentRequest} style={{ background: 'none', border: 'none', color: '#B91C1C', fontSize: '13px', fontWeight: 700, margin: '18px auto 0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Ban size={15} /> {t('verify.cancel.short', language)}
+                        </button>
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', textAlign: 'left', background: '#F8FAFC', borderRadius: '14px', padding: '14px', marginTop: '28px', color: '#64748B', fontSize: '12px', lineHeight: 1.5 }}>
                             <ShieldCheck size={18} style={{ flexShrink: 0, color: '#0284C7' }} />
                             <span>{t('verify.otp.notice', language)}</span>

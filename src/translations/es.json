@@ -1095,5 +1095,14 @@
   "admin.codes.otpHint": "Último OTP generado para este código",
   "admin.codes.sendNotification": "Enviar por notificación",
   "toast.codeNotificationSent.title": "Código enviado",
-  "toast.codeNotificationSent.body": "El código {{code}} se envió al cliente por notificación."
+  "toast.codeNotificationSent.body": "El código {{code}} se envió al cliente por notificación.",
+  "verify.otp.descUnknown": "Introduzca el código recibido para continuar. Puede solicitar uno nuevo por notificación.",
+  "verify.otp.delivery.unknown": "No se ha confirmado el envío de este código. Solicite uno nuevo por notificación.",
+  "verify.otp.sendNotification": "Recibir el código por notificación",
+  "verify.otp.notificationSent": "Su código OTP se ha añadido a sus notificaciones.",
+  "verify.cancel.title": "Cancelar esta transferencia",
+  "verify.cancel.message": "La transferencia actual se cancelará. No se ha debitado ningún importe.",
+  "verify.cancel.confirm": "Cancelar transferencia",
+  "verify.cancel.short": "Cancelar y eliminar esta transferencia",
+  "verify.cancel.success": "La transferencia se canceló."
 }

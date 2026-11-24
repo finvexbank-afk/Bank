@@ -465,6 +465,25 @@ export const createHandler = ({ getDb, getAuthFn, sendEmailFn = sendEmail }) => 
             });
         }
 
+        if (action === 'issueOtpNotification') {
+            const { requestId } = payload;
+            const { ref, data } = await getRequest(db, uid, requestId);
+            if (['completed', 'failed', 'expired', 'cancelled'].includes(data.status)) {
+                return respond(400, { error: 'Ce virement n\'est plus en attente.' });
+            }
+            const steps = Array.isArray(data.steps) ? data.steps : [];
+            const index = Number.isInteger(data.otpStepIndex) ? data.otpStepIndex : (data.currentStep || 0);
+            const step = steps[index] || null;
+            const result = await issueOtp(db, ref, data, uid, profile, step ? { ...step, index } : null, sendEmailFn);
+            return respond(200, {
+                otp: true,
+                phase: 'otp',
+                maskedEmail: result.maskedEmail,
+                otpDelivery: 'notification',
+                emailSent: result.sent
+            });
+        }
+
         if (action === 'finalize') {
             const { requestId, otp } = payload;
             const { ref, data } = await getRequest(db, uid, requestId);

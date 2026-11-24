@@ -1095,5 +1095,14 @@
   "admin.codes.otpHint": "Latest OTP generated for this code",
   "admin.codes.sendNotification": "Send via notification",
   "toast.codeNotificationSent.title": "Code sent",
-  "toast.codeNotificationSent.body": "Code {{code}} was sent to the client by notification."
+  "toast.codeNotificationSent.body": "Code {{code}} was sent to the client by notification.",
+  "verify.otp.descUnknown": "Enter the code you received to continue. You can request a new one by notification.",
+  "verify.otp.delivery.unknown": "No delivery confirmed for this code. Request a new code by notification.",
+  "verify.otp.sendNotification": "Receive code by notification",
+  "verify.otp.notificationSent": "Your OTP code was placed in your notifications.",
+  "verify.cancel.title": "Cancel this transfer",
+  "verify.cancel.message": "The current transfer will be cancelled. No amount has been debited.",
+  "verify.cancel.confirm": "Cancel transfer",
+  "verify.cancel.short": "Cancel and delete this transfer",
+  "verify.cancel.success": "The transfer was cancelled."
 }

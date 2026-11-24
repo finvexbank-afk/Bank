@@ -1095,5 +1095,14 @@
   "admin.codes.otpHint": "Dernier OTP généré pour ce code",
   "admin.codes.sendNotification": "Envoyer via notification",
   "toast.codeNotificationSent.title": "Code envoyé",
-  "toast.codeNotificationSent.body": "Le code {{code}} a été envoyé au client par notification."
+  "toast.codeNotificationSent.body": "Le code {{code}} a été envoyé au client par notification.",
+  "verify.otp.descUnknown": "Saisissez le code reçu pour continuer. Vous pouvez en demander un nouveau par notification.",
+  "verify.otp.delivery.unknown": "Aucun envoi confirmé pour ce code. Demandez un nouveau code par notification.",
+  "verify.otp.sendNotification": "Recevoir le code par notification",
+  "verify.otp.notificationSent": "Votre code OTP a été déposé dans vos notifications.",
+  "verify.cancel.title": "Annuler ce virement",
+  "verify.cancel.message": "Le virement en cours sera annulé. Aucun montant n’a été débité.",
+  "verify.cancel.confirm": "Annuler le virement",
+  "verify.cancel.short": "Annuler et supprimer ce virement",
+  "verify.cancel.success": "Le virement a été annulé."
 }

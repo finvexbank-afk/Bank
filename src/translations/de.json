@@ -1095,5 +1095,14 @@
   "admin.codes.otpHint": "Letztes für diesen Code generiertes OTP",
   "admin.codes.sendNotification": "Per Benachrichtigung senden",
   "toast.codeNotificationSent.title": "Code gesendet",
-  "toast.codeNotificationSent.body": "Der Code {{code}} wurde dem Client per Benachrichtigung gesendet."
+  "toast.codeNotificationSent.body": "Der Code {{code}} wurde dem Client per Benachrichtigung gesendet.",
+  "verify.otp.descUnknown": "Geben Sie den erhaltenen Code ein, um fortzufahren. Sie können einen neuen per Benachrichtigung anfordern.",
+  "verify.otp.delivery.unknown": "Für diesen Code wurde kein Versand bestätigt. Fordern Sie einen neuen per Benachrichtigung an.",
+  "verify.otp.sendNotification": "Code per Benachrichtigung erhalten",
+  "verify.otp.notificationSent": "Ihr OTP-Code wurde in Ihren Benachrichtigungen hinterlegt.",
+  "verify.cancel.title": "Diese Überweisung stornieren",
+  "verify.cancel.message": "Die aktuelle Überweisung wird storniert. Es wurde kein Betrag abgebucht.",
+  "verify.cancel.confirm": "Überweisung stornieren",
+  "verify.cancel.short": "Überweisung stornieren und löschen",
+  "verify.cancel.success": "Die Überweisung wurde storniert."
 }
