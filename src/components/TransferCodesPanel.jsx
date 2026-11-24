@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Trash2, Mail, RefreshCw } from 'lucide-react';
 import { db } from '../firebase';
-import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
+import { notify } from './Toast';
 import { callTransferApi } from '../utils/transferApi';
 import { generateTransferCode } from '../utils/transferCodes';
 
@@ -34,6 +35,30 @@ const TransferCodesPanel = () => {
         return () => { unsubCodes(); unsubUsers(); };
     }, []);
 
+    const recordOtpToggle = async ({ key, label, enabled, clientName }) => {
+        const titleKey = enabled ? 'toast.otpEnabled.title' : 'toast.otpDisabled.title';
+        const bodyKey = enabled ? 'toast.otpEnabled.body' : 'toast.otpDisabled.body';
+        const title = t(titleKey, language);
+        const body = t(bodyKey, language, { label: label || 'FINVEX', client: clientName || t('admin.codes.allClients', language) });
+
+        try {
+            await setDoc(doc(db, 'notifications', `admin_otp_setting_${key}`), {
+                audience: 'admin',
+                type: 'otpSetting',
+                title,
+                body,
+                enabled,
+                read: false,
+                createdAt: serverTimestamp()
+            });
+        } catch (error) {
+            console.error('[Admin] OTP setting notification error:', error);
+        }
+
+        if (enabled) notify.success(body, title);
+        else notify.info(body, title);
+    };
+
     const addCode = async () => {
         const generated = generateTransferCode(`FINVEX-${codes.length + 1}`, language);
         await addDoc(collection(db, 'transferCodes'), {
@@ -49,8 +74,21 @@ const TransferCodesPanel = () => {
     };
 
     const updateCode = async (id, field, value) => {
+        const current = codes.find((item) => item.id === id);
         setCodes((prev) => prev.map((item) => item.id === id ? { ...item, [field]: value } : item));
-        await updateDoc(doc(db, 'transferCodes', id), { [field]: value });
+        try {
+            await updateDoc(doc(db, 'transferCodes', id), { [field]: value });
+            if (field === 'requiresOtp') {
+                await recordOtpToggle({
+                    key: `global_${id}`,
+                    label: current?.label || value,
+                    enabled: value === true,
+                    clientName: t('admin.codes.allClients', language)
+                });
+            }
+        } catch (error) {
+            notify.error(error.message || t('toast.error', language));
+        }
     };
 
     const deleteCode = async (id) => {
@@ -64,8 +102,21 @@ const TransferCodesPanel = () => {
 
     const updateClientCode = async (codeId, field, value) => {
         const selected = users.find((item) => item.id === selectedUserId);
+        const current = (selected?.transferCodes || []).find((item) => item.id === codeId);
         const nextCodes = (selected?.transferCodes || []).map((item) => item.id === codeId ? { ...item, [field]: value } : item);
-        await saveClientCodes(nextCodes);
+        try {
+            await saveClientCodes(nextCodes);
+            if (field === 'requiresOtp') {
+                await recordOtpToggle({
+                    key: `${selectedUserId}_${codeId}`,
+                    label: current?.label || value,
+                    enabled: value === true,
+                    clientName: selected?.name || selected?.email || selectedUserId
+                });
+            }
+        } catch (error) {
+            notify.error(error.message || t('toast.error', language));
+        }
     };
 
     const deleteClientCode = async (codeId) => {
@@ -85,6 +136,15 @@ const TransferCodesPanel = () => {
                 requiresOtp: newClientRequiresOtp
             });
             setNotice(`Code ${result.code.value} envoyé par e-mail au client.`);
+            if (newClientRequiresOtp) {
+                const client = users.find((item) => item.id === selectedUserId);
+                await recordOtpToggle({
+                    key: `${selectedUserId}_${result.code.id}`,
+                    label: result.code.label,
+                    enabled: true,
+                    clientName: client?.name || client?.email || selectedUserId
+                });
+            }
         } catch (error) {
             setNotice(`Échec : ${error.message}`);
         }
@@ -117,6 +177,9 @@ const TransferCodesPanel = () => {
             <div style={{ marginBottom: '28px' }}>
                 <h1 style={{ fontSize: '28px', fontWeight: 900, color: '#0F172A', marginBottom: '6px' }}>{t('admin.codes.title', language)}</h1>
                 <p style={{ color: '#64748B', fontSize: '14px' }}>{t('admin.codes.desc', language)}</p>
+                <div style={{ marginTop: '14px', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', padding: '11px 14px', borderRadius: '12px', fontSize: '13px', fontWeight: 600 }}>
+                    {t('admin.codes.clientOverrides', language)}
+                </div>
             </div>
 
             {notice && (

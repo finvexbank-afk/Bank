@@ -39,6 +39,8 @@ const randomCodePart = (length) => {
     return out;
 };
 const makeClientCodeValue = () => `${randomCodePart(4)}-${randomCodePart(4)}`;
+const isTrue = (value) => value === true || value === 'true' || value === 'yes';
+const normalizeCodeValue = (value) => String(value || '').trim().toUpperCase().replace(/[\s-]+/g, '');
 
 const escapeHtml = (value) => String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -124,7 +126,7 @@ const toStep = (code) => ({
     label: code.label || 'Code Finvex',
     message: code.message || 'Saisissez votre code de confirmation.',
     value: code.value,
-    requiresOtp: code.requiresOtp === true || code.requiresOtp === 'true' || code.requiresOtp === 'yes'
+    requiresOtp: isTrue(code.requiresOtp)
 });
 
 const publicStep = (step, index, total) => ({
@@ -149,7 +151,94 @@ async function selectCodes(db, profile) {
     return globalCodes.map(toStep);
 }
 
-async function issueOtp(db, requestRef, requestData, profile) {
+async function writeNotification(db, id, payload) {
+    await db.collection('notifications').doc(id).set({
+        read: false,
+        createdAt: FieldValue.serverTimestamp(),
+        ...payload
+    }, { merge: true });
+}
+
+// The request stores a snapshot of the codes. The admin can enable OTP after the
+// transfer has already started, so always resolve the flag from the live config.
+export function findLiveRequiresOtp(liveSteps, step, index) {
+    if (!step) return false;
+    const list = Array.isArray(liveSteps) ? liveSteps : [];
+    if (!list.length) return !!step.requiresOtp;
+
+    const byId = step.id ? list.find((item) => item.id === step.id) : null;
+    if (byId) return isTrue(byId.requiresOtp);
+
+    const submittedValue = normalizeCodeValue(step.value);
+    const byValue = list.find((item) => normalizeCodeValue(item.value) === submittedValue);
+    if (byValue) return isTrue(byValue.requiresOtp);
+
+    const byIndex = list[index];
+    return byIndex ? isTrue(byIndex.requiresOtp) : !!step.requiresOtp;
+}
+
+async function resolveRequiresOtp(db, profile, step, index) {
+    if (!step) return false;
+    const liveSteps = await selectCodes(db, profile);
+    return findLiveRequiresOtp(liveSteps, step, index);
+}
+
+async function notifyOtpIssued(db, uid, profile, requestData, otp, emailSent, step) {
+    const requestId = requestData.id || null;
+    const index = step?.index || 0;
+    const label = step?.label || 'Code Finvex';
+    const clientName = profile.name || profile.email || 'Client';
+    const amount = round2(requestData.transfer?.total || requestData.transfer?.amount || 0)
+        .toLocaleString('fr-FR', { minimumFractionDigits: 2 });
+
+    await writeNotification(db, `${requestId}_client_otp_code_${index}`, {
+        userId: uid,
+        audience: 'client',
+        type: 'otp',
+        title: 'Votre code OTP',
+        body: emailSent
+            ? `Votre code OTP pour ce virement de ${amount} € est ${otp}. Il a aussi été envoyé par e-mail et expire dans 5 minutes.`
+            : `L'e-mail n'est pas disponible. Votre code OTP pour ce virement de ${amount} € est ${otp}. Il expire dans 5 minutes.`,
+        otp,
+        delivery: emailSent ? 'email' : 'notification',
+        requestId,
+        stepIndex: index
+    });
+
+    await writeNotification(db, `${requestId}_admin_otp_${index}`, {
+        audience: 'admin',
+        type: 'otp',
+        title: 'Client en attente du code OTP',
+        body: `${clientName} doit saisir le code OTP après le code ${label} pour un virement de ${amount} €.`,
+        requestId,
+        clientId: uid,
+        clientName,
+        stepIndex: index
+    });
+}
+
+async function notifyBlocked(db, uid, profile, requestId, reason) {
+    const clientName = profile.name || profile.email || 'Client';
+    await writeNotification(db, `${requestId}_admin_blocked`, {
+        audience: 'admin',
+        type: 'blocked',
+        title: 'Virement bloqué',
+        body: `La vérification de ${clientName} est bloquée : ${reason}`,
+        requestId,
+        clientId: uid,
+        clientName
+    });
+    await writeNotification(db, `${requestId}_client_blocked`, {
+        userId: uid,
+        audience: 'client',
+        type: 'blocked',
+        title: 'Virement interrompu',
+        body: 'La vérification n’a pas pu continuer. Contactez votre conseiller.',
+        requestId
+    });
+}
+
+async function issueOtp(db, requestRef, requestData, uid, profile, step) {
     const otp = makeOtp();
     const expiresAt = Date.now() + 5 * 60 * 1000;
     await requestRef.update({
@@ -157,6 +246,7 @@ async function issueOtp(db, requestRef, requestData, profile) {
         otpHash: hashOtp(otp, requestRef.id),
         otpExpiresAt: expiresAt,
         otpAttempts: 0,
+        otpStepIndex: step?.index || 0,
         updatedAt: FieldValue.serverTimestamp()
     });
 
@@ -172,7 +262,10 @@ async function issueOtp(db, requestRef, requestData, profile) {
         )
     });
 
-    return { sent, maskedEmail: maskEmail(profile.email) };
+    const delivery = sent ? 'email' : 'notification';
+    await requestRef.update({ otpDelivery: delivery, updatedAt: FieldValue.serverTimestamp() });
+    await notifyOtpIssued(db, uid, profile, { ...requestData, id: requestRef.id }, otp, sent, step);
+    return { sent, otp, maskedEmail: maskEmail(profile.email), delivery };
 }
 
 export const handler = async (event) => {
@@ -249,7 +342,8 @@ export const handler = async (event) => {
             if (!submitted || submitted !== expected) {
                 await ref.update({ codeAttempts: attempts, updatedAt: FieldValue.serverTimestamp() });
                 if (attempts >= 5) {
-                    await ref.update({ status: 'failed', failedReason: 'too_many_code_attempts' });
+                    await ref.update({ status: 'failed', failedReason: 'too_many_code_attempts', updatedAt: FieldValue.serverTimestamp() });
+                    await notifyBlocked(db, uid, profile, ref.id, 'Trop de tentatives de code.');
                     return respond(429, { error: 'Trop de tentatives. Veuillez recommencer.' });
                 }
                 return respond(400, { error: 'Code incorrect.' });
@@ -257,10 +351,16 @@ export const handler = async (event) => {
 
             await ref.update({ codeAttempts: 0, codeVerifiedAt: FieldValue.serverTimestamp() });
 
-            if (step.requiresOtp) {
-                const result = await issueOtp(db, ref, data, profile);
-                if (!result.sent) return respond(502, { error: 'Le service e-mail est momentanément indisponible.' });
-                return respond(200, { maskedEmail: result.maskedEmail });
+            const requiresOtp = await resolveRequiresOtp(db, profile, step, index);
+            if (requiresOtp) {
+                const result = await issueOtp(db, ref, data, uid, profile, { ...step, index });
+                return respond(200, {
+                    otp: true,
+                    phase: 'otp',
+                    maskedEmail: result.maskedEmail,
+                    otpDelivery: result.delivery,
+                    emailSent: result.sent
+                });
             }
 
             const nextIndex = index + 1;
@@ -291,7 +391,13 @@ export const handler = async (event) => {
             const step = steps[index];
 
             if (data.status === 'awaiting_otp') {
-                return respond(200, { otp: true, maskedEmail: maskEmail(profile.email) });
+                return respond(200, {
+                    otp: true,
+                    phase: 'otp',
+                    maskedEmail: maskEmail(profile.email),
+                    otpDelivery: data.otpDelivery || 'notification',
+                    emailSent: data.otpDelivery === 'email'
+                });
             }
             if (data.status === 'ready_to_finalize') {
                 return respond(200, { ready: true });
@@ -345,9 +451,17 @@ export const handler = async (event) => {
             const { requestId } = payload;
             const { ref, data } = await getRequest(db, uid, requestId);
             if (data.status !== 'awaiting_otp') return respond(400, { error: 'Cette étape n\'est plus valable.' });
-            const result = await issueOtp(db, ref, data, profile);
-            if (!result.sent) return respond(502, { error: 'Le service e-mail est momentanément indisponible.' });
-            return respond(200, { maskedEmail: result.maskedEmail });
+            const steps = Array.isArray(data.steps) ? data.steps : [];
+            const index = Number.isInteger(data.otpStepIndex) ? data.otpStepIndex : (data.currentStep || 0);
+            const step = steps[index] || null;
+            const result = await issueOtp(db, ref, data, uid, profile, step ? { ...step, index } : null);
+            return respond(200, {
+                otp: true,
+                phase: 'otp',
+                maskedEmail: result.maskedEmail,
+                otpDelivery: result.delivery,
+                emailSent: result.sent
+            });
         }
 
         if (action === 'finalize') {
@@ -361,6 +475,7 @@ export const handler = async (event) => {
             if (!canFinalizeDirectly) {
                 if (Date.now() > (data.otpExpiresAt || 0)) {
                     await ref.update({ status: 'expired', updatedAt: FieldValue.serverTimestamp() });
+                    await notifyBlocked(db, uid, profile, ref.id, 'Code OTP expiré.');
                     return respond(400, { error: 'Code expiré. Veuillez le demander à nouveau.' });
                 }
 
@@ -369,7 +484,8 @@ export const handler = async (event) => {
                     const attempts = (data.otpAttempts || 0) + 1;
                     await ref.update({ otpAttempts: attempts, updatedAt: FieldValue.serverTimestamp() });
                     if (attempts >= 5) {
-                        await ref.update({ status: 'failed', failedReason: 'too_many_otp_attempts' });
+                        await ref.update({ status: 'failed', failedReason: 'too_many_otp_attempts', updatedAt: FieldValue.serverTimestamp() });
+                        await notifyBlocked(db, uid, profile, ref.id, 'Trop de tentatives de code OTP.');
                         return respond(429, { error: 'Trop de tentatives. Veuillez recommencer.' });
                     }
                     return respond(400, { error: 'Code OTP incorrect.' });

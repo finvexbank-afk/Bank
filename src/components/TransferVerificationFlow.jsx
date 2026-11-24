@@ -35,6 +35,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
     const [requestId, setRequestId] = useState(null);
     const [codeInfo, setCodeInfo] = useState(null);
     const [maskedEmail, setMaskedEmail] = useState('');
+    const [otpDelivery, setOtpDelivery] = useState('notification');
     const [codeValue, setCodeValue] = useState('');
     const [otp, setOtp] = useState('');
     const [reference, setReference] = useState('');
@@ -188,6 +189,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
                 index: codeInfo?.index || 0
             });
             setMaskedEmail(result.maskedEmail || '');
+            setOtpDelivery(result.otpDelivery || (result.emailSent ? 'email' : 'notification'));
             setSeconds(RESEND_DELAY);
             savePending(currentRequestId, currentTransfer, 'otp');
             setPhase('otp');
@@ -208,6 +210,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
         setRequestId(null);
         setCodeInfo(null);
         setMaskedEmail('');
+        setOtpDelivery('notification');
         setCodeValue('');
         setOtp('');
         setReference('');
@@ -245,6 +248,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
         try {
             const result = await callTransferApi('resendOtp', { requestId });
             setMaskedEmail(result.maskedEmail);
+            setOtpDelivery(result.otpDelivery || (result.emailSent ? 'email' : 'notification'));
             setSeconds(RESEND_DELAY);
         } catch (err) {
             setError(err.message);
@@ -370,8 +374,11 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
                             <Mail size={34} />
                         </div>
                         <h3 style={{ fontSize: '24px', fontWeight: 900, color: '#0F172A', marginBottom: '8px' }}>{t('verify.otp.title', language)}</h3>
-                        <p style={{ color: '#64748B', fontSize: '14px', lineHeight: 1.5, marginBottom: '28px' }}>
+                        <p style={{ color: '#64748B', fontSize: '14px', lineHeight: 1.5, marginBottom: '10px' }}>
                             {t('verify.otp.desc', language, { email: maskedEmail })}
+                        </p>
+                        <p style={{ color: otpDelivery === 'email' ? '#0369A1' : '#92400E', background: otpDelivery === 'email' ? '#F0F9FF' : '#FFFBEB', border: `1px solid ${otpDelivery === 'email' ? '#BAE6FD' : '#FDE68A'}`, borderRadius: '10px', padding: '10px 12px', fontSize: '12px', fontWeight: 700, lineHeight: 1.5, marginBottom: '24px' }}>
+                            {t(otpDelivery === 'email' ? 'verify.otp.delivery.email' : 'verify.otp.delivery.notification', language, { email: maskedEmail })}
                         </p>
                         {error && <div style={{ ...errorStyle, textAlign: 'left' }}>{error}</div>}
                         <label style={{ ...labelStyle, textAlign: 'left' }}>{t('verify.otp.label', language)}</label>

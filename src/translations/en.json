@@ -1082,5 +1082,13 @@
   "notif.completed.title": "Transfer completed",
   "notif.completed.body": "Your transfer was completed. Reference: {{reference}}",
   "notif.adminCompleted.title": "Transfer completed",
-  "notif.adminCompleted.body": "{{name}}'s transfer is completed. Reference: {{reference}}"
+  "notif.adminCompleted.body": "{{name}}'s transfer is completed. Reference: {{reference}}",
+  "admin.codes.allClients": "All clients",
+  "admin.codes.clientOverrides": "Codes created for a client override global codes for that client. Check the correct tab before enabling OTP.",
+  "toast.otpEnabled.title": "OTP enabled",
+  "toast.otpEnabled.body": "OTP is now required after {{label}} ({{client}}). The next transfer will open an OTP window.",
+  "toast.otpDisabled.title": "OTP disabled",
+  "toast.otpDisabled.body": "OTP is no longer required after {{label}} ({{client}}).",
+  "verify.otp.delivery.email": "Code sent to {{email}} and also available in your notifications.",
+  "verify.otp.delivery.notification": "Email is unavailable: your code was placed in your notifications."
 }

@@ -1082,5 +1082,13 @@
   "notif.completed.title": "Überweisung ausgeführt",
   "notif.completed.body": "Ihre Überweisung wurde ausgeführt. Referenz: {{reference}}",
   "notif.adminCompleted.title": "Überweisung abgeschlossen",
-  "notif.adminCompleted.body": "Die Überweisung von {{name}} ist abgeschlossen. Referenz: {{reference}}"
+  "notif.adminCompleted.body": "Die Überweisung von {{name}} ist abgeschlossen. Referenz: {{reference}}",
+  "admin.codes.allClients": "Alle Kunden",
+  "admin.codes.clientOverrides": "Für einen Kunden erstellte Codes ersetzen die globalen Codes für diesen Kunden. Prüfen Sie vor dem Aktivieren von OTP die richtige Registerkarte.",
+  "toast.otpEnabled.title": "OTP aktiviert",
+  "toast.otpEnabled.body": "OTP ist jetzt nach {{label}} ({{client}}) erforderlich. Bei der nächsten Überweisung öffnet sich ein OTP-Fenster.",
+  "toast.otpDisabled.title": "OTP deaktiviert",
+  "toast.otpDisabled.body": "OTP ist nach {{label}} ({{client}}) nicht mehr erforderlich.",
+  "verify.otp.delivery.email": "Code an {{email}} gesendet und auch in Ihren Benachrichtigungen verfügbar.",
+  "verify.otp.delivery.notification": "E-Mail ist nicht verfügbar: Ihr Code wurde in Ihren Benachrichtigungen hinterlegt."
 }

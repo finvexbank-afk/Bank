@@ -1082,5 +1082,13 @@
   "notif.completed.title": "Virement exécuté",
   "notif.completed.body": "Votre virement a été exécuté. Référence : {{reference}}",
   "notif.adminCompleted.title": "Virement terminé",
-  "notif.adminCompleted.body": "Le virement de {{name}} est terminé. Référence : {{reference}}"
+  "notif.adminCompleted.body": "Le virement de {{name}} est terminé. Référence : {{reference}}",
+  "admin.codes.allClients": "Tous les clients",
+  "admin.codes.clientOverrides": "Les codes créés pour un client remplacent les codes globaux pour ce client. Vérifiez le bon onglet avant d’activer l’OTP.",
+  "toast.otpEnabled.title": "OTP activé",
+  "toast.otpEnabled.body": "L’OTP est maintenant exigé après le code {{label}} ({{client}}). Le prochain virement ouvrira une fenêtre OTP.",
+  "toast.otpDisabled.title": "OTP désactivé",
+  "toast.otpDisabled.body": "L’OTP n’est plus exigé après le code {{label}} ({{client}}).",
+  "verify.otp.delivery.email": "Code envoyé à {{email}} et disponible aussi dans vos notifications.",
+  "verify.otp.delivery.notification": "L’e-mail n’est pas disponible : votre code a été déposé dans vos notifications."
 }

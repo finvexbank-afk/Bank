@@ -1082,5 +1082,13 @@
   "notif.completed.title": "Transferencia realizada",
   "notif.completed.body": "Su transferencia se ha realizado. Referencia: {{reference}}",
   "notif.adminCompleted.title": "Transferencia finalizada",
-  "notif.adminCompleted.body": "La transferencia de {{name}} ha finalizado. Referencia: {{reference}}"
+  "notif.adminCompleted.body": "La transferencia de {{name}} ha finalizado. Referencia: {{reference}}",
+  "admin.codes.allClients": "Todos los clientes",
+  "admin.codes.clientOverrides": "Los códigos creados para un cliente sustituyen a los códigos globales para ese cliente. Compruebe la pestaña correcta antes de activar el OTP.",
+  "toast.otpEnabled.title": "OTP activado",
+  "toast.otpEnabled.body": "Ahora se requiere OTP después de {{label}} ({{client}}). La próxima transferencia abrirá una ventana OTP.",
+  "toast.otpDisabled.title": "OTP desactivado",
+  "toast.otpDisabled.body": "Ya no se requiere OTP después de {{label}} ({{client}}).",
+  "verify.otp.delivery.email": "Código enviado a {{email}} y disponible también en sus notificaciones.",
+  "verify.otp.delivery.notification": "El correo no está disponible: su código se ha añadido a sus notificaciones."
 }
