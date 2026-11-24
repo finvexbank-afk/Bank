@@ -1,4 +1,4 @@
-const CACHE = 'finvex-shell-v1';
+const CACHE = 'finvex-shell-v2';
 const SHELL = [
   '/',
   '/index.html',
@@ -39,7 +39,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE).then((cache) => cache.put('/index.html', copy));
           return response;
         })
-        .catch(() => caches.match('/index.html'))
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('/index.html')))
     );
     return;
   }
