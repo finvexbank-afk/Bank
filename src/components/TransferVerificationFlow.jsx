@@ -185,9 +185,24 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
     const busy = ['preparing', 'verifying', 'finalizing', 'advancing'].includes(phase);
 
     return (
-        <div style={overlayStyle}>
+        <div
+            style={overlayStyle}
+            onClick={(event) => {
+                if (event.target === event.currentTarget && ['error', 'success'].includes(phase)) onClose();
+            }}
+        >
             <div style={cardStyle}>
-                <button onClick={onClose} aria-label="Close" style={closeStyle}><X size={20} /></button>
+                <button
+                    onClick={onClose}
+                    aria-label={t('common.close', language)}
+                    style={{
+                        ...closeStyle,
+                        background: phase === 'code' ? 'rgba(255,255,255,0.22)' : '#F1F5F9',
+                        color: phase === 'code' ? 'white' : '#64748B'
+                    }}
+                >
+                    <X size={20} />
+                </button>
 
                 {busy && (
                     <div style={{ textAlign: 'center', padding: '48px 24px' }}>
@@ -207,8 +222,14 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
                             <AlertTriangle size={34} />
                         </div>
                         <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>{t('verify.title', language)}</h3>
-                        <p style={{ color: '#EF4444', fontSize: '14px', fontWeight: 600, marginBottom: '28px' }}>{error}</p>
-                        <button onClick={start} style={primaryButton}>{t('verify.code.confirm', language)}</button>
+                        <p style={{ color: '#64748B', fontSize: '14px', lineHeight: 1.5, marginBottom: '12px' }}>
+                            {t('verify.error.desc', language)}
+                        </p>
+                        <p style={{ color: '#EF4444', fontSize: '13px', fontWeight: 600, marginBottom: '28px', wordBreak: 'break-word' }}>{error}</p>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                            <button onClick={onClose} style={secondaryButton}>{t('verify.error.close', language)}</button>
+                            <button onClick={start} style={primaryButton}>{t('verify.error.retry', language)}</button>
+                        </div>
                     </div>
                 )}
 

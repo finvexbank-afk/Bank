@@ -1,10 +1,11 @@
 import { auth } from '../firebase';
+import { getFunctionUrl } from './functionBase';
 
 export const callTransferApi = async (action, payload = {}) => {
     const idToken = await auth.currentUser?.getIdToken();
     if (!idToken) throw new Error('No authentication token');
 
-    const response = await fetch('/.netlify/functions/transfer', {
+    const response = await fetch(getFunctionUrl('transfer'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, idToken, ...payload })

@@ -21,6 +21,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import { getBankDetails, getBankFieldsForFirestore, downloadRIB } from '../utils/bankDetails';
 import { notify, ask } from '../components/Toast';
+import { getFunctionUrl } from '../utils/functionBase';
 import TransferCodesPanel from '../components/TransferCodesPanel';
 import { callTransferApi } from '../utils/transferApi';
 import { createDefaultClientCodes } from '../utils/transferCodes';
@@ -45,7 +46,7 @@ const formatFirestoreDate = (value) => {
 const callAdminApi = async (action, payload) => {
     const idToken = await auth.currentUser?.getIdToken();
     if (!idToken) throw new Error('No authentication token');
-    const response = await fetch('/.netlify/functions/admin', {
+    const response = await fetch(getFunctionUrl('admin'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, idToken, ...payload })

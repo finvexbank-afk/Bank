@@ -1053,5 +1053,8 @@
   "cards.logDeactivated": "Carte désactivée",
   "cards.logBlocked": "Carte bloquée",
   "cards.logReactivated": "Carte réactivée",
-  "cards.logUnblocked": "Carte débloquée"
+  "cards.logUnblocked": "Carte débloquée",
+  "verify.error.desc": "Le virement n'a pas pu être envoyé. Vérifiez votre connexion et réessayez, ou fermez cette fenêtre.",
+  "verify.error.retry": "Réessayer",
+  "verify.error.close": "Fermer"
 }

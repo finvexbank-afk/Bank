@@ -1053,5 +1053,8 @@
   "cards.logDeactivated": "Karte deaktiviert",
   "cards.logBlocked": "Karte gesperrt",
   "cards.logReactivated": "Karte reaktiviert",
-  "cards.logUnblocked": "Karte entsperrt"
+  "cards.logUnblocked": "Karte entsperrt",
+  "verify.error.desc": "Die Überweisung konnte nicht gesendet werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut, oder schließen Sie dieses Fenster.",
+  "verify.error.retry": "Erneut versuchen",
+  "verify.error.close": "Schließen"
 }

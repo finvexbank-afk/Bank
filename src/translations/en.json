@@ -1053,5 +1053,8 @@
   "cards.logDeactivated": "Card deactivated",
   "cards.logBlocked": "Card blocked",
   "cards.logReactivated": "Card reactivated",
-  "cards.logUnblocked": "Card unblocked"
+  "cards.logUnblocked": "Card unblocked",
+  "verify.error.desc": "The transfer could not be sent. Check your connection and try again, or close this window.",
+  "verify.error.retry": "Retry",
+  "verify.error.close": "Close"
 }
