@@ -102,8 +102,8 @@ const emailShell = (title, body) => `
     </div>
 `;
 
-async function getCaller(db, idToken) {
-    const decoded = await getAuth(app).verifyIdToken(idToken);
+async function getCaller(db, idToken, auth) {
+    const decoded = await auth.verifyIdToken(idToken);
     const snap = await db.collection('users').doc(decoded.uid).get();
     if (!snap.exists) throw Object.assign(new Error('Compte introuvable.'), { status: 403 });
     return { uid: decoded.uid, profile: { id: snap.id, ...snap.data() } };
@@ -238,7 +238,7 @@ async function notifyBlocked(db, uid, profile, requestId, reason) {
     });
 }
 
-async function issueOtp(db, requestRef, requestData, uid, profile, step) {
+async function issueOtp(db, requestRef, requestData, uid, profile, step, sendEmailFn) {
     const otp = makeOtp();
     const expiresAt = Date.now() + 5 * 60 * 1000;
     await requestRef.update({
@@ -247,10 +247,13 @@ async function issueOtp(db, requestRef, requestData, uid, profile, step) {
         otpExpiresAt: expiresAt,
         otpAttempts: 0,
         otpStepIndex: step?.index || 0,
+        otpCodeId: step?.id || null,
+        otpValue: otp,
+        otpIssuedAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp()
     });
 
-    const sent = await sendEmail({
+    const sent = await sendEmailFn({
         to: profile.email,
         subject: 'Votre code de confirmation Finvex',
         html: emailShell(
@@ -268,18 +271,16 @@ async function issueOtp(db, requestRef, requestData, uid, profile, step) {
     return { sent, otp, maskedEmail: maskEmail(profile.email), delivery };
 }
 
-export const handler = async (event) => {
+export const createHandler = ({ getDb, getAuthFn, sendEmailFn = sendEmail }) => async (event) => {
     if (event.httpMethod === 'OPTIONS') return respond(204, {});
     if (event.httpMethod !== 'POST') return respond(405, { error: 'Method not allowed' });
 
     try {
-        if (!app) return respond(500, { error: 'Firebase Admin is not configured on the server.' });
-
-        const db = getFirestore(app);
+        const db = getDb();
         const { action, idToken, ...payload } = JSON.parse(event.body || '{}');
         if (!idToken) return respond(401, { error: 'Missing authentication token.' });
 
-        const { uid, profile } = await getCaller(db, idToken);
+        const { uid, profile } = await getCaller(db, idToken, getAuthFn());
 
         if (action === 'initiate') {
             const transfer = payload.transfer || {};
@@ -353,7 +354,7 @@ export const handler = async (event) => {
 
             const requiresOtp = await resolveRequiresOtp(db, profile, step, index);
             if (requiresOtp) {
-                const result = await issueOtp(db, ref, data, uid, profile, { ...step, index });
+                const result = await issueOtp(db, ref, data, uid, profile, { ...step, index }, sendEmailFn);
                 return respond(200, {
                     otp: true,
                     phase: 'otp',
@@ -454,7 +455,7 @@ export const handler = async (event) => {
             const steps = Array.isArray(data.steps) ? data.steps : [];
             const index = Number.isInteger(data.otpStepIndex) ? data.otpStepIndex : (data.currentStep || 0);
             const step = steps[index] || null;
-            const result = await issueOtp(db, ref, data, uid, profile, step ? { ...step, index } : null);
+            const result = await issueOtp(db, ref, data, uid, profile, step ? { ...step, index } : null, sendEmailFn);
             return respond(200, {
                 otp: true,
                 phase: 'otp',
@@ -555,7 +556,7 @@ export const handler = async (event) => {
                 updatedAt: FieldValue.serverTimestamp()
             });
 
-            await sendEmail({
+            await sendEmailFn({
                 to: profile.email,
                 subject: 'Votre virement a été enregistré',
                 html: emailShell(
@@ -612,7 +613,7 @@ export const handler = async (event) => {
             });
 
             if (payload.notify !== 'No' && target.email) {
-                await sendEmail({
+                await sendEmailFn({
                     to: target.email,
                     subject: mode === 'Fund/Add' ? 'Votre compte a été crédité' : 'Votre compte a été débité',
                     html: emailShell(
@@ -659,7 +660,7 @@ export const handler = async (event) => {
                 await targetRef.update({ transferCodes: [...existingCodes, code] });
             }
 
-            const sent = await sendEmail({
+            const sent = await sendEmailFn({
                 to: target.email,
                 subject: 'Votre code de confirmation Finvex',
                 html: emailShell(
@@ -673,9 +674,12 @@ export const handler = async (event) => {
 
             await db.collection('notifications').doc().set({
                 userId: targetUid,
+                audience: 'client',
                 type: 'code',
-                title: 'Code de confirmation envoyé',
-                body: `Un code de confirmation (${code.label}) a été envoyé à ${target.email}.`,
+                title: 'Votre code de confirmation',
+                body: `${code.message || 'Voici votre code de confirmation Finvex.'} Votre code est ${code.value}.`,
+                code: code.value,
+                codeId: code.id,
                 reference: code.value,
                 read: false,
                 createdAt: FieldValue.serverTimestamp()
@@ -686,10 +690,41 @@ export const handler = async (event) => {
                 : respond(502, { error: 'E-mail non envoyé. Vérifiez la configuration Resend.' });
         }
 
+        if (action === 'sendClientCodeNotification') {
+            if (profile.role !== 'admin') return respond(403, { error: 'Administrator privileges required.' });
+            const targetUid = payload.uid;
+            const codeId = payload.codeId;
+            if (!targetUid || typeof targetUid !== 'string') return respond(400, { error: 'Client invalide.' });
+            if (!codeId || typeof codeId !== 'string') return respond(400, { error: 'Code invalide.' });
+
+            const targetRef = db.collection('users').doc(targetUid);
+            const targetSnap = await targetRef.get();
+            if (!targetSnap.exists) return respond(404, { error: 'Client introuvable.' });
+            const target = targetSnap.data();
+            const codes = Array.isArray(target.transferCodes) ? target.transferCodes : [];
+            const code = codes.find((item) => item.id === codeId);
+            if (!code) return respond(404, { error: 'Code client introuvable.' });
+
+            await writeNotification(db, `${targetUid}_${codeId}_notification_${Date.now()}`, {
+                userId: targetUid,
+                audience: 'client',
+                type: 'code',
+                title: 'Votre code de confirmation',
+                body: `${code.message || 'Voici votre code de confirmation Finvex.'} Votre code est ${code.value}.`,
+                code: code.value,
+                codeId: code.id,
+                label: code.label || 'Code Finvex',
+                requiresOtp: isTrue(code.requiresOtp),
+                reference: code.value
+            });
+
+            return respond(200, { success: true, code });
+        }
+
         if (action === 'sendTestEmail') {
             if (profile.role !== 'admin') return respond(403, { error: 'Administrator privileges required.' });
             const to = payload.to || ADMIN_EMAIL;
-            const sent = await sendEmail({
+            const sent = await sendEmailFn({
                 to,
                 subject: 'Test e-mail Finvex Bank',
                 html: emailShell('Test de messagerie', '<p>Si vous recevez ce message, la messagerie transactionnelle Finvex est correctement configurée.</p>')
@@ -705,3 +740,11 @@ export const handler = async (event) => {
         return respond(error.status || 500, { error: error.message || 'Internal server error' });
     }
 };
+
+export const handler = createHandler({
+    getDb: () => {
+        if (!app) throw Object.assign(new Error('Firebase Admin is not configured on the server.'), { status: 500 });
+        return getFirestore(app);
+    },
+    getAuthFn: () => getAuth(app)
+});

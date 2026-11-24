@@ -1090,5 +1090,10 @@
   "toast.otpDisabled.title": "OTP deaktiviert",
   "toast.otpDisabled.body": "OTP ist nach {{label}} ({{client}}) nicht mehr erforderlich.",
   "verify.otp.delivery.email": "Code an {{email}} gesendet und auch in Ihren Benachrichtigungen verfügbar.",
-  "verify.otp.delivery.notification": "E-Mail ist nicht verfügbar: Ihr Code wurde in Ihren Benachrichtigungen hinterlegt."
+  "verify.otp.delivery.notification": "E-Mail ist nicht verfügbar: Ihr Code wurde in Ihren Benachrichtigungen hinterlegt.",
+  "admin.codes.otp": "OTP",
+  "admin.codes.otpHint": "Letztes für diesen Code generiertes OTP",
+  "admin.codes.sendNotification": "Per Benachrichtigung senden",
+  "toast.codeNotificationSent.title": "Code gesendet",
+  "toast.codeNotificationSent.body": "Der Code {{code}} wurde dem Client per Benachrichtigung gesendet."
 }

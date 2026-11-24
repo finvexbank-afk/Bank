@@ -1090,5 +1090,10 @@
   "toast.otpDisabled.title": "OTP disabled",
   "toast.otpDisabled.body": "OTP is no longer required after {{label}} ({{client}}).",
   "verify.otp.delivery.email": "Code sent to {{email}} and also available in your notifications.",
-  "verify.otp.delivery.notification": "Email is unavailable: your code was placed in your notifications."
+  "verify.otp.delivery.notification": "Email is unavailable: your code was placed in your notifications.",
+  "admin.codes.otp": "OTP",
+  "admin.codes.otpHint": "Latest OTP generated for this code",
+  "admin.codes.sendNotification": "Send via notification",
+  "toast.codeNotificationSent.title": "Code sent",
+  "toast.codeNotificationSent.body": "Code {{code}} was sent to the client by notification."
 }

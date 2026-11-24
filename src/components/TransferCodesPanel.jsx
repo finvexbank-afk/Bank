@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Trash2, Mail, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Mail, RefreshCw, Bell } from 'lucide-react';
 import { db } from '../firebase';
-import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, query, where, serverTimestamp } from 'firebase/firestore';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import { notify } from './Toast';
@@ -22,6 +22,7 @@ const TransferCodesPanel = () => {
     const [newClientLabel, setNewClientLabel] = useState('Code Finvex');
     const [newClientMessage, setNewClientMessage] = useState('');
     const [newClientRequiresOtp, setNewClientRequiresOtp] = useState(false);
+    const [requestOtps, setRequestOtps] = useState([]);
     const [notice, setNotice] = useState('');
 
     useEffect(() => {
@@ -34,6 +35,35 @@ const TransferCodesPanel = () => {
         });
         return () => { unsubCodes(); unsubUsers(); };
     }, []);
+
+    useEffect(() => {
+        if (!selectedUserId) {
+            setRequestOtps([]);
+            return undefined;
+        }
+        const requestsQuery = query(collection(db, 'transferRequests'), where('userId', '==', selectedUserId));
+        return onSnapshot(requestsQuery, (snap) => {
+            const list = snap.docs
+                .map((item) => ({ id: item.id, ...item.data() }))
+                .filter((item) => item.otpValue);
+            setRequestOtps(list);
+        }, (error) => {
+            console.error('[Admin] OTP requests listener error:', error);
+        });
+    }, [selectedUserId]);
+
+    const getOtpForCode = (code, index) => {
+        const matches = requestOtps.filter((item) => {
+            if (code.id && item.otpCodeId) return item.otpCodeId === code.id;
+            return Number(item.otpStepIndex) === index;
+        });
+        matches.sort((a, b) => {
+            const av = a.otpIssuedAt?.toMillis ? a.otpIssuedAt.toMillis() : 0;
+            const bv = b.otpIssuedAt?.toMillis ? b.otpIssuedAt.toMillis() : 0;
+            return bv - av;
+        });
+        return matches[0]?.otpValue || '';
+    };
 
     const recordOtpToggle = async ({ key, label, enabled, clientName }) => {
         const titleKey = enabled ? 'toast.otpEnabled.title' : 'toast.otpDisabled.title';
@@ -160,6 +190,21 @@ const TransferCodesPanel = () => {
         }
     };
 
+    const sendCodeNotification = async (codeId) => {
+        setNotice('Envoi de la notification en cours...');
+        try {
+            const result = await callTransferApi('sendClientCodeNotification', { uid: selectedUserId, codeId });
+            setNotice(`Code ${result.code.value} envoyé par notification au client.`);
+            notify.success(
+                t('toast.codeNotificationSent.body', language, { code: result.code.value }),
+                t('toast.codeNotificationSent.title', language)
+            );
+        } catch (error) {
+            setNotice(`Échec : ${error.message}`);
+            notify.error(error.message || t('toast.error', language));
+        }
+    };
+
     const sendTest = async () => {
         setNotice('Envoi en cours...');
         try {
@@ -258,7 +303,7 @@ const TransferCodesPanel = () => {
                     <div style={{ marginTop: '28px' }}>
                         <h3 style={{ fontSize: '14px', fontWeight: 800, color: '#475569', marginBottom: '12px' }}>{selected.name || selected.email}</h3>
                         <div style={{ display: 'grid', gap: '16px' }}>
-                            {(selected.transferCodes || []).map((code) => (
+                            {(selected.transferCodes || []).map((code, index) => (
                                 <div key={code.id} style={{ border: '1px solid #E2E8F0', borderRadius: '14px', padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', alignItems: 'end' }}>
                                     <div>
                                         <label style={labelStyle}>{t('admin.codes.label', language)}</label>
@@ -267,6 +312,16 @@ const TransferCodesPanel = () => {
                                     <div>
                                         <label style={labelStyle}>{t('admin.codes.value', language)}</label>
                                         <input style={inputStyle} value={code.value || ''} onChange={(e) => updateClientCode(code.id, 'value', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <label style={labelStyle}>{t('admin.codes.otp', language)}</label>
+                                        <input
+                                            style={{ ...inputStyle, background: '#EFF6FF', color: '#1D4ED8', fontWeight: 800, letterSpacing: '2px' }}
+                                            value={getOtpForCode(code, index)}
+                                            placeholder="——————"
+                                            readOnly
+                                        />
+                                        <p style={{ fontSize: '10px', color: '#94A3B8', margin: '5px 0 0' }}>{t('admin.codes.otpHint', language)}</p>
                                     </div>
                                     <div style={{ gridColumn: '1 / -1' }}>
                                         <label style={labelStyle}>{t('admin.codes.message', language)}</label>
@@ -281,8 +336,9 @@ const TransferCodesPanel = () => {
                                             <input type="checkbox" checked={code.requiresOtp === true} onChange={(e) => updateClientCode(code.id, 'requiresOtp', e.target.checked)} />
                                             {t('admin.codes.requiresOtp', language)}
                                         </label>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                             <button onClick={() => sendCodeEmail(code.id)} style={buttonStyle}><Mail size={16} /> {t('admin.codes.sendEmail', language)}</button>
+                                            <button onClick={() => sendCodeNotification(code.id)} style={{ ...buttonStyle, background: '#0F172A' }}><Bell size={16} /> {t('admin.codes.sendNotification', language)}</button>
                                             <button onClick={() => deleteClientCode(code.id)} style={{ ...buttonStyle, background: '#FEE2E2', color: '#DC2626' }}><Trash2 size={16} /> {t('admin.codes.delete', language)}</button>
                                         </div>
                                     </div>
