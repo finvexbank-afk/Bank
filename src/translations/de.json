@@ -1065,5 +1065,22 @@
   "settings.codes.defaultLabel": "Finvex-Code",
   "verify.code.hint": "Ihr Code",
   "verify.code.copy": "Code kopieren",
-  "verify.code.descGeneric": "Geben Sie den von der Bank mitgeteilten Finvex-Bestätigungscode ein, um die Überweisung fortzusetzen."
+  "verify.code.descGeneric": "Geben Sie den von der Bank mitgeteilten Finvex-Bestätigungscode ein, um die Überweisung fortzusetzen.",
+  "notif.adminTitle": "Admin-Benachrichtigungen",
+  "notif.waitingCode.title": "Überweisungscode eingeben",
+  "notif.waitingCode.body": "Ihre Bank hat Ihnen den Code {{label}} für Ihre Überweisung über {{amount}} € mitgeteilt. Geben Sie ihn im offenen Fenster ein.",
+  "notif.waitingOtp.title": "E-Mail-Code eingeben",
+  "notif.waitingOtp.body": "Für Ihre Überweisung über {{amount}} € wurde ein 6-stelliger Code gesendet. Geben Sie ihn ein, um fortzufahren.",
+  "notif.adminWaitingCode.title": "Kunde wartet auf einen Code",
+  "notif.adminWaitingCode.body": "{{name}} wartet auf den Code {{label}} für eine Überweisung über {{amount}} €. Bitte den Wert mitteilen.",
+  "notif.adminWaitingOtp.title": "Kunde wartet auf E-Mail-Code",
+  "notif.adminWaitingOtp.body": "{{name}} wartet auf den OTP für eine Überweisung über {{amount}} € (nach {{label}}).",
+  "notif.adminBlocked.title": "Überweisung blockiert",
+  "notif.adminBlocked.body": "Die Verifizierung von {{name}} ist blockiert: {{error}}",
+  "notif.blocked.title": "Überweisung unterbrochen",
+  "notif.blocked.body": "Die Verifizierung konnte nicht fortgesetzt werden. Bitte kontaktieren Sie Ihren Berater.",
+  "notif.completed.title": "Überweisung ausgeführt",
+  "notif.completed.body": "Ihre Überweisung wurde ausgeführt. Referenz: {{reference}}",
+  "notif.adminCompleted.title": "Überweisung abgeschlossen",
+  "notif.adminCompleted.body": "Die Überweisung von {{name}} ist abgeschlossen. Referenz: {{reference}}"
 }

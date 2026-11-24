@@ -17,6 +17,7 @@ import { collection, doc, updateDoc, onSnapshot, query, orderBy, addDoc, serverT
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { countries } from '../data/countries';
 import LanguageSelector from '../components/LanguageSelector';
+import AdminNotificationBell from '../components/AdminNotificationBell';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import { getBankDetails, getBankFieldsForFirestore, downloadRIB } from '../utils/bankDetails';
@@ -212,6 +213,7 @@ const AdminDashboard = () => {
                         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} style={{ background: '#F1F5F9', border: 'none', color: '#1E293B', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}><Menu size={22} /></button>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <AdminNotificationBell />
                         <LanguageSelector position="inline" />
                     </div>
                 </header>

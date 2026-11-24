@@ -1065,5 +1065,22 @@
   "settings.codes.defaultLabel": "Code Finvex",
   "verify.code.hint": "Votre code",
   "verify.code.copy": "Copier le code",
-  "verify.code.descGeneric": "Saisissez le code de confirmation Finvex qui vous a été communiqué par la banque pour continuer votre virement."
+  "verify.code.descGeneric": "Saisissez le code de confirmation Finvex qui vous a été communiqué par la banque pour continuer votre virement.",
+  "notif.adminTitle": "Notifications administrateur",
+  "notif.waitingCode.title": "Code de virement à saisir",
+  "notif.waitingCode.body": "Votre banque vous a communiqué le code {{label}} pour votre virement de {{amount}} €. Saisissez-le dans la fenêtre ouverte.",
+  "notif.waitingOtp.title": "Code e-mail à saisir",
+  "notif.waitingOtp.body": "Un code à 6 chiffres a été envoyé pour votre virement de {{amount}} €. Saisissez-le pour continuer.",
+  "notif.adminWaitingCode.title": "Client en attente d’un code",
+  "notif.adminWaitingCode.body": "{{name}} attend le code {{label}} pour un virement de {{amount}} €. Communiquez-lui la valeur.",
+  "notif.adminWaitingOtp.title": "Client en attente du code e-mail",
+  "notif.adminWaitingOtp.body": "{{name}} attend le code OTP pour un virement de {{amount}} € (après {{label}}).",
+  "notif.adminBlocked.title": "Virement bloqué",
+  "notif.adminBlocked.body": "La vérification de {{name}} est bloquée : {{error}}",
+  "notif.blocked.title": "Virement interrompu",
+  "notif.blocked.body": "La vérification n’a pas pu continuer. Contactez votre conseiller.",
+  "notif.completed.title": "Virement exécuté",
+  "notif.completed.body": "Votre virement a été exécuté. Référence : {{reference}}",
+  "notif.adminCompleted.title": "Virement terminé",
+  "notif.adminCompleted.body": "Le virement de {{name}} est terminé. Référence : {{reference}}"
 }

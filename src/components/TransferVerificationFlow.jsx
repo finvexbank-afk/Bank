@@ -3,6 +3,9 @@ import { X, ShieldCheck, AlertTriangle, CheckCircle2, Mail, Loader2 } from 'luci
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import { callTransferApi } from '../utils/transferApi';
+import { useAppContext } from '../AppContext';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const RESEND_DELAY = 30;
 const PENDING_KEY = 'finvex_pending_transfer';
@@ -27,6 +30,7 @@ const clearPending = () => {
 
 const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, onCompleted }) => {
     const { language } = useLanguage();
+    const { user } = useAppContext();
     const [phase, setPhase] = useState('preparing');
     const [requestId, setRequestId] = useState(null);
     const [codeInfo, setCodeInfo] = useState(null);
@@ -65,10 +69,85 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
         return t(key, language) === key ? speed : t(key, language);
     })();
 
+    const pushNotification = async (id, payload) => {
+        if (!id) return;
+        try {
+            await setDoc(doc(db, 'notifications', id), {
+                read: false,
+                createdAt: serverTimestamp(),
+                ...payload
+            }, { merge: true });
+        } catch (err) {
+            console.error('[Verification] notification error:', err);
+        }
+    };
+
+    const notifyWaiting = (currentRequestId, kind, step) => {
+        if (!currentRequestId) return;
+        const clientName = user?.name || user?.email || 'Client';
+        const amount = Number(transfer?.amount || 0).toLocaleString(locale, { minimumFractionDigits: 2 });
+        const label = step?.label || 'FINVEX';
+        pushNotification(`${currentRequestId}_client_${kind}_${step?.index || 0}`, {
+            userId: user?.id,
+            audience: 'client',
+            type: kind,
+            title: t(kind === 'otp' ? 'notif.waitingOtp.title' : 'notif.waitingCode.title', language),
+            body: t(kind === 'otp' ? 'notif.waitingOtp.body' : 'notif.waitingCode.body', language, { label, amount }),
+            requestId: currentRequestId
+        });
+        pushNotification(`${currentRequestId}_admin_${kind}_${step?.index || 0}`, {
+            audience: 'admin',
+            type: kind,
+            title: t(kind === 'otp' ? 'notif.adminWaitingOtp.title' : 'notif.adminWaitingCode.title', language),
+            body: t(kind === 'otp' ? 'notif.adminWaitingOtp.body' : 'notif.adminWaitingCode.body', language, { name: clientName, label, amount }),
+            requestId: currentRequestId,
+            clientId: user?.id,
+            clientName
+        });
+    };
+
+    const notifyBlocked = (currentRequestId, message) => {
+        if (!currentRequestId) return;
+        pushNotification(`${currentRequestId}_admin_blocked`, {
+            audience: 'admin',
+            type: 'blocked',
+            title: t('notif.adminBlocked.title', language),
+            body: t('notif.adminBlocked.body', language, { name: user?.name || user?.email || 'Client', error: message || '' }),
+            requestId: currentRequestId,
+            clientId: user?.id
+        });
+        pushNotification(`${currentRequestId}_client_blocked`, {
+            userId: user?.id,
+            audience: 'client',
+            type: 'blocked',
+            title: t('notif.blocked.title', language),
+            body: t('notif.blocked.body', language),
+            requestId: currentRequestId
+        });
+    };
+
     const finish = (result, currentRequestId) => {
         setReference(result.reference);
         setPhase('success');
         clearPending();
+        if (currentRequestId) {
+            pushNotification(`${currentRequestId}_client_completed`, {
+                userId: user?.id,
+                audience: 'client',
+                type: 'completed',
+                title: t('notif.completed.title', language),
+                body: t('notif.completed.body', language, { reference: result.reference || '' }),
+                requestId: currentRequestId
+            });
+            pushNotification(`${currentRequestId}_admin_completed`, {
+                audience: 'admin',
+                type: 'completed',
+                title: t('notif.adminCompleted.title', language),
+                body: t('notif.adminCompleted.body', language, { name: user?.name || user?.email || 'Client', reference: result.reference || '' }),
+                requestId: currentRequestId,
+                clientId: user?.id
+            });
+        }
         if (onCompleted) onCompleted(result, currentRequestId);
     };
 
@@ -80,12 +159,14 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
         } catch (err) {
             setError(err.message);
             setPhase('error');
+            notifyBlocked(currentRequestId, err.message);
         }
     };
 
     const applyStepResult = (result, currentRequestId, currentTransfer) => {
         if (result.code || result.nextCode) {
             const next = result.code || result.nextCode;
+            notifyWaiting(currentRequestId, 'code', next);
             savePending(currentRequestId, currentTransfer, 'code');
             if (result.nextCode) {
                 setPhase('advancing');
@@ -102,6 +183,10 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
             return;
         }
         if (result.otp || result.maskedEmail) {
+            notifyWaiting(currentRequestId, 'otp', {
+                label: codeInfo?.label || '',
+                index: codeInfo?.index || 0
+            });
             setMaskedEmail(result.maskedEmail || '');
             setSeconds(RESEND_DELAY);
             savePending(currentRequestId, currentTransfer, 'otp');
@@ -137,6 +222,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
         } catch (err) {
             setError(err.message);
             setPhase('error');
+            notifyBlocked(null, err.message);
         }
     };
 
@@ -149,6 +235,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
         } catch (err) {
             setError(err.message);
             setPhase('code');
+            notifyBlocked(requestId, err.message);
         }
     };
 
@@ -161,6 +248,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
             setSeconds(RESEND_DELAY);
         } catch (err) {
             setError(err.message);
+            notifyBlocked(requestId, err.message);
         }
     };
 
@@ -177,6 +265,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
         } catch (err) {
             setError(err.message);
             setPhase('otp');
+            notifyBlocked(requestId, err.message);
         }
     };
 
