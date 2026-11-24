@@ -24,6 +24,7 @@ const Cards = () => {
     // Derived states from Firestore
     const hasPendingApplication = card && card.status === 'Pending';
     const isCardActive = card && card.status === 'Active';
+    const hasCard = Boolean(card);
     
     const [flipped, setFlipped] = useState(false);
     const [showNumbers, setShowNumbers] = useState(false);
@@ -260,7 +261,7 @@ const Cards = () => {
 
                 <div style={{ background: 'white', borderRadius: '24px', border: '1px solid #E2E8F0', padding: 'clamp(20px, 5vw, 40px)', minHeight: '400px' }}>
                     <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B', marginBottom: '32px' }}>{t('cards.accountInventory', language)}</h3>
-                    {hasPendingApplication ? (
+                    {hasCard ? (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px' }}>
                             <div style={{ border: '1px solid #F1F5F9', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '360px', background: '#F8FAFC', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>

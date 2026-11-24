@@ -14,7 +14,7 @@ import { getBankDetails } from '../utils/bankDetails';
 import '../index.css';
 
 const Dashboard = () => {
-    const { user, transactions, setIsTransferModalOpen } = useAppContext();
+    const { user, transactions, card, setIsTransferModalOpen } = useAppContext();
     const { language } = useLanguage();
     const navigate = useNavigate();
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString('fr-FR'));
@@ -40,6 +40,11 @@ const Dashboard = () => {
     const pendingTotal = (transactions || [])
         .filter((tx) => !tx.status || tx.status === 'Pending' || tx.status === 'On-hold' || tx.status === 'Processing')
         .reduce((sum, tx) => sum + Math.abs(Number(tx.amount) || 0), 0);
+
+    const rawCardNumber = String(card?.number || '').replace(/\D/g, '');
+    const cardLast4 = rawCardNumber.slice(-4) || '****';
+    const cardBrand = String(card?.type || 'VISA').toUpperCase();
+    const cardIsActive = card?.status === 'Active';
 
     return (
         <MainLayout>
@@ -149,16 +154,40 @@ const Dashboard = () => {
                             </div>
                             <span onClick={() => navigate('/cards')} style={{ fontSize: '14px', color: '#0EA5E9', fontWeight: 700, cursor: 'pointer' }}>{t('common.viewAll', language)} {'\u003E'}</span>
                         </div>
-                        <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-                            <div style={{ width: '56px', height: '56px', background: '#F8FAFC', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 20px' }}>
-                                <CreditCard size={28} color="#94A3B8" />
+                        {card ? (
+                            <div style={{ padding: '24px 32px' }}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+                                        <div style={{ width: '150px', aspectRatio: '1.58/1', borderRadius: '14px', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', color: 'white', padding: '16px', display: 'flex', flexDirection: 'column', boxShadow: '0 12px 25px rgba(29,78,216,0.2)' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 800 }}>
+                                                <span>FINVEX</span><span>{cardBrand}</span>
+                                            </div>
+                                            <p style={{ margin: 'auto 0 0', fontSize: '15px', fontWeight: 800, letterSpacing: '2px' }}>•••• {cardLast4}</p>
+                                        </div>
+                                        <div>
+                                            <p style={{ fontSize: '15px', fontWeight: 800, color: '#1E293B', margin: '0 0 4px' }}>{t('cards.cardTypeLabel', language)} {cardBrand}</p>
+                                            <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>
+                                                {cardIsActive ? t('cards.statusActive', language) : t('cards.statusPending', language)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => navigate('/cards')} style={{ padding: '12px 22px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                        {t('cards.manageCard', language)}
+                                    </button>
+                                </div>
                             </div>
-                            <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>{t('dashboard.noCardsYet', language)}</h4>
-                            <p style={{ fontSize: '14px', color: '#64748B', maxWidth: '400px', margin: '0 auto 24px', lineHeight: 1.5 }}>{t('dashboard.noCardsDesc', language)}</p>
-                            <button onClick={() => navigate('/cards')} style={{ padding: '14px 32px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}>
-                                <Plus size={20} /> {t('dashboard.applyForCard', language)}
-                            </button>
-                        </div>
+                        ) : (
+                            <div style={{ padding: '60px 24px', textAlign: 'center' }}>
+                                <div style={{ width: '56px', height: '56px', background: '#F8FAFC', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 20px' }}>
+                                    <CreditCard size={28} color="#94A3B8" />
+                                </div>
+                                <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>{t('dashboard.noCardsYet', language)}</h4>
+                                <p style={{ fontSize: '14px', color: '#64748B', maxWidth: '400px', margin: '0 auto 24px', lineHeight: 1.5 }}>{t('dashboard.noCardsDesc', language)}</p>
+                                <button onClick={() => navigate('/cards')} style={{ padding: '14px 32px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}>
+                                    <Plus size={20} /> {t('dashboard.applyForCard', language)}
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Recent Transactions Table */}
