@@ -27,5 +27,8 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.1",
     "vite": "^8.0.10"
+  },
+  "overrides": {
+    "jose": "4.15.9"
   }
 }
