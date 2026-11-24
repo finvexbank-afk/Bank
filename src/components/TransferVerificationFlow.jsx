@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, ShieldCheck, AlertTriangle, CheckCircle2, Mail, Loader2, Copy } from 'lucide-react';
+import { X, ShieldCheck, AlertTriangle, CheckCircle2, Mail, Loader2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { t } from '../translations';
 import { callTransferApi } from '../utils/transferApi';
-import { useAppContext } from '../AppContext';
 
 const RESEND_DELAY = 30;
 const PENDING_KEY = 'finvex_pending_transfer';
@@ -28,7 +27,6 @@ const clearPending = () => {
 
 const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, onCompleted }) => {
     const { language } = useLanguage();
-    const { user } = useAppContext();
     const [phase, setPhase] = useState('preparing');
     const [requestId, setRequestId] = useState(null);
     const [codeInfo, setCodeInfo] = useState(null);
@@ -185,9 +183,6 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
     if (!open) return null;
 
     const busy = ['preparing', 'verifying', 'finalizing', 'advancing'].includes(phase);
-    const expectedCode = (user?.transferCodes || []).find((item) =>
-        item.enabled !== false && item.label === codeInfo?.label
-    )?.value || '';
 
     return (
         <div
@@ -257,27 +252,11 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
                                 <ShieldCheck size={28} />
                             </div>
                             <p style={{ textAlign: 'center', color: '#475569', fontSize: '14px', lineHeight: 1.6, marginBottom: '16px' }}>
-                                {t('verify.code.desc', language, { message: codeInfo?.message || '' })}
+                                {t('verify.code.descGeneric', language)}
                             </p>
-                            <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '12px', padding: '12px 14px', color: '#92400E', fontSize: '12px', fontWeight: 600, lineHeight: 1.5, marginBottom: '16px' }}>
+                            <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '12px', padding: '12px 14px', color: '#92400E', fontSize: '12px', fontWeight: 600, lineHeight: 1.5, marginBottom: '24px' }}>
                                 {t('verify.code.warning', language)}
                             </div>
-                            {expectedCode && (
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '12px 14px', marginBottom: '24px' }}>
-                                    <div style={{ minWidth: 0 }}>
-                                        <p style={{ fontSize: '11px', fontWeight: 800, color: '#1D4ED8', margin: '0 0 4px', textTransform: 'uppercase' }}>{t('verify.code.hint', language)}</p>
-                                        <p style={{ fontSize: '16px', fontWeight: 800, color: '#1E3A8A', margin: 0, letterSpacing: '1px' }}>{expectedCode}</p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => navigator.clipboard?.writeText(expectedCode)}
-                                        style={{ border: 'none', background: 'white', color: '#2563EB', borderRadius: '10px', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                                        aria-label={t('verify.code.copy', language)}
-                                    >
-                                        <Copy size={16} />
-                                    </button>
-                                </div>
-                            )}
                             {error && <div style={errorStyle}>{error}</div>}
                             <label style={labelStyle}>{codeInfo?.label || t('verify.code.label', language)}</label>
                             <input

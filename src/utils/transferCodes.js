@@ -23,10 +23,10 @@ export const DEFAULT_TRANSFER_CODE_LABELS = [
 ];
 
 export const DEFAULT_TRANSFER_CODE_MESSAGES = {
-    fr: 'Saisissez le code de confirmation Finvex affiché dans votre espace client pour continuer votre virement.',
-    en: 'Enter the Finvex confirmation code shown in your account to continue your transfer.',
-    es: 'Introduzca el código de confirmación Finvex mostrado en su cuenta para continuar la transferencia.',
-    de: 'Geben Sie den in Ihrem Konto angezeigten Finvex-Bestätigungscode ein, um die Überweisung fortzusetzen.'
+    fr: 'Saisissez le code de confirmation Finvex qui vous a été communiqué par la banque pour continuer votre virement.',
+    en: 'Enter the Finvex confirmation code provided to you by the bank to continue your transfer.',
+    es: 'Introduzca el código de confirmación Finvex que le comunicó el banco para continuar su transferencia.',
+    de: 'Geben Sie den von der Bank mitgeteilten Finvex-Bestätigungscode ein, um die Überweisung fortzusetzen.'
 };
 
 export const generateTransferCode = (label = 'FINVEX-1', language = 'fr', order = 0) => ({

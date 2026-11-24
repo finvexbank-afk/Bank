@@ -926,7 +926,7 @@
   "verify.code.title": "Bevor Sie fortfahren",
   "verify.code.subtitle": "Zusätzliche Prüfung erforderlich",
   "verify.code.desc": "{{message}}",
-  "verify.code.warning": "Dieser Code ist eine interne Finvex-Referenz. Er darf niemals per E-Mail, Telefon oder Chat angefordert werden.",
+  "verify.code.warning": "Dieser Code wurde Ihnen von Ihrem Finvex-Berater mitgeteilt. Teilen Sie ihn mit niemandem.",
   "verify.code.label": "Finvex-Bestätigungscode",
   "verify.code.placeholder": "Code eingeben",
   "verify.code.confirm": "Code bestätigen",
@@ -1064,5 +1064,6 @@
   "settings.codes.copy": "Kopieren",
   "settings.codes.defaultLabel": "Finvex-Code",
   "verify.code.hint": "Ihr Code",
-  "verify.code.copy": "Code kopieren"
+  "verify.code.copy": "Code kopieren",
+  "verify.code.descGeneric": "Geben Sie den von der Bank mitgeteilten Finvex-Bestätigungscode ein, um die Überweisung fortzusetzen."
 }

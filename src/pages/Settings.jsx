@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
     User, Lock, Bell, Globe, Shield, Save, CheckCircle2, 
     Camera, ChevronRight, Copy, Mail, Calendar, Phone, 
-    Smartphone, HelpCircle, MessageSquare, ExternalLink, Landmark, Download, Key
+    Smartphone, HelpCircle, MessageSquare, ExternalLink, Landmark, Download
 } from 'lucide-react';
 import MainLayout from '../components/MainLayout';
 import { useAppContext } from '../AppContext';
@@ -99,12 +99,6 @@ const Settings = () => {
                                     icon={<Lock size={18} />} 
                                     label={t('settings.nav.pin', language)} 
                                     onClick={() => setActiveTab('pin')} 
-                                />
-                                <NavTab 
-                                    active={activeTab === 'codes'} 
-                                    icon={<Key size={18} />} 
-                                    label={t('settings.nav.codes', language)} 
-                                    onClick={() => setActiveTab('codes')} 
                                 />
                             </div>
                         </div>
@@ -216,43 +210,6 @@ const Settings = () => {
                                 <button type="button" onClick={() => downloadRIB(user, language)} style={{ width: '100%', maxWidth: '320px', padding: '15px 24px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)' }}>
                                     <Download size={18} /> {t('settings.bank.download', language)}
                                 </button>
-                            </div>
-                        )}
-
-                        {activeTab === 'codes' && (
-                            <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                                    <Key size={20} color="#0EA5E9" />
-                                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#1E293B' }}>{t('settings.codes.title', language)}</h3>
-                                </div>
-                                <p style={{ color: '#64748B', fontSize: '14px', lineHeight: 1.6, marginBottom: '28px' }}>
-                                    {t('settings.codes.subtitle', language)}
-                                </p>
-                                {(user.transferCodes || []).filter((code) => code.enabled !== false && code.value).length ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                                        {(user.transferCodes || [])
-                                            .filter((code) => code.enabled !== false && code.value)
-                                            .map((code) => (
-                                                <div key={code.id || code.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '18px 20px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', flexWrap: 'wrap' }}>
-                                                    <div>
-                                                        <p style={{ fontSize: '11px', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 6px' }}>{code.label || t('settings.codes.defaultLabel', language)}</p>
-                                                        <p style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B', letterSpacing: '1px', margin: 0 }}>{code.value}</p>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => copyToClipboard(code.value)}
-                                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '10px', fontSize: '12px', fontWeight: 700, color: '#475569', cursor: 'pointer' }}
-                                                    >
-                                                        <Copy size={15} /> {t('settings.codes.copy', language)}
-                                                    </button>
-                                                </div>
-                                            ))}
-                                    </div>
-                                ) : (
-                                    <div style={{ padding: '32px', textAlign: 'center', background: '#F8FAFC', borderRadius: '14px', color: '#64748B', fontSize: '14px' }}>
-                                        {t('settings.codes.empty', language)}
-                                    </div>
-                                )}
                             </div>
                         )}
 
