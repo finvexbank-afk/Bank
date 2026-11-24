@@ -1,7 +1,8 @@
-import { handler } from '../netlify/functions/transfer.mjs';
-
-// Vercel adapter for the existing transfer function. The business logic stays in
-// netlify/functions/transfer.mjs so both hosts run exactly the same code.
+// Vercel adapter for the shared transfer function.
+// The business logic lives in netlify/functions/transfer.mjs so both hosts run
+// exactly the same code. The module is imported lazily so a bundling problem
+// surfaces as an explicit JSON error instead of an opaque
+// FUNCTION_INVOCATION_FAILED.
 
 const readBody = async (req) => {
     // Vercel pre-parses JSON bodies for Node functions, so req.body can already
@@ -22,6 +23,18 @@ const readBody = async (req) => {
 };
 
 export default async function transfer(req, res) {
+    let handler;
+
+    try {
+        ({ handler } = await import('../netlify/functions/transfer.mjs'));
+    } catch (error) {
+        console.error('[api/transfer] cannot load shared handler:', error);
+        return res.status(500).json({
+            error: `Impossible de charger le module partagé: ${error?.message || 'unknown'}`,
+            code: error?.code || null
+        });
+    }
+
     try {
         const event = {
             httpMethod: req.method || 'POST',

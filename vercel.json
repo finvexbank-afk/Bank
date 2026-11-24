@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/transfer.mjs": {
+      "includeFiles": "netlify/functions/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/((?!api/).*)",
