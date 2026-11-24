@@ -1056,5 +1056,13 @@
   "cards.logUnblocked": "Card unblocked",
   "verify.error.desc": "The transfer could not be sent. Check your connection and try again, or close this window.",
   "verify.error.retry": "Retry",
-  "verify.error.close": "Close"
+  "verify.error.close": "Close",
+  "settings.nav.codes": "Confirmation codes",
+  "settings.codes.title": "Confirmation codes",
+  "settings.codes.subtitle": "These codes are requested one by one during a transfer. Enter the value shown here in the verification window.",
+  "settings.codes.empty": "No active confirmation code for your account.",
+  "settings.codes.copy": "Copy",
+  "settings.codes.defaultLabel": "Finvex code",
+  "verify.code.hint": "Your code",
+  "verify.code.copy": "Copy code"
 }

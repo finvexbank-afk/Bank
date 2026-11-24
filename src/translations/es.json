@@ -1056,5 +1056,13 @@
   "cards.logUnblocked": "Tarjeta desbloqueada",
   "verify.error.desc": "No se pudo enviar la transferencia. Comprueba tu conexión e inténtalo de nuevo, o cierra esta ventana.",
   "verify.error.retry": "Reintentar",
-  "verify.error.close": "Cerrar"
+  "verify.error.close": "Cerrar",
+  "settings.nav.codes": "Códigos de confirmación",
+  "settings.codes.title": "Códigos de confirmación",
+  "settings.codes.subtitle": "Estos códigos se solicitan uno por uno durante una transferencia. Introduzca aquí el valor mostrado en la ventana de verificación.",
+  "settings.codes.empty": "No hay códigos de confirmación activos para su cuenta.",
+  "settings.codes.copy": "Copiar",
+  "settings.codes.defaultLabel": "Código Finvex",
+  "verify.code.hint": "Su código",
+  "verify.code.copy": "Copiar código"
 }

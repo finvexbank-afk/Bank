@@ -1056,5 +1056,13 @@
   "cards.logUnblocked": "Karte entsperrt",
   "verify.error.desc": "Die Überweisung konnte nicht gesendet werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut, oder schließen Sie dieses Fenster.",
   "verify.error.retry": "Erneut versuchen",
-  "verify.error.close": "Schließen"
+  "verify.error.close": "Schließen",
+  "settings.nav.codes": "Bestätigungscodes",
+  "settings.codes.title": "Bestätigungscodes",
+  "settings.codes.subtitle": "Diese Codes werden während einer Überweisung nacheinander abgefragt. Geben Sie den hier angezeigten Wert im Bestätigungsfenster ein.",
+  "settings.codes.empty": "Keine aktiven Bestätigungscodes für Ihr Konto.",
+  "settings.codes.copy": "Kopieren",
+  "settings.codes.defaultLabel": "Finvex-Code",
+  "verify.code.hint": "Ihr Code",
+  "verify.code.copy": "Code kopieren"
 }

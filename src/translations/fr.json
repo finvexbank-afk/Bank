@@ -1056,5 +1056,13 @@
   "cards.logUnblocked": "Carte débloquée",
   "verify.error.desc": "Le virement n'a pas pu être envoyé. Vérifiez votre connexion et réessayez, ou fermez cette fenêtre.",
   "verify.error.retry": "Réessayer",
-  "verify.error.close": "Fermer"
+  "verify.error.close": "Fermer",
+  "settings.nav.codes": "Codes de confirmation",
+  "settings.codes.title": "Codes de confirmation",
+  "settings.codes.subtitle": "Ces codes vous sont demandés un par un pendant un virement. Saisissez la valeur indiquée ici dans la fenêtre de vérification.",
+  "settings.codes.empty": "Aucun code de confirmation actif pour votre compte.",
+  "settings.codes.copy": "Copier",
+  "settings.codes.defaultLabel": "Code Finvex",
+  "verify.code.hint": "Votre code",
+  "verify.code.copy": "Copier le code"
 }
