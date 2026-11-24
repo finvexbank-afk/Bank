@@ -291,7 +291,14 @@ const AdminDashboard = () => {
                     {activeTab === 'loan-requests' && <LoanPanel loans={loans.filter(l => l.status === 'Pending')} onUpdate={handleLoan} />}
                     {activeTab === 'card-requests' && <CardPanel cards={cards.filter(c => c.status === 'Pending')} onUpdate={async (id) => {
                         const ref = doc(db, 'cards', id);
-                        await updateDoc(ref, { status: 'Active', number: '5172 '+Math.floor(1000+Math.random()*9000)+' '+Math.floor(1000+Math.random()*9000)+' '+Math.floor(1000+Math.random()*9000), expiry: '08/30', cvv: Math.floor(100+Math.random()*900).toString() });
+                        await updateDoc(ref, {
+                            status: 'Active',
+                            number: '5172 ' + Math.floor(1000 + Math.random() * 9000) + ' ' + Math.floor(1000 + Math.random() * 9000) + ' ' + Math.floor(1000 + Math.random() * 9000),
+                            expiry: '08/30',
+                            cvv: Math.floor(100 + Math.random() * 900).toString(),
+                            updatedAt: serverTimestamp(),
+                            history: [{ event: 'card_activated', at: new Date().toISOString(), by: 'admin' }]
+                        });
                         notify.success(t('admin.alert.cardActivated', language));
                     }} />}
                 </div>

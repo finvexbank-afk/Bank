@@ -3,16 +3,16 @@ import {
   CreditCard, ChevronRight, ArrowLeft, Info, 
   CheckCircle2, HelpCircle, ShieldCheck, Plus,
   Hourglass, Wallet, Globe, Zap, Settings, Eye,
-  RefreshCcw, List, Lock, ShieldAlert, EyeOff, CheckCircle, ExternalLink
+  RefreshCcw, List, Lock, ShieldAlert, EyeOff, CheckCircle, ExternalLink, X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
 import { useAppContext } from '../AppContext';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { t } from '../translations';
 import { useLanguage } from '../contexts/LanguageContext';
-import { notify } from '../components/Toast';
+import { notify, ask } from '../components/Toast';
 
 const Cards = () => {
     const { user, card } = useAppContext();
@@ -20,10 +20,14 @@ const Cards = () => {
     const navigate = useNavigate();
     const [view, setView] = useState('list'); // 'list', 'apply', 'details'
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+    const [actionBusy, setActionBusy] = useState(false);
+    const [logOpen, setLogOpen] = useState(false);
+
     // Derived states from Firestore
     const hasPendingApplication = card && card.status === 'Pending';
     const isCardActive = card && card.status === 'Active';
+    const isCardFrozen = card && card.status === 'Frozen';
+    const isCardBlocked = card && card.status === 'Blocked';
     const hasCard = Boolean(card);
     
     const [flipped, setFlipped] = useState(false);
@@ -66,11 +70,74 @@ const Cards = () => {
         }
     };
 
+    const updateCardStatus = async (nextStatus, options = {}) => {
+        if (!card?.id) return;
+        if (options.confirmMessage) {
+            const approved = await ask({
+                title: options.confirmTitle || t('cards.statusUpdated', language),
+                message: options.confirmMessage,
+                confirmLabel: options.confirmLabel,
+                tone: options.tone || 'warning'
+            });
+            if (!approved) return;
+        }
+        setActionBusy(true);
+        try {
+            await updateDoc(doc(db, 'cards', card.id), {
+                status: nextStatus,
+                updatedAt: serverTimestamp(),
+                history: arrayUnion({
+                    event: options.event || nextStatus,
+                    at: new Date().toISOString(),
+                    by: user?.id || 'client'
+                })
+            });
+            notify.success(t(options.successKey || 'cards.statusUpdated', language));
+        } catch (error) {
+            console.error('Card update error:', error);
+            notify.error(t('cards.actionFailed', language));
+        } finally {
+            setActionBusy(false);
+        }
+    };
+
     // --- VIEW: DETAILS ---
     if (view === 'details') {
-        const statusColor = isCardActive ? '#10B981' : '#F59E0B';
-        const statusBg = isCardActive ? '#D1FAE5' : '#FEF3C7';
-        
+        const statusMeta = isCardBlocked
+            ? { bg: '#FEE2E2', color: '#B91C1C', icon: ShieldAlert, label: t('cards.statusBlocked', language) }
+            : isCardFrozen
+                ? { bg: '#F1F5F9', color: '#475569', icon: Lock, label: t('cards.statusFrozen', language) }
+                : isCardActive
+                    ? { bg: '#D1FAE5', color: '#047857', icon: CheckCircle, label: t('cards.statusActive', language) }
+                    : { bg: '#FEF3C7', color: '#B45309', icon: Hourglass, label: t('cards.statusPending', language) };
+        const StatusIcon = statusMeta.icon;
+
+        const formatLogDate = (value) => {
+            if (!value) return '—';
+            if (value?.toDate) return value.toDate().toLocaleString('fr-FR');
+            const parsed = new Date(value);
+            if (Number.isNaN(parsed.getTime())) return String(value);
+            return parsed.toLocaleString('fr-FR');
+        };
+        const logEventLabel = (event) => ({
+            card_requested: t('cards.logRequested', language),
+            card_activated: t('cards.logActivated', language),
+            card_active: t('cards.logActivated', language),
+            card_deactivated: t('cards.logDeactivated', language),
+            card_frozen: t('cards.logDeactivated', language),
+            card_blocked: t('cards.logBlocked', language),
+            card_reactivated: t('cards.logReactivated', language),
+            card_unblocked: t('cards.logUnblocked', language)
+        }[event] || event);
+        const logEntries = Array.isArray(card?.history) && card.history.length
+            ? card.history
+            : [
+                { event: 'card_requested', at: card?.createdAt, by: card?.userName || '' },
+                ...(card?.status && card.status !== 'Pending'
+                    ? [{ event: `card_${String(card.status).toLowerCase()}`, at: card?.updatedAt, by: '' }]
+                    : [])
+            ];
+
         return (
             <MainLayout>
                 <div style={{ padding: 'clamp(16px, 4vw, 32px)', maxWidth: '1000px', margin: '0 auto' }}>
@@ -85,24 +152,117 @@ const Cards = () => {
                     <div style={{ background: 'white', borderRadius: '20px', border: '1px solid #E2E8F0', padding: 'clamp(24px, 6vw, 60px) clamp(16px, 4vw, 40px)', position: 'relative' }}>
                         {/* Status & Actions Header */}
                         <div className="flex-row-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', gap: '20px' }}>
-                            <div style={{ background: statusBg, color: statusColor, padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                {isCardActive ? <CheckCircle size={16} /> : <Hourglass size={16} />}
-                                {isCardActive ? t('cards.statusActive', language) : t('cards.statusPending', language)}
+                            <div style={{ background: statusMeta.bg, color: statusMeta.color, padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <StatusIcon size={16} />
+                                {statusMeta.label}
                             </div>
                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                 {isCardActive && (
                                     <>
-                                        <button className="mobile-full" style={{ background: '#FEF3C7', color: '#B45309', border: '1px solid #FDE68A', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> {t('cards.deactivate', language)}</button>
-                                        <button className="mobile-full" style={{ background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}><ShieldAlert size={14} /> {t('cards.block', language)}</button>
+                                        <button
+                                            className="mobile-full"
+                                            disabled={actionBusy}
+                                            onClick={() => updateCardStatus('Frozen', {
+                                                confirmTitle: t('cards.deactivate', language),
+                                                confirmMessage: t('cards.deactivateConfirm', language),
+                                                confirmLabel: t('cards.deactivate', language),
+                                                successKey: 'cards.deactivated',
+                                                event: 'card_deactivated'
+                                            })}
+                                            style={{ background: '#FEF3C7', color: '#B45309', border: '1px solid #FDE68A', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: actionBusy ? 'not-allowed' : 'pointer', opacity: actionBusy ? 0.6 : 1 }}
+                                        >
+                                            <Lock size={14} /> {t('cards.deactivate', language)}
+                                        </button>
+                                        <button
+                                            className="mobile-full"
+                                            disabled={actionBusy}
+                                            onClick={() => updateCardStatus('Blocked', {
+                                                confirmTitle: t('cards.block', language),
+                                                confirmMessage: t('cards.blockConfirm', language),
+                                                confirmLabel: t('cards.block', language),
+                                                tone: 'danger',
+                                                successKey: 'cards.blocked',
+                                                event: 'card_blocked'
+                                            })}
+                                            style={{ background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: actionBusy ? 'not-allowed' : 'pointer', opacity: actionBusy ? 0.6 : 1 }}
+                                        >
+                                            <ShieldAlert size={14} /> {t('cards.block', language)}
+                                        </button>
                                     </>
                                 )}
-                                <button className="mobile-full" style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px' }}><List size={14} /> {t('cards.log', language)}</button>
+                                {isCardFrozen && (
+                                    <>
+                                        <button
+                                            className="mobile-full"
+                                            disabled={actionBusy}
+                                            onClick={() => updateCardStatus('Active', {
+                                                confirmTitle: t('cards.reactivate', language),
+                                                confirmMessage: t('cards.reactivateConfirm', language),
+                                                confirmLabel: t('cards.reactivate', language),
+                                                successKey: 'cards.reactivated',
+                                                event: 'card_reactivated'
+                                            })}
+                                            style={{ background: '#D1FAE5', color: '#047857', border: '1px solid #A7F3D0', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: actionBusy ? 'not-allowed' : 'pointer', opacity: actionBusy ? 0.6 : 1 }}
+                                        >
+                                            <CheckCircle size={14} /> {t('cards.reactivate', language)}
+                                        </button>
+                                        <button
+                                            className="mobile-full"
+                                            disabled={actionBusy}
+                                            onClick={() => updateCardStatus('Blocked', {
+                                                confirmTitle: t('cards.block', language),
+                                                confirmMessage: t('cards.blockConfirm', language),
+                                                confirmLabel: t('cards.block', language),
+                                                tone: 'danger',
+                                                successKey: 'cards.blocked',
+                                                event: 'card_blocked'
+                                            })}
+                                            style={{ background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: actionBusy ? 'not-allowed' : 'pointer', opacity: actionBusy ? 0.6 : 1 }}
+                                        >
+                                            <ShieldAlert size={14} /> {t('cards.block', language)}
+                                        </button>
+                                    </>
+                                )}
+                                {isCardBlocked && (
+                                    <button
+                                        className="mobile-full"
+                                        disabled={actionBusy}
+                                        onClick={() => updateCardStatus('Active', {
+                                            confirmTitle: t('cards.unblock', language),
+                                            confirmMessage: t('cards.unblockConfirm', language),
+                                            confirmLabel: t('cards.unblock', language),
+                                            tone: 'warning',
+                                            successKey: 'cards.unblocked',
+                                            event: 'card_unblocked'
+                                        })}
+                                        style={{ background: '#D1FAE5', color: '#047857', border: '1px solid #A7F3D0', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: actionBusy ? 'not-allowed' : 'pointer', opacity: actionBusy ? 0.6 : 1 }}
+                                    >
+                                        <CheckCircle size={14} /> {t('cards.unblock', language)}
+                                    </button>
+                                )}
+                                <button
+                                    className="mobile-full"
+                                    onClick={() => setLogOpen(true)}
+                                    style={{ background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '8px 12px', fontSize: '12px', color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                                >
+                                    <List size={14} /> {t('cards.log', language)}
+                                </button>
                             </div>
                         </div>
 
-                        {!isCardActive && (
+                        {hasPendingApplication && (
                             <div style={{ marginBottom: '24px', padding: '16px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '14px', color: '#92400E', fontSize: '13px', lineHeight: 1.5 }}>
                                 {t('cards.pendingDetailsNotice', language)}
+                            </div>
+                        )}
+                        {isCardFrozen && (
+                            <div style={{ marginBottom: '24px', padding: '16px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', color: '#475569', fontSize: '13px', lineHeight: 1.5 }}>
+                                {t('cards.frozenNotice', language)}
+                            </div>
+                        )}
+                        {isCardBlocked && (
+                            <div style={{ marginBottom: '24px', padding: '16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '14px', color: '#B91C1C', fontSize: '13px', lineHeight: 1.5 }}>
+                                {t('cards.blockedNotice', language)}
                             </div>
                         )}
 
@@ -197,6 +357,40 @@ const Cards = () => {
                         </div>
                     </div>
                 </div>
+
+                {logOpen && (
+                    <div
+                        onClick={(event) => { if (event.target === event.currentTarget) setLogOpen(false); }}
+                        style={{ position: 'fixed', inset: 0, zIndex: 3500, background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                    >
+                        <div style={{ width: 'min(480px, 100%)', background: 'white', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 30px 70px rgba(15,23,42,0.25)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1E293B', margin: 0 }}>{t('cards.logTitle', language)}</h3>
+                                <button onClick={() => setLogOpen(false)} style={{ border: 'none', background: '#F8FAFC', color: '#64748B', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                    <X size={18} />
+                                </button>
+                            </div>
+                            <p style={{ fontSize: '13px', color: '#64748B', margin: '0 0 22px' }}>
+                                {t('cards.logSubtitle', language, { brand: cardBrand, last4 })}
+                            </p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {logEntries.map((entry, index) => (
+                                    <div key={`${entry.event}-${index}`} style={{ display: 'flex', gap: '12px', padding: '12px 14px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
+                                        <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '12px', fontWeight: 800 }}>{index + 1}</div>
+                                        <div style={{ minWidth: 0 }}>
+                                            <p style={{ fontSize: '13px', fontWeight: 800, color: '#1E293B', margin: '0 0 3px' }}>{logEventLabel(entry.event)}</p>
+                                            <p style={{ fontSize: '12px', color: '#64748B', margin: 0 }}>{formatLogDate(entry.at)}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <button onClick={() => setLogOpen(false)} style={{ marginTop: '24px', width: '100%', padding: '12px', background: '#0EA5E9', color: 'white', border: 'none', borderRadius: '11px', fontWeight: 800, fontSize: '13px', cursor: 'pointer' }}>
+                                {t('common.close', language)}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 <style>{`
                     @media (max-width: 640px) {
                         .flex-row-mobile { flex-direction: column; align-items: flex-start !important; }
