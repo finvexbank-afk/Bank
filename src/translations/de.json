@@ -1104,5 +1104,8 @@
   "verify.cancel.message": "Die aktuelle Überweisung wird storniert. Es wurde kein Betrag abgebucht.",
   "verify.cancel.confirm": "Überweisung stornieren",
   "verify.cancel.short": "Überweisung stornieren und löschen",
-  "verify.cancel.success": "Die Überweisung wurde storniert."
+  "verify.cancel.success": "Die Überweisung wurde storniert.",
+  "verify.expired.title": "Diese Überweisung ist nicht mehr aktiv",
+  "verify.expired.desc": "Die Verifizierung wurde storniert, ist abgelaufen oder bereits abgeschlossen. Für diesen Versuch wurde kein Betrag belastet. Sie können jederzeit eine neue Überweisung starten.",
+  "verify.expired.restart": "Neue Überweisung starten"
 }

@@ -1104,5 +1104,8 @@
   "verify.cancel.message": "Le virement en cours sera annulé. Aucun montant n’a été débité.",
   "verify.cancel.confirm": "Annuler le virement",
   "verify.cancel.short": "Annuler et supprimer ce virement",
-  "verify.cancel.success": "Le virement a été annulé."
+  "verify.cancel.success": "Le virement a été annulé.",
+  "verify.expired.title": "Ce virement n'est plus actif",
+  "verify.expired.desc": "La vérification a été annulée, expirée ou déjà finalisée. Aucun montant n'a été débité pour cette tentative. Vous pouvez recommencer un virement quand vous le souhaitez.",
+  "verify.expired.restart": "Recommencer un virement"
 }

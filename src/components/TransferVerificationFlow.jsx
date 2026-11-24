@@ -12,6 +12,22 @@ import { issueClientOtp } from '../utils/otpFallback';
 const RESEND_DELAY = 30;
 const PENDING_KEY = 'finvex_pending_transfer';
 
+// Server messages meaning the request can never succeed again (cancelled,
+// expired, deleted or belonging to someone else). Retrying would loop forever,
+// so we drop the local state and show a terminal screen instead.
+const DEAD_REQUEST_PATTERNS = [
+    "n'est plus valable",
+    'plus en attente',
+    'introuvable',
+    'Impossible de reprendre',
+    'not valid',
+    'no longer'
+];
+
+const isDeadRequestError = (message) =>
+    DEAD_REQUEST_PATTERNS.some((pattern) => String(message || '').toLowerCase().includes(pattern.toLowerCase()));
+
+
 const savePending = (requestId, transfer, phase) => {
     try {
         localStorage.setItem(PENDING_KEY, JSON.stringify({ requestId, transfer, phase, updatedAt: Date.now() }));
@@ -160,6 +176,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
             const result = await callTransferApi('finalize', { requestId: currentRequestId });
             finish(result, currentRequestId);
         } catch (err) {
+            if (isDeadRequestError(err.message)) return handleDeadRequest(err.message);
             setError(err.message);
             setPhase('error');
             notifyBlocked(currentRequestId, err.message);
@@ -206,6 +223,16 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
         if (result.reference) finish(result, currentRequestId);
     };
 
+    // The request is gone server-side: stop retrying, drop the local copy and
+    // show a terminal screen with a clear next step.
+    const handleDeadRequest = (message) => {
+        clearPending();
+        refreshPendingTransfer?.();
+        setError(message || '');
+        setRequestId(null);
+        setPhase('expired');
+    };
+
     const start = async () => {
         setPhase('preparing');
         setError('');
@@ -225,6 +252,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
             setRequestId(currentRequestId);
             applyStepResult(result, currentRequestId, transfer);
         } catch (err) {
+            if (isDeadRequestError(err.message)) return handleDeadRequest(err.message);
             setError(err.message);
             setPhase('error');
             notifyBlocked(null, err.message);
@@ -238,6 +266,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
             const result = await callTransferApi('verifyCode', { requestId, codeValue });
             applyStepResult(result, requestId, transfer);
         } catch (err) {
+            if (isDeadRequestError(err.message)) return handleDeadRequest(err.message);
             setError(err.message);
             setPhase('code');
             notifyBlocked(requestId, err.message);
@@ -253,6 +282,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
             setOtpDelivery(result.otpDelivery || (result.emailSent === true ? 'email' : null));
             setSeconds(RESEND_DELAY);
         } catch (err) {
+            if (isDeadRequestError(err.message)) return handleDeadRequest(err.message);
             setError(err.message);
             notifyBlocked(requestId, err.message);
         }
@@ -322,6 +352,7 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
             }
             finish(result, requestId);
         } catch (err) {
+            if (isDeadRequestError(err.message)) return handleDeadRequest(err.message);
             setError(err.message);
             setPhase('otp');
             notifyBlocked(requestId, err.message);
@@ -377,6 +408,30 @@ const TransferVerificationFlow = ({ open, transfer, resumeRequestId, onClose, on
                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                             <button onClick={onClose} style={secondaryButton}>{t('verify.error.close', language)}</button>
                             <button onClick={start} style={primaryButton}>{t('verify.error.retry', language)}</button>
+                        </div>
+                    </div>
+                )}
+
+                {phase === 'expired' && (
+                    <div style={{ padding: '48px 32px', textAlign: 'center' }}>
+                        <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#FEF3C7', color: '#B45309', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 24px' }}>
+                            <Ban size={34} />
+                        </div>
+                        <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>{t('verify.expired.title', language)}</h3>
+                        <p style={{ color: '#64748B', fontSize: '14px', lineHeight: 1.5, marginBottom: '12px' }}>
+                            {t('verify.expired.desc', language)}
+                        </p>
+                        {error && (
+                            <p style={{ color: '#B45309', fontSize: '12px', fontWeight: 600, marginBottom: '24px', wordBreak: 'break-word' }}>{error}</p>
+                        )}
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                            <button onClick={onClose} style={secondaryButton}>{t('common.close', language)}</button>
+                            <button
+                                onClick={() => { onClose(); window.location.assign('/dashboard'); }}
+                                style={primaryButton}
+                            >
+                                {t('verify.expired.restart', language)}
+                            </button>
                         </div>
                     </div>
                 )}

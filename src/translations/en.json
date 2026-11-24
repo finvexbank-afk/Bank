@@ -1104,5 +1104,8 @@
   "verify.cancel.message": "The current transfer will be cancelled. No amount has been debited.",
   "verify.cancel.confirm": "Cancel transfer",
   "verify.cancel.short": "Cancel and delete this transfer",
-  "verify.cancel.success": "The transfer was cancelled."
+  "verify.cancel.success": "The transfer was cancelled.",
+  "verify.expired.title": "This transfer is no longer active",
+  "verify.expired.desc": "The verification was cancelled, expired or already completed. No funds were debited for this attempt. You can start a new transfer whenever you like.",
+  "verify.expired.restart": "Start a new transfer"
 }

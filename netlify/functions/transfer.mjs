@@ -383,7 +383,7 @@ export const createHandler = ({ getDb, getAuthFn, sendEmailFn = sendEmail }) => 
         if (action === 'resume') {
             const { requestId } = payload;
             const { data } = await getRequest(db, uid, requestId);
-            if (['completed', 'failed', 'expired'].includes(data.status)) {
+            if (['completed', 'failed', 'expired', 'cancelled'].includes(data.status)) {
                 return respond(400, { error: 'Ce virement n\'est plus en attente.' });
             }
 
